@@ -6,141 +6,206 @@ O OrderBox será um sistema SaaS multiempresa.
 
 Toda informação operacional pertence a uma Company.
 
+Nenhuma entidade operacional poderá existir sem vínculo com uma empresa.
+
+O campo `company_id` será obrigatório em todas as entidades de negócio.
+
 ---
 
-## Estrutura Principal
+## Módulos do Sistema
 
-Company
-│
-├── Users
-│
-├── Customers
-│   ├── Addresses
-│   └── Contacts
-│
-├── Products
-│   ├── Categories
-│   ├── Brands
-│   └── ProductPrices
-│
-├── Orders
-│   └── OrderItems
-│
-├── Stock
-│   ├── Warehouses
-│   ├── StockBalances
-│   └── StockMovements
-│
-├── Financial
-│   ├── AccountsReceivable
-│   └── Payments
-│
-└── Audit
-    └── AuditLogs
+### Administração
+
+- Companies
+- Users
+- Roles (futuro)
+- Permissions (futuro)
+
+### Comercial
+
+- Customers
+- CustomerAddresses
+- CustomerContacts
+- Products
+- Categories
+- Brands
+- ProductPrices
+- Orders
+- OrderItems
+
+### Estoque
+
+- Warehouses
+- StockBalances
+- StockMovements
+
+### Financeiro
+
+- AccountsReceivable
+- Payments
+
+### Auditoria
+
+- AuditLogs
+
+### CRM (Planejado)
+
+- Leads
+- Activities
+- Opportunities
+
+### Portal B2B (Planejado)
+
+- CustomerUsers
+- Carts
+- CartItems
+- Favorites
+
+### Mobile (Planejado)
+
+- SyncLogs
+- SyncQueue
+- DeviceTokens
 
 ---
 
 ## Fluxo Comercial
 
+```text
 Customer
-
-↓
-
+    ↓
 Order
-
-↓
-
+    ↓
 OrderItem
-
-↓
-
+    ↓
 StockMovement
-
-↓
-
+    ↓
 AccountsReceivable
-
-↓
-
+    ↓
 Payment
+```
 
 ---
 
 ## Relacionamentos Principais
 
-Company
-├── Users
-├── Customers
-├── Products
-├── Orders
-├── Warehouses
-└── AccountsReceivable
+### Company
 
-Customer
-└── Orders
+- 1:N Users
+- 1:N Customers
+- 1:N Products
+- 1:N Orders
+- 1:N Warehouses
+- 1:N AccountsReceivable
 
-Order
-└── OrderItems
+### Customer
 
-Product
-└── OrderItems
+- 1:N CustomerAddresses
+- 1:N CustomerContacts
+- 1:N Orders
 
-Warehouse
-└── StockMovements
+### Product
 
-AccountsReceivable
-└── Payments
+- 1:N ProductPrices
+- 1:N OrderItems
 
----
+### Order
 
-## Módulos Planejados
+- 1:N OrderItems
 
-### Administração
+### Warehouse
 
-- Usuários
-- Empresas
-- Configurações
+- 1:N StockBalances
+- 1:N StockMovements
 
-### Comercial
+### AccountsReceivable
 
-- Clientes
-- Produtos
-- Pedidos
-
-### Estoque
-
-- Depósitos
-- Movimentações
-- Inventário
-
-### Financeiro
-
-- Contas a Receber
-- Pagamentos
-
-### CRM
-
-- Leads
-- Atividades
-- Oportunidades
-
-### B2B
-
-- Portal do Cliente
-- Carrinho
-- Pedidos Online
-
-### Mobile
-
-- Catálogo Offline
-- Clientes
-- Pedidos
-- Sincronização
+- 1:N Payments
 
 ---
 
-## Observações
+## Diagrama Geral
 
-Nenhuma entidade operacional poderá existir sem vínculo com uma Company.
+> O diagrama visual completo será mantido no arquivo:
 
-O campo company_id será obrigatório em todas as entidades de negócio.
+```text
+docs/03-modelagem/er-diagram.md
+```
+
+---
+
+## Convenções do Projeto
+
+### Nomenclatura
+
+Todas as entidades utilizarão nomes em inglês.
+
+Exemplos:
+
+- Company
+- User
+- Customer
+- Product
+- Order
+
+### Chaves Estrangeiras
+
+Todas as tabelas seguirão o padrão:
+
+```text
+company_id
+customer_id
+product_id
+order_id
+```
+
+### Exclusão
+
+Sempre que possível utilizar exclusão lógica:
+
+```text
+active = false
+```
+
+Evitar remoção física de registros.
+
+---
+
+## Roadmap da Modelagem
+
+### Fase 1
+
+- Companies
+- Users
+- Customers
+- CustomerAddresses
+- CustomerContacts
+
+### Fase 2
+
+- Categories
+- Brands
+- Products
+- ProductPrices
+
+### Fase 3
+
+- Orders
+- OrderItems
+
+### Fase 4
+
+- Warehouses
+- StockBalances
+- StockMovements
+
+### Fase 5
+
+- AccountsReceivable
+- Payments
+
+### Fase 6
+
+- CRM
+- B2B
+- Mobile
