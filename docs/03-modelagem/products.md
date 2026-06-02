@@ -1,0 +1,137 @@
+# Products
+
+## Objetivo
+
+Representa os produtos comercializados pela empresa.
+
+Os produtos podem ser vendidos através do PDV, força de vendas, portal B2B e integrações externas.
+
+Todo produto pertence a uma Company.
+
+---
+
+## Campos
+
+| Campo | Tipo | Obrigatório | Descrição |
+|---------|---------|---------|---------|
+| id | bigint | Sim | Identificador único |
+| company_id | bigint | Sim | Empresa proprietária |
+| category_id | bigint | Sim | Categoria |
+| brand_id | bigint | Não | Marca |
+| unit_id | bigint | Sim | Unidade de medida |
+| sku | varchar(100) | Sim | Código interno |
+| barcode | varchar(50) | Não | Código de barras |
+| name | varchar(255) | Sim | Nome do produto |
+| short_description | varchar(500) | Não | Descrição resumida |
+| description | text | Não | Descrição completa |
+| weight | decimal(10,3) | Não | Peso |
+| width | decimal(10,2) | Não | Largura |
+| height | decimal(10,2) | Não | Altura |
+| length | decimal(10,2) | Não | Comprimento |
+| cost_price | decimal(15,2) | Não | Custo |
+| active | boolean | Sim | Produto ativo |
+| created_at | timestamp | Sim | Data de criação |
+| updated_at | timestamp | Sim | Data de atualização |
+
+---
+
+## Relacionamentos
+
+Product
+
+- N:1 Company
+- N:1 Category
+- N:1 Brand
+- N:1 Unit
+- 1:N ProductPrices
+- 1:N OrderItems
+- 1:N StockBalances
+- 1:N StockMovements
+
+---
+
+## Regras de Negócio
+
+### SKU Único
+
+Não pode existir dois produtos com o mesmo SKU dentro da mesma empresa.
+
+### Produto Inativo
+
+Produtos inativos não podem:
+
+- ser vendidos
+- aparecer no B2B
+- aparecer no aplicativo mobile
+
+### Exclusão
+
+Produtos não devem ser removidos fisicamente.
+
+Utilizar:
+
+active = false
+
+---
+
+## Casos de Uso
+
+### Produto Próprio
+
+Fabricado pela empresa.
+
+Exemplo:
+
+- Torneira Boia Airlock Valeplast
+
+### Produto de Revenda
+
+Comprado de terceiros para revenda.
+
+Exemplo:
+
+- Produto Tigre
+- Produto Amanco
+
+---
+
+## Integrações Futuras
+
+Campos utilizados em integrações:
+
+- Shopee
+- Mercado Livre
+- Amazon
+- Tray
+- Nuvemshop
+
+---
+
+## Observações Futuras
+
+Possíveis recursos:
+
+- múltiplas imagens
+- vídeos
+- NCM
+- CFOP
+- GTIN
+- EAN
+- ficha técnica
+- variações
+- kits
+- composição de produto
+- produto digital
+- produto controlado
+
+---
+
+## Importante
+
+Preço não será armazenado diretamente na tabela de produtos.
+
+Os preços serão gerenciados através da entidade:
+
+ProductPrices
+
+Permitindo múltiplas tabelas de preço.
