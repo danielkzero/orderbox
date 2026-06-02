@@ -34,7 +34,8 @@ User
 - N:1 Company
 - 1:N Orders
 - 1:N AuditLogs
-
+- 1:1 SalesRepresentative
+- 1:N CustomerMembers
 ---
 
 ## Perfis (Role)
@@ -47,15 +48,20 @@ Possui acesso total ao sistema.
 
 Possui acesso gerencial.
 
-Pode visualizar relatórios e indicadores.
+### SalesRepresentative
 
-### Sales
+Representante comercial.
 
-Responsável por vendas e pedidos.
+Pode acessar:
+
+- aplicativo mobile
+- carteira de clientes
+- pedidos
+- indicadores comerciais
 
 ### Stock
 
-Responsável por estoque.
+Responsável pelo estoque.
 
 ### Financial
 
@@ -63,7 +69,7 @@ Responsável pelo financeiro.
 
 ### Customer
 
-Usuário vinculado ao portal B2B.
+Usuário vinculado a um cliente para acesso ao portal B2B.
 
 ---
 
