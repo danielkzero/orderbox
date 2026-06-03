@@ -4,7 +4,7 @@
 
 Representa os itens pertencentes a um pedido.
 
-Cada registro corresponde a um produto vendido.
+Cada registro corresponde a um produto incluído no pedido.
 
 ---
 
@@ -17,7 +17,7 @@ Cada registro corresponde a um produto vendido.
 | product_id | bigint | Sim | Produto |
 | quantity | decimal(15,3) | Sim | Quantidade |
 | unit_price | decimal(15,2) | Sim | Preço unitário |
-| discount_amount | decimal(15,2) | Não | Desconto |
+| discounts | json | Não | Lista de descontos aplicados |
 | total_amount | decimal(15,2) | Sim | Total do item |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
@@ -37,11 +37,11 @@ OrderItem
 
 ### Quantidade
 
-Quantidade deve ser maior que zero.
+A quantidade deve ser maior que zero.
 
 ### Produto Ativo
 
-Somente produtos ativos podem ser vendidos.
+Somente produtos ativos podem ser adicionados ao pedido.
 
 ### Integridade
 
@@ -49,21 +49,50 @@ Não pode existir item sem pedido.
 
 ### Alteração
 
-Itens não podem ser alterados após faturamento.
+Itens podem ser alterados somente enquanto o pedido estiver em Draft.
+
+### Preço
+
+O preço unitário deve ser armazenado no momento da venda.
+
+Alterações futuras na tabela de preços não devem afetar pedidos já criados.
+
+### Descontos
+
+O item pode possuir múltiplos descontos.
+
+Exemplo:
+
+```json
+[
+  {
+    "name": "Desconto Comercial",
+    "type": "percentage",
+    "value": 5
+  },
+  {
+    "name": "Campanha Junho",
+    "type": "fixed",
+    "value": 10.00
+  }
+]
+```
 
 ---
 
 ## Cálculo
 
-Total do Item
+Subtotal do Item
 
+```text
 Quantidade × Preço Unitário
+```
 
-(-)
+↓
 
-Desconto
+Aplicação dos descontos
 
-=
+↓
 
 Total do Item
 
@@ -78,3 +107,6 @@ Possíveis recursos:
 - série
 - rastreabilidade
 - tributação por item
+- brindes
+- kits de produtos
+- observações por item
