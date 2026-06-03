@@ -19,17 +19,15 @@ Todo produto pertence a uma Company.
 | category_id | bigint | Sim | Categoria |
 | brand_id | bigint | Não | Marca |
 | unit_id | bigint | Sim | Unidade de medida |
+| external_id | varchar(100) | Não | Código do produto no ERP |
 | sku | varchar(100) | Sim | Código interno |
 | barcode | varchar(50) | Não | Código de barras |
+| image_url | varchar(255) | Não | Imagem principal |
 | name | varchar(255) | Sim | Nome do produto |
 | short_description | varchar(500) | Não | Descrição resumida |
 | description | text | Não | Descrição completa |
-| weight | decimal(10,3) | Não | Peso |
-| width | decimal(10,2) | Não | Largura |
-| height | decimal(10,2) | Não | Altura |
-| length | decimal(10,2) | Não | Comprimento |
-| cost_price | decimal(15,2) | Não | Custo |
 | active | boolean | Sim | Produto ativo |
+| available_stock | decimal(15,3) | Não | Estoque disponível sincronizado do ERP |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
 
@@ -45,8 +43,6 @@ Product
 - N:1 Unit
 - 1:N ProductPrices
 - 1:N OrderItems
-- 1:N StockBalances
-- 1:N StockMovements
 
 ---
 
@@ -111,6 +107,11 @@ Campos utilizados em integrações:
 
 Possíveis recursos:
 
+- cost_price (preço do custo)
+- weight (peso)
+- width (Largura)
+- height (Altura)
+- length (Comprimento)
 - múltiplas imagens
 - vídeos
 - NCM
