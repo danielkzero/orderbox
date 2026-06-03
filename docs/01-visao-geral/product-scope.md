@@ -11,8 +11,7 @@ Sistema de força de vendas com operação online e offline.
 - Tabelas de preço
 - Representantes
 - Pedidos
-- Estoque
-- Financeiro básico
+- Estoque básico
 
 ## Aplicações
 
