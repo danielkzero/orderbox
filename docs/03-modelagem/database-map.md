@@ -4,6 +4,17 @@
 
 O OrderBox será um sistema SaaS multiempresa.
 
+O OrderBox não é um ERP.
+
+O OrderBox é uma plataforma de força de vendas responsável por conectar:
+
+- Representantes
+- Clientes
+- Produtos
+- Pedidos
+
+de forma simples, online e offline.
+
 Toda informação operacional pertence a uma Company.
 
 Nenhuma entidade operacional poderá existir sem vínculo com uma empresa.
@@ -18,71 +29,51 @@ O campo `company_id` será obrigatório em todas as entidades de negócio.
 
 - Companies
 - Users
-- Roles (futuro)
-- Permissions (futuro)
 
-### Comercial
+### Cadastros
 
 - Customers
 - CustomerAddresses
 - CustomerContacts
-- Products
+
 - Categories
 - Brands
+- Units
+
+- Products
+
+### Comercial
+
+- SalesRepresentatives
+- CustomerRepresentatives
+
+- PriceTables
 - ProductPrices
+
 - Orders
 - OrderItems
 
-### Estoque
+### Mobile
 
-- Warehouses
-- StockBalances
-- StockMovements
-
-### Financeiro
-
-- AccountsReceivable
-- Payments
+- Devices
+- SyncLogs
 
 ### Auditoria
 
 - AuditLogs
-
-### CRM (Planejado)
-
-- Leads
-- Activities
-- Opportunities
-
-### Portal B2B (Planejado)
-
-- CustomerUsers
-- Carts
-- CartItems
-- Favorites
-
-### Mobile (Planejado)
-
-- SyncLogs
-- SyncQueue
-- DeviceTokens
 
 ---
 
 ## Fluxo Comercial
 
 ```text
-Customer
+Representante
     ↓
-Order
+Cliente
     ↓
-OrderItem
+Pedido
     ↓
-StockMovement
-    ↓
-AccountsReceivable
-    ↓
-Payment
+ERP
 ```
 
 ---
@@ -95,14 +86,18 @@ Payment
 - 1:N Customers
 - 1:N Products
 - 1:N Orders
-- 1:N Warehouses
-- 1:N AccountsReceivable
+- 1:N SalesRepresentatives
 
 ### Customer
 
 - 1:N CustomerAddresses
 - 1:N CustomerContacts
 - 1:N Orders
+- 1:N CustomerRepresentatives
+
+### SalesRepresentative
+
+- 1:N CustomerRepresentatives
 
 ### Product
 
@@ -113,20 +108,33 @@ Payment
 
 - 1:N OrderItems
 
-### Warehouse
+---
 
-- 1:N StockBalances
-- 1:N StockMovements
+## Integração com ERP
 
-### AccountsReceivable
+O ERP continua responsável por:
 
-- 1:N Payments
+- faturamento
+- financeiro
+- estoque oficial
+- emissão fiscal
+- entrega
+- contabilidade
+
+O OrderBox é responsável por:
+
+- cadastro de clientes
+- catálogo de produtos
+- tabelas de preço
+- representantes
+- pedidos
+- sincronização mobile
 
 ---
 
 ## Diagrama Geral
 
-> O diagrama visual completo será mantido no arquivo:
+O diagrama visual completo será mantido no arquivo:
 
 ```text
 docs/03-modelagem/er-diagram.md
@@ -157,6 +165,7 @@ company_id
 customer_id
 product_id
 order_id
+user_id
 ```
 
 ### Exclusão
@@ -177,6 +186,7 @@ Evitar remoção física de registros.
 
 - Companies
 - Users
+
 - Customers
 - CustomerAddresses
 - CustomerContacts
@@ -185,27 +195,45 @@ Evitar remoção física de registros.
 
 - Categories
 - Brands
+- Units
+
 - Products
-- ProductPrices
 
 ### Fase 3
+
+- SalesRepresentatives
+- CustomerRepresentatives
+
+- PriceTables
+- ProductPrices
+
+### Fase 4
 
 - Orders
 - OrderItems
 
-### Fase 4
-
-- Warehouses
-- StockBalances
-- StockMovements
-
 ### Fase 5
 
-- AccountsReceivable
-- Payments
+- Devices
+- SyncLogs
 
 ### Fase 6
 
+- AuditLogs
+
+---
+
+## Fora do Escopo da V1
+
+Funcionalidades mantidas para futuras versões:
+
 - CRM
-- B2B
-- Mobile
+- Financeiro
+- Estoque avançado
+- Fiscal
+- NFe
+- Aprovações
+- Workflow
+- Portal B2B avançado
+- Marketplace
+- Integrações com marketplaces
