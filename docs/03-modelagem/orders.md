@@ -22,9 +22,8 @@ Todo pedido pertence a uma Company.
 | order_number | varchar(50) | Sim | Número do pedido |
 | status | varchar(50) | Sim | Status atual |
 | subtotal | decimal(15,2) | Sim | Subtotal |
-| discount_amount | decimal(15,2) | Não | Desconto |
-| freight_amount | decimal(15,2) | Não | Frete |
-| total_amount | decimal(15,2) | Sim | Total |
+| discounts | json | Não | Lista de descontos aplicados |
+| total_amount | decimal(15,2) | Sim | Valor final do pedido |
 | notes | text | Não | Observações |
 | order_date | datetime | Sim | Data do pedido |
 | created_at | timestamp | Sim | Data de criação |
@@ -41,7 +40,6 @@ Order
 - N:1 User
 - N:1 PriceTable
 - 1:N OrderItems
-- 1:N AccountsReceivable
 
 ---
 
@@ -51,25 +49,25 @@ Order
 
 Pedido em edição.
 
-### Pending
+Permissões:
 
-Aguardando aprovação.
+- editar
+- remover
+- adicionar itens
+- alterar quantidades
+- alterar preços
 
-### Approved
+---
 
-Pedido aprovado.
+### Sent
 
-### Invoiced
+Pedido enviado.
 
-Pedido faturado.
+Permissões:
 
-### Delivered
+- visualizar
 
-Pedido entregue.
-
-### Canceled
-
-Pedido cancelado.
+Após o envio o pedido não pode mais ser alterado.
 
 ---
 
@@ -79,27 +77,60 @@ Pedido cancelado.
 
 O número do pedido deve ser único dentro da empresa.
 
-### Pedido Cancelado
-
-Pedidos cancelados não podem gerar faturamento.
-
 ### Alteração
 
-Pedidos faturados não podem ser alterados.
+Somente pedidos em Draft podem ser alterados.
 
 ### Exclusão
 
-Pedidos nunca devem ser removidos fisicamente.
+Somente pedidos em Draft podem ser removidos.
+
+### Auditoria
+
+Toda alteração relevante deve gerar registro em AuditLog.
+
+### Descontos
+
+O pedido pode possuir múltiplos descontos.
+
+Exemplo:
+
+```json
+[
+  {
+    "name": "Desconto Comercial",
+    "type": "percentage",
+    "value": 5
+  },
+  {
+    "name": "Campanha Junho",
+    "type": "percentage",
+    "value": 10
+  }
+]
+```
 
 ---
 
-## Origens Futuras
+## Origens
 
 - Admin
-- PDV
 - Mobile
 - B2B
-- API
+
+---
+
+## Integração com ERP
+
+O ERP continua responsável por:
+
+- faturamento
+- financeiro
+- estoque oficial
+- emissão fiscal
+- entrega
+
+O OrderBox apenas envia os pedidos para processamento.
 
 ---
 
@@ -112,3 +143,5 @@ Possíveis recursos:
 - aprovação financeira
 - assinatura digital
 - workflow personalizado
+- integração ERP
+- acompanhamento do status no ERP
