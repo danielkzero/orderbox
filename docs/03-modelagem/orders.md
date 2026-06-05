@@ -17,6 +17,7 @@ Todo pedido pertence a uma Company.
 | id | bigint | Sim | Identificador único |
 | company_id | bigint | Sim | Empresa proprietária |
 | customer_id | bigint | Sim | Cliente |
+| sales_representative_id | bigint | Sim | Representante |
 | user_id | bigint | Sim | Usuário responsável |
 | price_table_id | bigint | Sim | Tabela de preço utilizada |
 | order_number | varchar(50) | Sim | Número do pedido |
@@ -25,6 +26,7 @@ Todo pedido pertence a uma Company.
 | discounts | json | Não | Lista de descontos aplicados |
 | total_amount | decimal(15,2) | Sim | Valor final do pedido |
 | notes | text | Não | Observações |
+| source | varchar(50) | Sim | Origem do pedido |
 | order_date | datetime | Sim | Data do pedido |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
@@ -37,6 +39,7 @@ Order
 
 - N:1 Company
 - N:1 Customer
+- N:1 SalesRepresentative
 - N:1 User
 - N:1 PriceTable
 - 1:N OrderItems
@@ -68,6 +71,24 @@ Permissões:
 - visualizar
 
 Após o envio o pedido não pode mais ser alterado.
+
+---
+
+### Cancelled
+
+Pedido cancelado.
+
+Permissões:
+
+- visualizar
+
+Restrições:
+
+- não pode ser alterado
+- não pode ser reenviado
+- não pode voltar para Draft
+
+O cancelamento deve gerar registro em AuditLog.
 
 ---
 
