@@ -15,7 +15,7 @@ O OrderBox é uma plataforma de força de vendas responsável por conectar:
 
 de forma simples, online e offline.
 
-Toda informação operacional pertence a uma Company.
+Toda informação operacional pertence a uma Company (Empresa).
 
 Nenhuma entidade operacional poderá existir sem vínculo com uma empresa.
 
@@ -55,12 +55,12 @@ O campo `company_id` será obrigatório em todas as entidades de negócio.
 
 ### Mobile
 
-- Devices
-- SyncLogs
+- Devices (Dispositivos)
+- SyncLogs (Registro/Histórico de sincronização)
 
 ### Auditoria
 
-- AuditLogs
+- AuditLogs (Registro/Histórico de auditoria)
 
 ---
 
@@ -98,6 +98,7 @@ ERP
 ### SalesRepresentative
 
 - 1:N CustomerRepresentatives
+- 1:N Orders
 
 ### Product
 
