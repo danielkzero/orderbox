@@ -57,6 +57,20 @@ Permitir autenticação do usuário.
 
 ---
 
+## Escopo do Representante
+
+O aplicativo mobile é focado na operação do representante comercial.
+
+Por padrão o usuário visualizará apenas:
+
+- clientes vinculados
+- pedidos vinculados
+- informações da própria carteira
+
+Produtos, categorias, marcas e tabelas de preço são compartilhados pela empresa.
+
+---
+
 ## Tela: Dashboard
 
 ### Objetivo
@@ -82,7 +96,7 @@ Apresentar informações rápidas para o representante.
 
 ### Objetivo
 
-Listar clientes disponíveis para o representante.
+Listar apenas os clientes vinculados ao representante.
 
 ### Filtros
 
@@ -95,6 +109,7 @@ Listar clientes disponíveis para o representante.
 - Visualizar cliente
 - Criar cliente
 - Editar cliente
+- Criar pedido
 
 ---
 
@@ -116,6 +131,78 @@ Visualizar informações do cliente.
 
 - Criar pedido
 - Editar cliente
+
+---
+
+## Tela: Novo Cliente
+
+### Objetivo
+
+Permitir o cadastro de novos clientes diretamente pelo aplicativo.
+
+### Informações
+
+#### Dados Básicos
+
+- Razão social
+- Nome fantasia
+- Documento
+- Inscrição estadual
+- Telefone
+- E-mail
+
+#### Endereço
+
+- CEP
+- Logradouro
+- Número
+- Complemento
+- Bairro
+- Cidade
+- Estado
+
+#### Contato Principal
+
+- Nome
+- Telefone
+- E-mail
+
+### Ações
+
+- Salvar
+- Salvar e Criar Pedido
+
+### Regras
+
+O cliente será automaticamente vinculado ao representante responsável pelo cadastro.
+
+O cadastro poderá ser realizado offline.
+
+A sincronização ocorrerá posteriormente.
+
+---
+
+## Tela: Histórico do Cliente
+
+### Objetivo
+
+Apresentar informações comerciais do cliente.
+
+### Informações
+
+- Última compra
+- Último pedido
+- Quantidade de pedidos
+- Valor total comprado
+
+### Produtos Mais Comprados
+
+- Produto
+- Quantidade
+
+### Ações
+
+- Criar pedido
 
 ---
 
@@ -169,7 +256,7 @@ Visualizar detalhes do produto.
 
 ### Objetivo
 
-Listar pedidos do usuário.
+Listar apenas os pedidos criados pelo representante (usuário).
 
 ### Filtros
 
