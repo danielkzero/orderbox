@@ -189,9 +189,9 @@ Exemplo:
 
 | Tipo | Origem | Tabela | Prioridade |
 |--------|--------|--------|--------|
-| Localidade | Barra Mansa/RJ | Interior RJ | 1 |
-| Cliente | Distribuidora Múltipla | Atacado Especial Interior RJ | 2 |
-| Representante | Matias Oliveira | Especial RJ | 3 |
+| Localidade | Barra Mansa/RJ (local_id) | Interior RJ | 1 |
+| Cliente | Distribuidora Múltipla (customer_id) | Atacado Especial Interior RJ | 2 |
+| Representante | Matias Oliveira (representantive_id) | Especial RJ | 3 |
 
 Resultado:
 
