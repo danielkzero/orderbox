@@ -24,6 +24,12 @@ O painel administrativo será utilizado por:
 - Usuários
 - Auditoria
 
+### Implementação Atual
+
+O painel administrativo utiliza TailAdmin Laravel como base visual, preservando Blade, Alpine.js e Tailwind CSS.
+
+Os módulos do menu consultam exclusivamente os dados da Company autenticada. Usuários são gerenciados apenas por Admin; auditoria pode ser consultada por Admin e Manager; segurança e 2FA são gerenciados pelo próprio usuário.
+
 ---
 
 ## Tela: Dashboard

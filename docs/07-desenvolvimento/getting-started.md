@@ -18,6 +18,22 @@ A aplicação Laravel está em:
 apps/web
 ```
 
+### Interface Administrativa
+
+O painel utiliza componentes e padrões visuais do [TailAdmin Laravel](https://github.com/TailAdmin/tailadmin-laravel), distribuído sob licença MIT.
+
+A integração mantém as regras e autenticação próprias do OrderBox e inclui:
+
+- layout responsivo com sidebar;
+- modo claro e escuro;
+- menus filtrados por perfil;
+- módulos operacionais para clientes, produtos, preços, representantes e pedidos;
+- cadastros de categorias, marcas e unidades;
+- gestão de usuários;
+- ativação e desativação de 2FA;
+- consulta e revogação de sessões;
+- auditoria de autenticação e alterações administrativas.
+
 Instalação:
 
 ```text
