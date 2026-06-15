@@ -1,0 +1,20 @@
+<?php
+
+namespace App\Http\Middleware;
+
+use App\Support\CompanyContext;
+use Closure;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
+
+class BindCompanyContext
+{
+    public function __construct(private readonly CompanyContext $context) {}
+
+    public function handle(Request $request, Closure $next): Response
+    {
+        $this->context->set($request->user()->company_id);
+
+        return $next($request);
+    }
+}
