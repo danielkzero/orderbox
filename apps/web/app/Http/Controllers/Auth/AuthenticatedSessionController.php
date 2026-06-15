@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationChallengeService;
 use App\Services\Authentication\AuthenticationSessionService;
 use Illuminate\Http\RedirectResponse;
@@ -29,6 +30,7 @@ class AuthenticatedSessionController extends Controller
         LoginRequest $request,
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
+        AuditService $audit,
     ): RedirectResponse {
         $user = $request->authenticateUser();
 
@@ -50,6 +52,7 @@ class AuthenticatedSessionController extends Controller
             $request->ip(),
             $request->userAgent(),
         );
+        $audit->record($user, 'Login', $user, null, ['channel' => 'Web']);
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -57,8 +60,9 @@ class AuthenticatedSessionController extends Controller
     /**
      * Destroy an authenticated session.
      */
-    public function destroy(Request $request, AuthenticationSessionService $sessions): RedirectResponse
+    public function destroy(Request $request, AuthenticationSessionService $sessions, AuditService $audit): RedirectResponse
     {
+        $audit->record($request->user(), 'Logout', $request->user(), ['channel' => 'Web'], null);
         $sessions->revokeWeb($request->user());
         Auth::guard('web')->logout();
 

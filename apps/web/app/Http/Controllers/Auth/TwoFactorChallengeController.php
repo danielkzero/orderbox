@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationChallengeService;
 use App\Services\Authentication\AuthenticationSessionService;
 use App\Services\Authentication\TwoFactorService;
@@ -29,6 +30,7 @@ class TwoFactorChallengeController extends Controller
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
         TwoFactorService $twoFactor,
+        AuditService $audit,
     ): RedirectResponse {
         $request->validate(['code' => ['required', 'string', 'size:6']]);
 
@@ -53,6 +55,7 @@ class TwoFactorChallengeController extends Controller
             $request->userAgent(),
         );
         $challenges->consume($challenge);
+        $audit->record($challenge->user, 'Login', $challenge->user, null, ['channel' => 'Web', 'two_factor' => true]);
         $request->session()->forget('authentication_challenge_id');
 
         return redirect()->intended(route('dashboard', absolute: false));

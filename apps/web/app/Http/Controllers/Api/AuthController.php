@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationChallengeService;
 use App\Services\Authentication\AuthenticationSessionService;
 use App\Services\Authentication\CredentialAuthenticator;
@@ -18,6 +19,7 @@ class AuthController extends Controller
         CredentialAuthenticator $credentials,
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
+        AuditService $audit,
     ): JsonResponse {
         $validated = $request->validate([
             'email' => ['required', 'email'],
@@ -43,7 +45,10 @@ class AuthController extends Controller
             ], 202);
         }
 
-        return $this->tokenResponse($sessions->activateMobile($user, $request->ip(), $request->userAgent())->plainTextToken);
+        $token = $sessions->activateMobile($user, $request->ip(), $request->userAgent());
+        $audit->record($user, 'Login', $user, null, ['channel' => 'Mobile']);
+
+        return $this->tokenResponse($token->plainTextToken);
     }
 
     public function confirmTwoFactor(
@@ -51,6 +56,7 @@ class AuthController extends Controller
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
         TwoFactorService $twoFactor,
+        AuditService $audit,
     ): JsonResponse {
         $validated = $request->validate([
             'challenge_id' => ['required', 'uuid'],
@@ -65,6 +71,7 @@ class AuthController extends Controller
 
         $token = $sessions->activateMobile($challenge->user, $request->ip(), $request->userAgent());
         $challenges->consume($challenge);
+        $audit->record($challenge->user, 'Login', $challenge->user, null, ['channel' => 'Mobile', 'two_factor' => true]);
 
         return $this->tokenResponse($token->plainTextToken);
     }
@@ -77,8 +84,9 @@ class AuthController extends Controller
         ]);
     }
 
-    public function logout(Request $request, AuthenticationSessionService $sessions): JsonResponse
+    public function logout(Request $request, AuthenticationSessionService $sessions, AuditService $audit): JsonResponse
     {
+        $audit->record($request->user(), 'Logout', $request->user(), ['channel' => 'Mobile'], null);
         $sessions->revokeMobile($request->user(), $request->user()->currentAccessToken()->getKey());
 
         return response()->json(['success' => true, 'data' => null]);

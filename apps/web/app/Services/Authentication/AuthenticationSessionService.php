@@ -109,6 +109,24 @@ class AuthenticationSessionService
         });
     }
 
+    public function revokeSession(AuthenticationSession $session): void
+    {
+        DB::transaction(function () use ($session): void {
+            if ($session->web_session_id) {
+                DB::table('sessions')->where('id', $session->web_session_id)->delete();
+            }
+
+            if ($session->personal_access_token_id) {
+                DB::table('personal_access_tokens')->where('id', $session->personal_access_token_id)->delete();
+            }
+
+            $session->forceFill([
+                'active_slot' => null,
+                'revoked_at' => now(),
+            ])->save();
+        });
+    }
+
     private function revokeActive(User $user, string $channel): ?AuthenticationSession
     {
         $session = AuthenticationSession::query()
