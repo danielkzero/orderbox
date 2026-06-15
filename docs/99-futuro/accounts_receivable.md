@@ -4,7 +4,7 @@
 
 Representa os títulos financeiros gerados para recebimento.
 
-Normalmente são originados a partir de pedidos faturados.
+Normalmente são importados do ERP ou gerados após a confirmação de faturamento no ERP.
 
 Todo título pertence a uma Company.
 
@@ -68,7 +68,7 @@ Cancelado.
 
 ### Geração
 
-Normalmente será criado após faturamento do pedido.
+O título somente poderá ser criado após a confirmação de faturamento pelo ERP.
 
 ### Baixa Automática
 

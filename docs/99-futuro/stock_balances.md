@@ -6,7 +6,7 @@ Representa o saldo atual de estoque por produto e depósito.
 
 Esta tabela existe apenas para otimização de consultas.
 
-O saldo oficial é derivado das movimentações de estoque.
+Caso o módulo próprio de estoque seja adotado, seu saldo será derivado das movimentações registradas no OrderBox. Até lá, o ERP permanece como fonte oficial.
 
 ---
 
@@ -44,13 +44,13 @@ Deve existir apenas um saldo por:
 
 O saldo deve ser atualizado automaticamente após cada movimentação.
 
-### Fonte Oficial
+### Fonte do Módulo
 
-A fonte oficial sempre será:
+Dentro do módulo próprio de estoque, a fonte para reconstrução dos saldos será:
 
 StockMovements
 
-Esta tabela serve apenas para performance.
+StockBalances serve apenas para performance.
 
 ---
 

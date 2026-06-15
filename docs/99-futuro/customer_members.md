@@ -63,3 +63,5 @@ Um usuário poderá futuramente participar de mais de um cliente.
 ### Acesso
 
 As permissões do portal B2B serão controladas através deste vínculo.
+
+O usuário e o cliente vinculados devem pertencer à mesma Company.

@@ -90,6 +90,8 @@ Movimentações nunca podem ser removidas.
 
 Toda movimentação deve possuir origem quando possível.
 
+Uma transferência entre depósitos deve gerar uma saída no depósito de origem e uma entrada no depósito de destino, ambas vinculadas pela mesma referência.
+
 ---
 
 ## Exemplos
