@@ -20,6 +20,18 @@ Cada entrega deve possuir:
 
 ---
 
+## Decisões Consolidadas
+
+- aplicação principal em Laravel 12 com Blade;
+- API Mobile autenticada com Laravel Sanctum;
+- aplicativo Mobile em Ionic;
+- banco de dados MariaDB;
+- sessão Web armazenada em banco;
+- uma sessão ativa por usuário e canal;
+- 2FA por código TOTP antes da substituição de sessão.
+
+---
+
 ## Etapa 0 - Fundação
 
 ### Entregas
@@ -43,6 +55,8 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 
 - Companies e Users;
 - login, logout e perfil;
+- sessão única por canal Web e Mobile;
+- confirmação por 2FA antes da substituição de sessão;
 - perfis Admin, Manager e SalesRepresentative;
 - filtro obrigatório por Company;
 - AuditLog de login e alterações administrativas.
@@ -179,8 +193,6 @@ Catálogo e Clientes podem avançar em paralelo após a fundação multiempresa.
 
 Antes da implementação, confirmar:
 
-- tecnologia e provedor do banco relacional;
-- estratégia do Bearer Token e revogação;
 - formato final da numeração de pedidos;
 - se Manager pode cancelar pedidos;
 - se representante pode alterar qualquer cliente da carteira ou apenas clientes criados por ele;

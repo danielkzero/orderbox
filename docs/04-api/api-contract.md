@@ -2,7 +2,9 @@
 
 ## Objetivo
 
-Definir o contrato HTTP mínimo para implementação do Admin e do Mobile.
+Definir o contrato HTTP mínimo para implementação do Mobile e de integrações futuras.
+
+O painel Admin utiliza Blade e sessão Web Laravel. As regras de negócio são compartilhadas com a API, mas suas rotas de interface não fazem parte deste contrato.
 
 ---
 
@@ -103,10 +105,13 @@ Resposta:
 | Método | Rota | Uso |
 |---------|---------|---------|
 | POST | `/auth/login` | Autenticar usuário |
+| POST | `/auth/2fa/confirm` | Confirmar login pendente protegido por 2FA |
 | POST | `/auth/logout` | Revogar token atual |
 | GET | `/auth/me` | Retornar usuário, Company e perfil |
 
 O login recebe `email` e `password`. Na V1, o e-mail de acesso é globalmente único.
+
+Cada usuário mantém no máximo uma autenticação Web e uma Mobile ativas. Um novo login concluído revoga a sessão anterior do mesmo canal. Quando 2FA estiver ativo, a revogação ocorre somente após a confirmação do segundo fator.
 
 ---
 

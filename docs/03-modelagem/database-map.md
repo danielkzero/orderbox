@@ -29,6 +29,8 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 
 - Companies
 - Users
+- AuthenticationSessions
+- AuthenticationChallenges
 
 ### Cadastros
 
@@ -98,6 +100,8 @@ ERP
 - 1:N SyncLogs
 - 1:N SyncOperations
 - 1:N SyncChanges
+- 1:N AuthenticationSessions
+- 1:N AuthenticationChallenges
 
 ### Customer
 
@@ -209,6 +213,8 @@ Evitar remoção física de registros.
 
 - Companies
 - Users
+- AuthenticationSessions
+- AuthenticationChallenges
 
 - Customers
 - CustomerAddresses

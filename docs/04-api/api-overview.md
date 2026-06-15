@@ -4,19 +4,18 @@
 
 A API do OrderBox será responsável por atender:
 
-- Admin
 - Mobile
 - Integrações futuras
 
-Todas as aplicações utilizarão a mesma API.
+O painel Admin é renderizado pelo Laravel com Blade e utiliza sessão Web. Admin e API compartilham as mesmas regras de negócio e o mesmo banco, mas possuem mecanismos de autenticação distintos.
 
 ---
 
 ## Autenticação
 
-A autenticação será realizada através de:
+A API utiliza Bearer Token emitido pelo Laravel Sanctum.
 
-Bearer Token
+O painel Admin utiliza sessão Web Laravel e não consome Bearer Token para navegação autenticada.
 
 ---
 

@@ -140,6 +140,9 @@ Toda alteração crítica deve gerar auditoria.
 Devem gerar auditoria:
 
 - Login
+- Logout
+- Substituição de sessão
+- Revogação administrativa de sessão
 - Cadastro de cliente
 - Cadastro de produto
 - Alteração de preços

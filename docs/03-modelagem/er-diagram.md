@@ -7,6 +7,14 @@ erDiagram
 
     COMPANIES ||--o{ USERS : possui
 
+    COMPANIES ||--o{ AUTHENTICATION_SESSIONS : possui
+
+    USERS ||--o{ AUTHENTICATION_SESSIONS : autentica
+
+    COMPANIES ||--o{ AUTHENTICATION_CHALLENGES : possui
+
+    USERS ||--o{ AUTHENTICATION_CHALLENGES : confirma
+
     COMPANIES ||--o{ CUSTOMERS : possui
 
     CUSTOMERS ||--o{ CUSTOMER_ADDRESSES : possui

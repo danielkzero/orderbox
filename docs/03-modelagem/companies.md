@@ -44,6 +44,8 @@ Company
 - 1:N SyncLogs
 - 1:N SyncOperations
 - 1:N SyncChanges
+- 1:N AuthenticationSessions
+- 1:N AuthenticationChallenges
 
 ---
 

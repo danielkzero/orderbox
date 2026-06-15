@@ -10,7 +10,7 @@ Os documentos individuais de cada entidade continuam sendo a referência funcion
 
 ## Premissas
 
-- Banco de dados relacional com suporte a transações, chaves estrangeiras, índices compostos e JSON.
+- MariaDB com suporte a transações, chaves estrangeiras, índices compostos e JSON.
 - Identificadores internos do servidor usam `bigint`.
 - Referências criadas no mobile usam UUID.
 - Datas são persistidas em UTC e expostas pela API no formato ISO 8601.
@@ -42,6 +42,8 @@ Possuem `company_id` obrigatório:
 - SyncOperations
 - SyncChanges
 - AuditLogs
+- AuthenticationSessions
+- AuthenticationChallenges
 
 ### Entidades Filhas
 
@@ -83,6 +85,8 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 |---------|---------|
 | Companies | `document` único; `active` obrigatório |
 | Users | `email` globalmente único na V1; `role` em `Admin`, `Manager`, `SalesRepresentative` |
+| AuthenticationSessions | `(user_id, channel, active_slot)` único; `channel` em `Web`, `Mobile`; tokens e chaves de validação armazenados como hash |
+| AuthenticationChallenges | desafio pendente vinculado a User e Company; `channel` em `Web`, `Mobile`; expiração obrigatória |
 | Customers | `(company_id, document)` único; `(company_id, client_reference)` único quando informado; `version >= 1` |
 | CustomerAddresses | FK obrigatória para Customer; somente um endereço padrão por cliente e tipo |
 | CustomerContacts | FK obrigatória para Customer; somente um contato principal ativo por cliente |
@@ -115,6 +119,8 @@ Quando `minimum_quantity` estiver ausente em ProductPrices, a migration deve nor
 | PriceTable → ProductPrices e Orders | Restrict |
 | Order → OrderItems | Cascade apenas quando o Order estiver em Draft |
 | User → AuditLogs, Orders e Devices | Restrict |
+| User → AuthenticationSessions | Cascade |
+| User → AuthenticationChallenges | Cascade |
 | Device → SyncLogs e SyncOperations | Restrict |
 
 Regras condicionais, como cascade somente para Draft, devem ser aplicadas pela camada de serviço dentro de transação.
@@ -133,6 +139,8 @@ Além de PKs, FKs e constraints únicas:
 | ProductPrices | `(price_table_id, product_id, minimum_quantity)` |
 | Orders | `(company_id, status, order_date)`, `(sales_representative_id, order_date)`, `(customer_id, order_date)`, `(company_id, updated_at)` |
 | AuditLogs | `(company_id, created_at)`, `(company_id, entity_type, entity_id)` |
+| AuthenticationSessions | `(company_id, user_id, channel)`, `(last_activity_at)`, `(revoked_at)` |
+| AuthenticationChallenges | `(user_id, channel, expires_at)` |
 | SyncLogs | `(company_id, device_id, started_at)` |
 | SyncOperations | `(company_id, device_id, created_at)` |
 | SyncChanges | `(company_id, sequence)` |
@@ -156,10 +164,11 @@ Devem ocorrer em uma única transação:
 
 1. Companies
 2. Users
-3. Customers, CustomerAddresses e CustomerContacts
-4. SalesRepresentatives e CustomerRepresentatives
-5. Categories, Brands e Units
-6. Products, PriceTables e ProductPrices
-7. Orders e OrderItems
-8. Devices, SyncLogs, SyncOperations e SyncChanges
-9. AuditLogs
+3. AuthenticationSessions e AuthenticationChallenges
+4. Customers, CustomerAddresses e CustomerContacts
+5. SalesRepresentatives e CustomerRepresentatives
+6. Categories, Brands e Units
+7. Products, PriceTables e ProductPrices
+8. Orders e OrderItems
+9. Devices, SyncLogs, SyncOperations e SyncChanges
+10. AuditLogs

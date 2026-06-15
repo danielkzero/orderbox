@@ -21,6 +21,8 @@ Todo usuário pertence obrigatoriamente a uma Company.
 | password | varchar(255) | Sim | Senha criptografada |
 | role | varchar(50) | Sim | Perfil do usuário |
 | active | boolean | Sim | Usuário ativo |
+| two_factor_enabled | boolean | Sim | Segundo fator ativo |
+| two_factor_secret | text | Não | Segredo do segundo fator armazenado com criptografia |
 | last_login_at | timestamp | Não | Último acesso |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
@@ -35,6 +37,8 @@ User
 - 1:N Orders
 - 1:N AuditLogs
 - 1:N Devices
+- 1:N AuthenticationSessions
+- 1:N AuthenticationChallenges
 - 1:0..1 SalesRepresentative
 
 ---
@@ -74,6 +78,10 @@ O login será realizado através de:
 - senha
 
 Na V1, o e-mail de acesso deve ser globalmente único para permitir autenticação sem seleção prévia da Company.
+
+O usuário pode manter uma sessão Web e uma sessão Mobile simultâneas, mas nunca duas sessões ativas no mesmo canal.
+
+Consulte [Autenticação e sessão única](../02-regras-negocio/authentication.md).
 
 ### Usuário Inativo
 
