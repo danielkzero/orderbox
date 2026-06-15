@@ -74,4 +74,21 @@ class AdminPanelTest extends TestCase
         $this->actingAs($manager)->get('/users')->assertForbidden();
         $this->actingAs($manager)->get('/audit-logs')->assertOk();
     }
+
+    public function test_audit_log_page_renders_existing_actions(): void
+    {
+        AuditLog::query()->create([
+            'company_id' => $this->admin->company_id,
+            'user_id' => $this->admin->id,
+            'action' => 'TemplateInstalled',
+            'entity_type' => 'User',
+            'entity_id' => $this->admin->id,
+            'new_values' => ['template' => 'TailAdmin Laravel'],
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get('/audit-logs')
+            ->assertOk()
+            ->assertSee('TemplateInstalled');
+    }
 }

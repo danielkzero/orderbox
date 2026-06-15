@@ -18,7 +18,7 @@
                         <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
                             @foreach ($columns as $resolver)
                                 <td class="whitespace-nowrap px-5 py-4 text-gray-700 dark:text-gray-300">
-                                    @php $value = is_callable($resolver) ? $resolver($item) : data_get($item, $resolver); @endphp
+                                    @php $value = $resolver instanceof \Closure ? $resolver($item) : data_get($item, $resolver); @endphp
                                     {!! $value instanceof \Illuminate\Contracts\View\View ? $value->render() : e($value ?? '-') !!}
                                 </td>
                             @endforeach
