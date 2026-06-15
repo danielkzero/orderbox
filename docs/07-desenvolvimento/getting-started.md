@@ -56,6 +56,20 @@ O seed administrativo só é executado quando `ADMIN_EMAIL` e `ADMIN_PASSWORD` e
 composer run dev
 ```
 
+O comando inicia o servidor Laravel, o processamento da fila e o Vite.
+
+Em Linux ou macOS, os logs podem ser acompanhados em outro terminal:
+
+```text
+composer run dev:logs
+```
+
+No Windows, Laravel Pail não funciona porque depende da extensão `pcntl`. Utilize o PowerShell:
+
+```powershell
+Get-Content storage/logs/laravel.log -Wait
+```
+
 Endpoints operacionais:
 
 - `GET /up`: health check do Laravel;
