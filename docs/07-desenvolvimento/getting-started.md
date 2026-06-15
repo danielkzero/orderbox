@@ -48,6 +48,16 @@ php artisan db:seed
 
 O seed administrativo só é executado quando `ADMIN_EMAIL` e `ADMIN_PASSWORD` estiverem definidos no `.env`.
 
+### Dados de Demonstração
+
+Após criar o administrador, o ambiente local pode ser preenchido com a empresa `hydradigital` e dados fictícios:
+
+```text
+php artisan db:seed --class=HydradigitalDemoSeeder
+```
+
+O seeder é idempotente e cria clientes, representantes, catálogo, tabelas de preço e pedidos. As contas fictícias usam a senha `password`; a senha do administrador não é alterada.
+
 ---
 
 ## Execução
