@@ -4,7 +4,7 @@
 
 Representa um pedido de venda realizado por um cliente.
 
-Os pedidos podem ser originados através do painel administrativo, portal B2B, aplicativo mobile ou integrações externas.
+Na V1, os pedidos podem ser originados pelo painel administrativo ou pelo aplicativo mobile.
 
 Todo pedido pertence a uma Company.
 
@@ -106,6 +106,10 @@ Somente pedidos em Draft podem ser alterados.
 
 Somente pedidos em Draft podem ser removidos.
 
+### Cancelamento
+
+Somente pedidos em Sent podem ser cancelados.
+
 ### Auditoria
 
 Toda alteração relevante deve gerar registro em AuditLog.
@@ -137,7 +141,6 @@ Exemplo:
 
 - Admin
 - Mobile
-- B2B
 
 ---
 
@@ -166,3 +169,5 @@ Possíveis recursos:
 - workflow personalizado
 - integração ERP
 - acompanhamento do status no ERP
+- criação pelo Portal B2B
+- criação por integrações externas

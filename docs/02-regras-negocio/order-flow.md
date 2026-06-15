@@ -18,7 +18,6 @@ Um pedido pode ser criado por:
 
 - Admin
 - Mobile
-- B2B
 
 ---
 
@@ -29,6 +28,10 @@ Draft (Rascunho)
 ↓
 
 Sent (Enviado)
+
+Opcionalmente, um pedido em Sent pode ser cancelado:
+
+Sent (Enviado) → Cancelled (Cancelado)
 
 ---
 
@@ -64,6 +67,24 @@ Representa um pedido entregue ao processo comercial da empresa.
 
 ---
 
+### Cancelled
+
+Pedido cancelado após o envio.
+
+Permissões:
+
+- visualizar
+
+Restrições:
+
+- não pode ser alterado;
+- não pode ser reenviado;
+- não pode voltar para Draft.
+
+O cancelamento deve gerar registro em AuditLog.
+
+---
+
 ## Regras Gerais
 
 ### Alterações
@@ -73,6 +94,10 @@ Somente pedidos em Draft podem ser alterados.
 ### Exclusão
 
 Somente pedidos em Draft podem ser removidos.
+
+### Cancelamento
+
+Somente pedidos em Sent podem ser cancelados.
 
 ### Auditoria
 
@@ -106,20 +131,6 @@ Sent
 
 ---
 
-## Fluxo B2B
-
-Cliente
-
-↓
-
-Cria Pedido
-
-↓
-
-Sent
-
----
-
 ## Integração com ERP
 
 O ERP continua responsável por:
@@ -138,8 +149,9 @@ O OrderBox apenas envia os pedidos para processamento.
 
 Possíveis evoluções:
 
-- cancelamento de pedidos
 - aprovação comercial
 - aprovação financeira
 - acompanhamento do pedido no ERP
 - integração automática com ERP
+- criação de pedidos pelo Portal B2B
+- criação de pedidos por integrações externas

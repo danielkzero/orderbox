@@ -132,18 +132,18 @@ Gerenciar tabelas de preço da empresa.
 - Nome
 - Status
 - Quantidade de produtos
-- Quantidade de clientes vinculados
 
 ### Ações
 
 - Criar tabela
 - Editar tabela
 - Vincular produtos
-- Vincular clientes
 
-### Regras
+### Regras Comerciais Futuras
 
-As tabelas de preço poderão ser vinculadas através de regras comerciais.
+As regras comerciais descritas nesta seção não fazem parte da V1.
+
+Em uma versão futura, as tabelas de preço poderão ser vinculadas através de regras comerciais.
 
 As regras serão avaliadas por prioridade.
 
@@ -191,7 +191,7 @@ Exemplo:
 |--------|--------|--------|--------|
 | Localidade | Barra Mansa/RJ (local_id) | Interior RJ | 1 |
 | Cliente | Distribuidora Múltipla (customer_id) | Atacado Especial Interior RJ | 2 |
-| Representante | Matias Oliveira (representantive_id) | Especial RJ | 3 |
+| Representante | Matias Oliveira (sales_representative_id) | Especial RJ | 3 |
 
 Resultado:
 
@@ -214,6 +214,8 @@ Em caso de empate, deverá ser utilizada a regra criada mais recentemente.
 ### Fallback
 
 Caso nenhuma regra seja encontrada, o sistema utilizará a tabela de preço padrão da empresa.
+
+Antes da implementação, essa evolução exigirá modelar as regras comerciais e a identificação da tabela padrão.
 
 ---
 
@@ -254,6 +256,8 @@ Consultar pedidos gerados pela operação.
 ### Ações
 
 - Visualizar pedido
+- Criar pedido
+- Cancelar pedido enviado
 
 ---
 

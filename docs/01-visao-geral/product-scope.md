@@ -1,6 +1,6 @@
 # OrderBox V1
 
-Objetivo:
+## Objetivo
 
 Sistema de força de vendas com operação online e offline.
 
@@ -11,7 +11,8 @@ Sistema de força de vendas com operação online e offline.
 - Tabelas de preço
 - Representantes
 - Pedidos
-- Estoque básico
+- Consulta de estoque disponível sincronizado do ERP
+- Auditoria
 
 ## Aplicações
 
@@ -25,5 +26,13 @@ Sistema de força de vendas com operação online e offline.
 - NFe
 - Metas
 - Comissões avançadas
-- Portal B2B completo
+- Portal B2B
 - Marketplace
+- Controle próprio de estoque e movimentações
+- Financeiro e contas a receber
+
+## Limites da V1
+
+O OrderBox consulta o estoque disponível recebido do ERP, mas não mantém o estoque oficial nem registra movimentações.
+
+Pedidos podem ser criados no Admin ou no Mobile. Outros canais de venda e integrações de entrada ficam para versões futuras.

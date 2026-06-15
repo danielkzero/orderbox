@@ -6,7 +6,6 @@ A API do OrderBox será responsável por atender:
 
 - Admin
 - Mobile
-- Portal B2B
 - Integrações futuras
 
 Todas as aplicações utilizarão a mesma API.
@@ -68,6 +67,10 @@ Erro:
 - Listar
 - Visualizar
 - Criar
+- Atualizar rascunho
+- Remover rascunho
+- Enviar
+- Cancelar
 
 ### Sync
 

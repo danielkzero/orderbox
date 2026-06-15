@@ -309,6 +309,9 @@ Visualizar pedido.
 ### Ações
 
 - Visualizar
+- Editar rascunho
+- Remover rascunho
+- Enviar rascunho
 
 ---
 
