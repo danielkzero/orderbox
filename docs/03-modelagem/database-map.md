@@ -57,6 +57,8 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 
 - Devices (Dispositivos)
 - SyncLogs (Registro/Histórico de sincronização)
+- SyncOperations (Operações idempotentes)
+- SyncChanges (Mudanças incrementais)
 
 ### Auditoria
 
@@ -94,6 +96,8 @@ ERP
 - 1:N AuditLogs
 - 1:N Devices
 - 1:N SyncLogs
+- 1:N SyncOperations
+- 1:N SyncChanges
 
 ### Customer
 
@@ -119,6 +123,7 @@ ERP
 ### Device
 
 - 1:N SyncLogs
+- 1:N SyncOperations
 
 ---
 
@@ -150,6 +155,12 @@ O diagrama visual completo será mantido no arquivo:
 
 ```text
 docs/03-modelagem/er-diagram.md
+```
+
+O contrato técnico para migrations, constraints e índices está em:
+
+```text
+docs/03-modelagem/database-contract.md
 ```
 
 ---
@@ -228,6 +239,8 @@ Evitar remoção física de registros.
 
 - Devices
 - SyncLogs
+- SyncOperations
+- SyncChanges
 
 ### Fase 6
 

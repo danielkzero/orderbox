@@ -32,6 +32,7 @@ Device
 - N:1 Company
 - N:1 User
 - 1:N SyncLogs
+- 1:N SyncOperations
 
 ---
 

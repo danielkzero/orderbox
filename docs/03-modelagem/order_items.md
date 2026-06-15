@@ -61,6 +61,10 @@ Alterações futuras na tabela de preços não devem afetar pedidos já criados.
 
 O item pode possuir múltiplos descontos.
 
+Descontos percentuais devem estar entre `0` e `100`. Descontos fixos devem ser maiores ou iguais a zero.
+
+O total do item nunca pode ser negativo.
+
 Exemplo:
 
 ```json

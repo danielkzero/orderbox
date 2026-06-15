@@ -16,6 +16,7 @@ Todo cliente pertence obrigatoriamente a uma Company.
 |---------|---------|---------|---------|
 | id | bigint | Sim | Identificador único |
 | company_id | bigint | Sim | Empresa proprietária |
+| client_reference | uuid | Não | Referência gerada pelo mobile |
 | corporate_name | varchar(255) | Sim | Razão social |
 | trade_name | varchar(255) | Não | Nome fantasia |
 | document | varchar(20) | Sim | CPF ou CNPJ |
@@ -24,6 +25,7 @@ Todo cliente pertence obrigatoriamente a uma Company.
 | phone | varchar(20) | Não | Telefone principal |
 | credit_limit | decimal(15,2) | Não | Limite de crédito |
 | active | boolean | Sim | Cliente ativo |
+| version | integer | Sim | Versão para controle de concorrência |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
 
@@ -67,7 +69,11 @@ Clientes inativos não podem:
 
 ### Limite de Crédito
 
-O sistema poderá bloquear novos pedidos quando o limite de crédito for excedido.
+Na V1, o limite de crédito é apenas informativo. Bloqueio financeiro depende de integração e regras futuras.
+
+### Concorrência
+
+Atualizações devem informar a versão atual do cliente. Alterações com versão desatualizada são rejeitadas.
 
 ### Exclusão
 

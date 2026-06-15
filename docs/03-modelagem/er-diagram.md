@@ -74,6 +74,14 @@ erDiagram
     COMPANIES ||--o{ SYNC_LOGS : possui
 
     DEVICES ||--o{ SYNC_LOGS : gera
+
+    COMPANIES ||--o{ SYNC_OPERATIONS : possui
+
+    DEVICES ||--o{ SYNC_OPERATIONS : envia
+
+    SYNC_LOGS ||--o{ SYNC_OPERATIONS : processa
+
+    COMPANIES ||--o{ SYNC_CHANGES : possui
 ```
 
 ---

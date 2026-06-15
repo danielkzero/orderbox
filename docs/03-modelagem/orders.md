@@ -16,6 +16,7 @@ Todo pedido pertence a uma Company.
 |---------|---------|---------|---------|
 | id | bigint | Sim | Identificador único |
 | company_id | bigint | Sim | Empresa proprietária |
+| client_reference | uuid | Não | Referência gerada pelo mobile |
 | customer_id | bigint | Sim | Cliente |
 | sales_representative_id | bigint | Sim | Representante |
 | user_id | bigint | Sim | Usuário responsável |
@@ -28,6 +29,9 @@ Todo pedido pertence a uma Company.
 | notes | text | Não | Observações |
 | source | varchar(50) | Sim | Origem do pedido |
 | order_date | datetime | Sim | Data do pedido |
+| sent_at | timestamp | Não | Data de envio |
+| cancelled_at | timestamp | Não | Data de cancelamento |
+| version | integer | Sim | Versão para controle de concorrência |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
 
@@ -98,6 +102,8 @@ O cancelamento deve gerar registro em AuditLog.
 
 O número do pedido deve ser único dentro da empresa.
 
+O servidor atribui o número quando o pedido é aceito pela API ou sincronização.
+
 ### Alteração
 
 Somente pedidos em Draft podem ser alterados.
@@ -110,6 +116,14 @@ Somente pedidos em Draft podem ser removidos.
 
 Somente pedidos em Sent podem ser cancelados.
 
+### Concorrência
+
+Atualizações de Draft devem informar a versão atual do pedido. Alterações com versão desatualizada são rejeitadas.
+
+### Tabela de Preço
+
+Na V1, a tabela de preço é selecionada explicitamente na criação do pedido.
+
 ### Auditoria
 
 Toda alteração relevante deve gerar registro em AuditLog.
@@ -117,6 +131,10 @@ Toda alteração relevante deve gerar registro em AuditLog.
 ### Descontos
 
 O pedido pode possuir múltiplos descontos.
+
+Descontos percentuais devem estar entre `0` e `100`. Descontos fixos devem ser maiores ou iguais a zero.
+
+O valor final do pedido nunca pode ser negativo.
 
 Exemplo:
 

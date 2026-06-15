@@ -42,6 +42,8 @@ Company
 - 1:N AuditLogs
 - 1:N Devices
 - 1:N SyncLogs
+- 1:N SyncOperations
+- 1:N SyncChanges
 
 ---
 

@@ -144,6 +144,7 @@ Devem gerar auditoria:
 - Cadastro de produto
 - Alteração de preços
 - Criação de pedidos
+- Envio de pedidos
 - Cancelamento de pedidos
 - Alteração de permissões
 

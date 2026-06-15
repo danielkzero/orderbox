@@ -57,7 +57,6 @@ Não pode existir dois produtos com o mesmo SKU dentro da mesma empresa.
 Produtos inativos não podem:
 
 - ser vendidos
-- aparecer no B2B
 - aparecer no aplicativo mobile
 
 ### Exclusão

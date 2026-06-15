@@ -73,6 +73,8 @@ O login será realizado através de:
 - email
 - senha
 
+Na V1, o e-mail de acesso deve ser globalmente único para permitir autenticação sem seleção prévia da Company.
+
 ### Usuário Inativo
 
 Usuários inativos não podem acessar o sistema.
