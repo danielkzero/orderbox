@@ -27,16 +27,23 @@ Sucesso:
 ```json
 {
   "success": true,
-  "data": {}
+  "data": {},
+  "meta": {}
 }
 ```
+
+`meta` será omitido quando não houver metadados adicionais.
 
 Erro:
 
 ```json
 {
   "success": false,
-  "message": "Mensagem de erro"
+  "error": {
+    "code": "validation_error",
+    "message": "Mensagem de erro",
+    "fields": {}
+  }
 }
 ```
 
@@ -94,3 +101,10 @@ Exemplo:
 /api/v1/products
 /api/v1/orders
 ```
+
+---
+
+## Contratos Detalhados
+
+- [Contrato da API V1](api-contract.md)
+- [Contrato de sincronização mobile](sync-contract.md)

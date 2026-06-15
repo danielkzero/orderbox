@@ -127,7 +127,17 @@ Pedido Registrado no Servidor
 
 ↓
 
+Draft
+
+↓
+
+Envio solicitado pelo representante
+
+↓
+
 Sent
+
+O mobile pode sincronizar um pedido como Draft e enviá-lo posteriormente.
 
 ---
 

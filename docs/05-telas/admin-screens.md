@@ -274,6 +274,7 @@ Consultar pedidos gerados pela operação.
 ### Ações
 
 - Visualizar
+- Cancelar pedido enviado
 
 ---
 

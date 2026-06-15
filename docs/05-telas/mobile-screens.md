@@ -325,10 +325,12 @@ Exibir informações da sincronização.
 
 - Última sincronização
 - Pedidos pendentes de envio
+- Operações rejeitadas
 
 ### Ações
 
 - Sincronizar agora
+- Revisar operação rejeitada
 
 ---
 
