@@ -4,7 +4,7 @@
 
 Representa os produtos comercializados pela empresa.
 
-Os produtos podem ser vendidos através do PDV, força de vendas, portal B2B e integrações externas.
+Na V1, os produtos compõem o catálogo utilizado pelo painel administrativo e pelo aplicativo mobile.
 
 Todo produto pertence a uma Company.
 
@@ -91,9 +91,9 @@ Exemplo:
 
 ---
 
-## Integrações Futuras
+## Canais Futuros
 
-Campos utilizados em integrações:
+Possíveis integrações de catálogo:
 
 - Shopee
 - Mercado Livre
@@ -109,9 +109,9 @@ Possíveis recursos:
 
 - cost_price (preço do custo)
 - weight (peso)
-- width (Largura)
-- height (Altura)
-- length (Comprimento)
+- width (largura)
+- height (altura)
+- length (comprimento)
 - múltiplas imagens
 - vídeos
 - NCM

@@ -61,7 +61,7 @@ R$ 44,90
 
 ### Preço Obrigatório
 
-Todo produto vendido deve possuir pelo menos um preço ativo.
+Todo produto vendido deve possuir pelo menos um preço cadastrado em uma tabela de preço ativa.
 
 ### Unicidade
 
@@ -69,6 +69,9 @@ Não pode existir dois registros para:
 
 - mesmo produto
 - mesma tabela de preço
+- mesma quantidade mínima
+
+Quando `minimum_quantity` não for informada, o registro representa a faixa base do produto na tabela.
 
 ### Quantidade Mínima
 

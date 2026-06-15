@@ -6,7 +6,7 @@ Representa uma empresa cliente do OrderBox.
 
 Toda informação do sistema pertence a uma empresa.
 
-O isolamento dos dados deve ser garantido através do campo `company_id` em todas as entidades de negócio.
+O isolamento dos dados deve ser garantido por `company_id` nas entidades raiz e pelo vínculo obrigatório com uma entidade raiz nas entidades filhas.
 
 ---
 
@@ -32,9 +32,16 @@ Company
 
 - 1:N Users
 - 1:N Customers
+- 1:N Categories
+- 1:N Brands
+- 1:N Units
 - 1:N Products
+- 1:N PriceTables
 - 1:N Orders
-- 1:N Warehouses
+- 1:N SalesRepresentatives
+- 1:N AuditLogs
+- 1:N Devices
+- 1:N SyncLogs
 
 ---
 
@@ -50,7 +57,7 @@ Empresas inativas não podem:
 
 - criar pedidos
 - cadastrar produtos
-- movimentar estoque
+- sincronizar dados
 
 ### Exclusão
 

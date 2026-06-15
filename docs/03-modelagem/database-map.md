@@ -15,11 +15,11 @@ O OrderBox é uma plataforma de força de vendas responsável por conectar:
 
 de forma simples, online e offline.
 
-Toda informação operacional pertence a uma Company (Empresa).
+Toda informação operacional pertence, direta ou indiretamente, a uma Company (Empresa).
 
 Nenhuma entidade operacional poderá existir sem vínculo com uma empresa.
 
-O campo `company_id` será obrigatório em todas as entidades de negócio.
+Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo por uma chave estrangeira obrigatória, evitando duplicação sem perder o isolamento multiempresa.
 
 ---
 
@@ -84,9 +84,16 @@ ERP
 
 - 1:N Users
 - 1:N Customers
+- 1:N Categories
+- 1:N Brands
+- 1:N Units
 - 1:N Products
+- 1:N PriceTables
 - 1:N Orders
 - 1:N SalesRepresentatives
+- 1:N AuditLogs
+- 1:N Devices
+- 1:N SyncLogs
 
 ### Customer
 
@@ -108,6 +115,10 @@ ERP
 ### Order
 
 - 1:N OrderItems
+
+### Device
+
+- 1:N SyncLogs
 
 ---
 
@@ -159,7 +170,7 @@ Exemplos:
 
 ### Chaves Estrangeiras
 
-Todas as tabelas seguirão o padrão:
+As chaves estrangeiras seguirão nomes em `snake_case`, por exemplo:
 
 ```text
 company_id
@@ -230,11 +241,11 @@ Funcionalidades mantidas para futuras versões:
 
 - CRM
 - Financeiro
-- Estoque avançado
+- Controle próprio de estoque e movimentações
 - Fiscal
 - NFe
 - Aprovações
 - Workflow
-- Portal B2B avançado
+- Portal B2B
 - Marketplace
 - Integrações com marketplaces

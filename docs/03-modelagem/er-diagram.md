@@ -13,23 +13,35 @@ erDiagram
 
     CUSTOMERS ||--o{ CUSTOMER_CONTACTS : possui
 
+    COMPANIES ||--o{ CATEGORIES : possui
+
+    COMPANIES ||--o{ BRANDS : possui
+
+    COMPANIES ||--o{ UNITS : possui
+
     COMPANIES ||--o{ PRODUCTS : possui
 
     PRODUCTS }o--|| CATEGORIES : pertence
 
-    PRODUCTS }o--|| BRANDS : pertence
+    PRODUCTS }o--o| BRANDS : pertence
 
     PRODUCTS }o--|| UNITS : utiliza
 
     PRODUCTS ||--o{ PRODUCT_PRICES : possui
 
+    COMPANIES ||--o{ PRICE_TABLES : possui
+
     PRICE_TABLES ||--o{ PRODUCT_PRICES : define
 
     COMPANIES ||--o{ SALES_REPRESENTATIVES : possui
 
+    USERS ||--o| SALES_REPRESENTATIVES : representa
+
     CUSTOMERS ||--o{ CUSTOMER_REPRESENTATIVES : possui
 
     SALES_REPRESENTATIVES ||--o{ CUSTOMER_REPRESENTATIVES : atende
+
+    SALES_REPRESENTATIVES ||--o{ ORDERS : atende
 
     COMPANIES ||--o{ ORDERS : possui
 
@@ -42,6 +54,10 @@ erDiagram
     ORDERS ||--o{ ORDER_ITEMS : contem
 
     PRODUCTS ||--o{ ORDER_ITEMS : vendido
+
+    COMPANIES ||--o{ AUDIT_LOGS : possui
+
+    USERS ||--o{ AUDIT_LOGS : realiza
 ```
 
 ---
@@ -51,7 +67,11 @@ erDiagram
 ```mermaid
 erDiagram
 
+    COMPANIES ||--o{ DEVICES : possui
+
     USERS ||--o{ DEVICES : utiliza
+
+    COMPANIES ||--o{ SYNC_LOGS : possui
 
     DEVICES ||--o{ SYNC_LOGS : gera
 ```
@@ -78,4 +98,8 @@ erDiagram
     ORDERS ||--o{ ACCOUNTS_RECEIVABLE : gera
 
     ACCOUNTS_RECEIVABLE ||--o{ PAYMENTS : recebe
+
+    CUSTOMERS ||--o{ CUSTOMER_MEMBERS : possui
+
+    USERS ||--o{ CUSTOMER_MEMBERS : participa
 ```

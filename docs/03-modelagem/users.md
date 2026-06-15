@@ -34,8 +34,9 @@ User
 - N:1 Company
 - 1:N Orders
 - 1:N AuditLogs
-- 1:1 SalesRepresentative
-- 1:N CustomerMembers
+- 1:N Devices
+- 1:0..1 SalesRepresentative
+
 ---
 
 ## Perfis (Role)
@@ -58,20 +59,6 @@ Pode acessar:
 - carteira de clientes
 - pedidos
 - indicadores comerciais
-
-### Stock
-
-Responsável pelo estoque.
-
-### Financial
-
-Responsável pelo financeiro.
-
-### Customer
-
-Usuário vinculado a um cliente para acesso ao portal B2B.
-
----
 
 ## Regras de Negócio
 
@@ -108,6 +95,8 @@ Em versões futuras o campo role poderá ser substituído por:
 - Permissions
 
 Permitindo permissões mais granulares.
+
+Perfis para estoque, financeiro e clientes do Portal B2B também poderão ser adicionados quando esses módulos entrarem no escopo.
 
 ---
 

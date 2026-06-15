@@ -61,7 +61,7 @@ Saída do sistema.
 
 ### Approve
 
-Aprovação.
+Aprovação. Ação reservada para fluxos futuros.
 
 ### Cancel
 
@@ -97,11 +97,11 @@ Pedido #456
 
 Status:
 
-Pending
+Draft
 
 ↓
 
-Approved
+Sent
 
 ---
 
@@ -145,8 +145,6 @@ Devem gerar auditoria:
 - Alteração de preços
 - Criação de pedidos
 - Cancelamento de pedidos
-- Movimentação de estoque
-- Recebimento financeiro
 - Alteração de permissões
 
 ---
@@ -160,3 +158,5 @@ Possíveis recursos:
 - exportação LGPD
 - monitoramento de segurança
 - alertas automáticos
+- auditoria de movimentações de estoque
+- auditoria de recebimentos financeiros

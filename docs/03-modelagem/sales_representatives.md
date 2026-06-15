@@ -4,7 +4,7 @@
 
 Representa os vendedores e representantes comerciais da empresa.
 
-Permite controlar carteira de clientes, regiões de atuação, metas e comissões.
+Permite controlar a carteira de clientes de cada representante.
 
 Todo representante está vinculado a um usuário.
 
@@ -31,11 +31,11 @@ SalesRepresentative
 - N:1 Company
 - 1:1 User
 - 1:N CustomerRepresentatives
+- 1:N Orders
 
 ---
 
 ## Regras de Negócio
-
 
 ### Código Único
 

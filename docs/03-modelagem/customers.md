@@ -4,7 +4,7 @@
 
 Representa um cliente da empresa.
 
-Clientes podem realizar compras através de vendedores, PDV ou portal B2B.
+Na V1, clientes realizam pedidos por meio de representantes ou do painel administrativo.
 
 Todo cliente pertence obrigatoriamente a uma Company.
 
@@ -36,8 +36,8 @@ Customer
 - N:1 Company
 - 1:N CustomerAddresses
 - 1:N CustomerContacts
+- 1:N CustomerRepresentatives
 - 1:N Orders
-- 1:N AccountsReceivable
 
 ---
 
@@ -64,7 +64,6 @@ Não pode existir dois clientes com o mesmo CPF ou CNPJ dentro da mesma empresa.
 Clientes inativos não podem:
 
 - criar pedidos
-- acessar o portal B2B
 
 ### Limite de Crédito
 
