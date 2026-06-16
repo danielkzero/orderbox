@@ -12,7 +12,7 @@
                     <circle cx="11" cy="11" r="7" />
                     <path d="m20 20-3-3" stroke-linecap="round" />
                 </svg>
-                <input type="search" placeholder="Search or type command..." class="h-11 flex-1 border-0 bg-transparent p-0 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-0 dark:text-white/90 dark:placeholder:text-white/30">
+                <input type="search" placeholder="Pesquisar ou digitar comando..." class="h-11 flex-1 border-0 bg-transparent p-0 text-sm text-gray-800 placeholder:text-gray-400 focus:ring-0 dark:text-white/90 dark:placeholder:text-white/30">
                 <span class="rounded-lg border border-gray-200 px-2 py-1 text-xs text-gray-500 dark:border-gray-800 dark:text-gray-400">Ctrl K</span>
             </form>
         </div>

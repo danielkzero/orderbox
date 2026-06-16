@@ -38,7 +38,7 @@
         </x-primary-button>
 
         <p class="text-center text-sm text-gray-500 dark:text-gray-400">
-            O acesso e liberado pela administracao da empresa. Solicite seu usuario ao gestor.
+            O acesso é liberado pela administração da empresa. Solicite seu usuário ao gestor.
         </p>
     </form>
 </x-guest-layout>

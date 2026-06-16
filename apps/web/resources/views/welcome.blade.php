@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Orderbox | Forca de vendas para distribuidores</title>
-    <meta name="description" content="Orderbox organiza representantes, clientes, produtos, tabelas de preco, pedidos e API em uma plataforma comercial para web e mobile.">
+    <title>Orderbox | Força de vendas para distribuidores</title>
+    <meta name="description" content="Orderbox organiza representantes, clientes, produtos, tabelas de preço, pedidos e API em uma plataforma comercial para web e APP.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800 antialiased dark:bg-gray-950 dark:text-white">
@@ -21,10 +21,10 @@
             </a>
 
             <nav class="hidden items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300 md:flex">
-                <a href="#gestao" class="hover:text-brand-500">Gestao</a>
+                <a href="#gestao" class="hover:text-brand-500">Gestão</a>
                 <a href="#vendedor" class="hover:text-brand-500">Vendedores</a>
                 <a href="#recursos" class="hover:text-brand-500">Recursos</a>
-                <a href="#seguranca" class="hover:text-brand-500">Seguranca</a>
+                <a href="#seguranca" class="hover:text-brand-500">Segurança</a>
             </nav>
 
             @auth
@@ -41,13 +41,13 @@
             <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:py-24">
                 <div>
                     <span class="inline-flex rounded-full bg-brand-50 px-4 py-2 text-xs font-medium text-brand-500 ring-1 ring-brand-500/10 dark:bg-brand-500/15 dark:text-brand-300">
-                        Plataforma comercial web + mobile
+                        Plataforma comercial web + APP
                     </span>
                     <h1 class="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
-                        Controle sua forca de vendas do cliente ao pedido.
+                        Controle sua força de vendas do cliente ao pedido.
                     </h1>
                     <p class="mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">
-                        Orderbox centraliza representantes, carteiras de clientes, catalogo, tabelas de preco, regioes, pedidos e liberacao de API em uma operacao simples para distribuidores.
+                        Orderbox centraliza representantes, carteiras de clientes, catálogo, tabelas de preço, regiões, pedidos e liberação de API em uma operação simples para distribuidores.
                     </p>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -62,15 +62,15 @@
                     <div class="mt-10 grid max-w-xl grid-cols-3 gap-4">
                         <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                             <strong class="block text-2xl text-gray-900 dark:text-white">Web</strong>
-                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">gestao administrativa</span>
+                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">gestão administrativa</span>
                         </div>
                         <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-                            <strong class="block text-2xl text-gray-900 dark:text-white">Ionic</strong>
+                            <strong class="block text-2xl text-gray-900 dark:text-white">APP</strong>
                             <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">vendas em campo</span>
                         </div>
                         <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                             <strong class="block text-2xl text-gray-900 dark:text-white">API</strong>
-                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">integracao liberada</span>
+                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">integração liberada</span>
                         </div>
                     </div>
                 </div>
@@ -85,7 +85,7 @@
                     </div>
 
                     <div class="grid gap-4 py-5 sm:grid-cols-4">
-                        @foreach ([['R$ 92k', 'Volume'], ['48', 'Pedidos'], ['126', 'Clientes'], ['3', 'Regioes']] as [$value, $label])
+                        @foreach ([['R$ 92k', 'Volume'], ['48', 'Pedidos'], ['126', 'Clientes'], ['3', 'Regiões']] as [$value, $label])
                             <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <strong class="block text-xl text-gray-900 dark:text-white">{{ $value }}</strong>
                                 <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{ $label }}</span>
@@ -110,7 +110,7 @@
                         </div>
 
                         <div class="space-y-4">
-                            @foreach ([['Pedido enviado', 'PED-00048', 'success'], ['Tabela revisada', 'Atacado SP', 'brand'], ['Sessao 2FA', 'confirmada', 'warning']] as [$title, $detail, $tone])
+                            @foreach ([['Pedido enviado', 'PED-00048', 'success'], ['Tabela revisada', 'Atacado SP', 'brand'], ['Sessão 2FA', 'confirmada', 'warning']] as [$title, $detail, $tone])
                                 <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $title }}</p>
                                     <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $detail }}</p>
@@ -126,16 +126,16 @@
             <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
                 <div class="mx-auto max-w-3xl text-center">
                     <span class="text-sm font-medium text-brand-500">Para gestores</span>
-                    <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Uma central de gestao comercial completa.</h2>
-                    <p class="mt-4 text-gray-600 dark:text-gray-400">Acompanhe resultado, carteira, representantes, regioes e pedidos em um painel unico.</p>
+                    <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Uma central de gestão comercial completa.</h2>
+                    <p class="mt-4 text-gray-600 dark:text-gray-400">Acompanhe resultado, carteira, representantes, regiões e pedidos em um painel único.</p>
                 </div>
 
                 <div class="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
                     @foreach ([
-                        ['Mais previsibilidade', 'Indicadores de pedidos, volume e desempenho por periodo.'],
-                        ['Mais controle', 'Regras de sessao, usuarios, auditoria e permissao de API.'],
-                        ['Mais assertividade', 'Clientes ligados a representantes, regioes e tabelas de preco.'],
-                        ['Mais organizacao', 'Catalogo, marcas, categorias, unidades e produtos em cadastros consistentes.'],
+                        ['Mais previsibilidade', 'Indicadores de pedidos, volume e desempenho por período.'],
+                        ['Mais controle', 'Regras de sessão, usuários, auditoria e permissão de API.'],
+                        ['Mais assertividade', 'Clientes ligados a representantes, regiões e tabelas de preço.'],
+                        ['Mais organização', 'Catálogo, marcas, categorias, unidades e produtos em cadastros consistentes.'],
                     ] as [$title, $description])
                         <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-950">
                             <div class="mb-5 flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/15">✓</div>
@@ -152,15 +152,15 @@
                 <span class="text-sm font-medium text-brand-500">Para vendedores</span>
                 <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">O apoio que o representante precisa para vender em campo.</h2>
                 <p class="mt-5 text-gray-600 dark:text-gray-400">
-                    A operacao mobile foi pensada para consulta de carteira, catalogo, tabelas e criacao de pedidos com sincronizacao controlada.
+                    A operação no APP foi pensada para consulta de carteira, catálogo, tabelas e criação de pedidos com sincronização controlada.
                 </p>
             </div>
             <div class="grid gap-4 sm:grid-cols-2">
                 @foreach ([
-                    ['Carteira de clientes', 'Acesse os clientes vinculados ao representante e sua regiao.'],
-                    ['Pedido com varios itens', 'Monte pedidos com produtos, quantidades, descontos e totais calculados.'],
-                    ['Catalogo comercial', 'Consulte produtos, marcas, unidades, estoque e tabelas ativas.'],
-                    ['Sincronizacao', 'Estrutura preparada para operacao online e evolucao offline.'],
+                    ['Carteira de clientes', 'Acesse os clientes vinculados ao representante e sua região.'],
+                    ['Pedido com vários itens', 'Monte pedidos com produtos, quantidades, descontos e totais calculados.'],
+                    ['Catálogo comercial', 'Consulte produtos, marcas, unidades, estoque e tabelas ativas.'],
+                    ['Sincronização', 'Estrutura preparada para operação online e evolução offline.'],
                 ] as [$title, $description])
                     <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                         <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
@@ -178,20 +178,20 @@
                         <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Tudo que sustenta o ciclo comercial.</h2>
                     </div>
                     <p class="max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-400">
-                        A home foi pensada como vitrine do que ja existe no painel e do que esta documentado como base da operacao.
+                        A home foi pensada como vitrine do que já existe no painel e do que está documentado como base da operação.
                     </p>
                 </div>
 
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     @foreach ([
-                        ['Clientes', 'Cadastro, documento, limite, regiao e representantes.'],
+                        ['Clientes', 'Cadastro, documento, limite, região e representantes.'],
                         ['Produtos', 'SKU, categoria, marca, unidade e disponibilidade.'],
-                        ['Tabelas de preco', 'Precos por produto e quantidade minima.'],
+                        ['Tabelas de preço', 'Preços por produto e quantidade mínima.'],
                         ['Pedidos', 'Status, origem, representante, itens e totais.'],
-                        ['Regioes', 'Organizacao comercial por UF, cidade e carteira.'],
-                        ['API', 'Clientes autorizados, segredo e rotacao controlada.'],
+                        ['Regiões', 'Organização comercial por UF, cidade e carteira.'],
+                        ['API', 'Clientes autorizados, segredo e rotação controlada.'],
                         ['Manual', 'Passo a passo operacional dentro do painel.'],
-                        ['Auditoria', 'Registro das acoes administrativas importantes.'],
+                        ['Auditoria', 'Registro das ações administrativas importantes.'],
                     ] as [$title, $description])
                         <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-950">
                             <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
@@ -206,14 +206,14 @@
             <div class="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900 lg:p-10">
                 <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
                     <div>
-                        <span class="text-sm font-medium text-brand-500">Seguranca e integracao</span>
-                        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">Autenticacao unica por canal e API liberada por cliente.</h2>
+                        <span class="text-sm font-medium text-brand-500">Segurança e integração</span>
+                        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">Autenticação única por canal e API liberada por cliente.</h2>
                         <p class="mt-5 text-gray-600 dark:text-gray-400">
-                            A mesma credencial pode ter uma sessao web e uma mobile, mas nunca duas sessoes simultaneas no mesmo tipo de acesso. Com 2FA, a invalidacao anterior exige confirmacao.
+                            A mesma credencial pode ter uma sessão web e uma sessão APP, mas nunca duas sessões simultâneas no mesmo tipo de acesso. Com 2FA, a invalidação anterior exige confirmação.
                         </p>
                     </div>
                     <div class="grid gap-4 sm:grid-cols-3">
-                        @foreach ([['Web', 'Sessao administrativa'], ['Mobile', 'Sessao de campo'], ['2FA', 'Confirmacao dupla']] as [$title, $description])
+                        @foreach ([['Web', 'Sessão administrativa'], ['APP', 'Sessão de campo'], ['2FA', 'Confirmação dupla']] as [$title, $description])
                             <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
                                 <strong class="block text-xl text-gray-900 dark:text-white">{{ $title }}</strong>
                                 <span class="mt-2 block text-sm text-gray-500 dark:text-gray-400">{{ $description }}</span>
@@ -241,8 +241,8 @@
 
     <footer class="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-            <span>Orderbox | Forca de vendas conectada</span>
-            <span>Design simples baseado no padrao TailAdmin.</span>
+            <span>Orderbox | Força de vendas conectada</span>
+            <span>Design simples baseado no padrão TailAdmin.</span>
         </div>
     </footer>
 </body>

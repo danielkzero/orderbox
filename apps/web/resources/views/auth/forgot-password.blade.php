@@ -14,7 +14,7 @@
         </div>
 
         <x-primary-button class="w-full justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm normal-case tracking-normal hover:bg-brand-600 focus:bg-brand-600 active:bg-brand-700">
-            Enviar link de redefinicao
+            Enviar link de redefinição
         </x-primary-button>
 
         <p class="text-center text-sm text-gray-500 dark:text-gray-400">

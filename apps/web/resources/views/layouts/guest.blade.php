@@ -25,7 +25,7 @@
                         <span class="flex size-10 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                             <x-application-logo class="size-6 fill-current text-brand-500" />
                         </span>
-                        <span>Voltar para o inicio</span>
+                        <span>Voltar para o início</span>
                     </a>
 
                     <div class="mb-8">
@@ -58,10 +58,10 @@
                     </div>
 
                     <div class="mt-16 max-w-xl">
-                        <p class="text-sm font-medium uppercase tracking-[0.28em] text-brand-200">Forca de vendas</p>
-                        <h2 class="mt-5 text-4xl font-semibold leading-tight">Autenticacao segura para web, mobile e API.</h2>
+                        <p class="text-sm font-medium uppercase tracking-[0.28em] text-brand-200">Força de vendas</p>
+                        <h2 class="mt-5 text-4xl font-semibold leading-tight">Autenticação segura para web, APP e API.</h2>
                         <p class="mt-5 text-base leading-7 text-gray-300">
-                            Controle sessao unica por canal, 2FA, acesso administrativo e operacao comercial em um fluxo consistente para a Hydradigital.
+                            Controle sessão única por canal, 2FA, acesso administrativo e operação comercial em um fluxo consistente para a Hydradigital.
                         </p>
                     </div>
                 </div>
@@ -69,7 +69,7 @@
                 <div class="relative z-10 grid gap-4">
                     <div class="rounded-3xl border border-white/10 bg-white/10 p-5 backdrop-blur">
                         <div class="flex items-center justify-between">
-                            <span class="text-sm text-gray-300">Sessao web</span>
+                            <span class="text-sm text-gray-300">Sessão web</span>
                             <span class="rounded-full bg-success-500/20 px-3 py-1 text-xs font-medium text-success-300">Protegida</span>
                         </div>
                         <div class="mt-5 h-2 rounded-full bg-white/10">
@@ -79,7 +79,7 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
                             <p class="text-2xl font-semibold">2FA</p>
-                            <p class="mt-1 text-sm text-gray-300">Dupla confirmacao</p>
+                            <p class="mt-1 text-sm text-gray-300">Dupla confirmação</p>
                         </div>
                         <div class="rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur">
                             <p class="text-2xl font-semibold">API</p>

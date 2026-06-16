@@ -1,6 +1,6 @@
 <x-guest-layout
-    title="Verificacao em duas etapas"
-    subtitle="Informe o codigo de seguranca para confirmar esta autenticacao e invalidar a sessao anterior neste mesmo canal."
+    title="Verificação em duas etapas"
+    subtitle="Informe o código de segurança para confirmar esta autenticação e invalidar a sessão anterior neste mesmo canal."
 >
     <form method="POST" action="{{ route('auth.2fa.store') }}" class="space-y-6" x-data="{
         code: '',
@@ -17,7 +17,7 @@
         <input type="hidden" name="code" x-model="code">
 
         <div>
-            <x-input-label value="Digite os 6 digitos do codigo" />
+            <x-input-label value="Digite os 6 dígitos do código" />
             <div class="mt-3 grid grid-cols-6 gap-3">
                 @for ($i = 0; $i < 6; $i++)
                     <input
@@ -36,7 +36,7 @@
         </div>
 
         <div class="rounded-xl border border-warning-200 bg-warning-50 px-4 py-3 text-sm text-warning-700 dark:border-warning-500/20 dark:bg-warning-500/10 dark:text-warning-300">
-            Como o usuario tem 2FA ativo, a sessao anterior so sera invalidada depois desta confirmacao.
+            Como o usuário tem 2FA ativo, a sessão anterior só será invalidada depois desta confirmação.
         </div>
 
         <x-primary-button class="w-full justify-center rounded-lg bg-brand-500 px-4 py-3 text-sm normal-case tracking-normal hover:bg-brand-600 focus:bg-brand-600 active:bg-brand-700">

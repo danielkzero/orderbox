@@ -1,6 +1,6 @@
 <x-guest-layout
     title="Confirmar senha"
-    subtitle="Esta area exige uma confirmacao adicional antes de continuar."
+    subtitle="Esta área exige uma confirmação adicional antes de continuar."
 >
     <form method="POST" action="{{ route('password.confirm') }}" class="space-y-5">
         @csrf

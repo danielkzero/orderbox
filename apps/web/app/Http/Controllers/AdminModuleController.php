@@ -75,7 +75,7 @@ class AdminModuleController extends Controller
             'Número' => 'order_number',
             'Cliente' => fn (Order $item) => $item->customer->trade_name ?: $item->customer->corporate_name,
             'Representante' => fn (Order $item) => $item->salesRepresentative->user->name,
-            'Origem' => 'source',
+            'Origem' => fn (Order $item) => $item->source === 'Mobile' ? 'APP' : $item->source,
             'Status' => fn (Order $item) => view('components.status-badge', ['active' => $item->status !== 'Cancelled', 'label' => $item->status]),
             'Total' => fn (Order $item) => 'R$ '.number_format((float) $item->total_amount, 2, ',', '.'),
             'Ações' => fn (Order $item) => view('admin.modules.actions', ['resource' => 'orders', 'item' => $item]),

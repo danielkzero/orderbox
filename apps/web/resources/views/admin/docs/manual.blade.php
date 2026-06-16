@@ -1,10 +1,10 @@
 <x-app-layout>
-    <x-page-header title="Manual de uso" description="Fluxo basico para operar o OrderBox no painel web e no aplicativo mobile." />
+    <x-page-header title="Manual de uso" description="Fluxo básico para operar o OrderBox no painel web e no APP." />
 
     <div class="grid gap-6 lg:grid-cols-[280px_1fr]">
         <x-panel>
             <div class="space-y-2 p-5 text-sm">
-                @foreach (['primeiro-acesso' => 'Primeiro acesso', 'cadastros' => 'Cadastros', 'pedidos' => 'Pedidos', 'usuarios' => 'Usuarios e 2FA', 'api' => 'API'] as $id => $label)
+                @foreach (['primeiro-acesso' => 'Primeiro acesso', 'cadastros' => 'Cadastros', 'pedidos' => 'Pedidos', 'usuarios' => 'Usuários e 2FA', 'api' => 'API'] as $id => $label)
                     <a href="#{{ $id }}" class="block rounded-lg px-3 py-2 text-gray-600 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-800">{{ $label }}</a>
                 @endforeach
             </div>
@@ -17,8 +17,8 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Entre pelo painel web, confira a empresa no dashboard e valide se os indicadores aparecem com os dados da hydradigital.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Acesse o login web.</li>
-                        <li>Informe o e-mail e senha do usuario autorizado.</li>
-                        <li>Se o usuario tiver 2FA ativo, confirme o codigo do aplicativo autenticador.</li>
+                        <li>Informe o e-mail e senha do usuário autorizado.</li>
+                        <li>Se o usuário tiver 2FA ativo, confirme o código do aplicativo autenticador.</li>
                         <li>Revise o dashboard antes de iniciar os cadastros.</li>
                     </ol>
                 </div>
@@ -27,12 +27,12 @@
             <x-panel id="cadastros">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">2. Cadastros operacionais</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Use os menus Clientes, Produtos, Tabelas de Preco, Categorias, Marcas e Unidades para manter a base comercial.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Use os menus Clientes, Produtos, Tabelas de Preço, Categorias, Marcas e Unidades para manter a base comercial.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Clique em "Novo registro" na listagem.</li>
-                        <li>Preencha os campos obrigatorios.</li>
+                        <li>Preencha os campos obrigatórios.</li>
                         <li>Salve e confira o item na listagem.</li>
-                        <li>Quando nao quiser mais usar um item, clique em "Inativar". Isso preserva historico e auditoria.</li>
+                        <li>Quando não quiser mais usar um item, clique em "Inativar". Isso preserva histórico e auditoria.</li>
                     </ol>
                 </div>
             </x-panel>
@@ -40,32 +40,32 @@
             <x-panel id="pedidos">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">3. Pedidos e consulta</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos podem ser criados pelo painel com cliente, representante, tabela de preco e um item inicial para teste do fluxo.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos podem ser criados pelo painel com cliente, representante, tabela de preço e vários itens para teste do fluxo.</p>
                     <ul class="list-disc space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
-                        <li>Pedidos vindos do mobile entram com origem "Mobile".</li>
+                        <li>Pedidos vindos do APP entram com origem "APP".</li>
                         <li>Pedidos feitos pelo painel entram com origem "Admin".</li>
-                        <li>Use "Cancelar" para encerrar um pedido preservando historico e auditoria.</li>
+                        <li>Use "Cancelar" para encerrar um pedido preservando histórico e auditoria.</li>
                     </ul>
                 </div>
             </x-panel>
 
             <x-panel id="usuarios">
                 <div class="space-y-3 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">4. Usuarios, sessoes e 2FA</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Administradores gerenciam usuarios. Cada credencial so pode manter uma sessao web e uma sessao mobile ativa ao mesmo tempo.</p>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">4. Usuários, sessões e 2FA</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Administradores gerenciam usuários. Cada credencial só pode manter uma sessão web e uma sessão APP ativa ao mesmo tempo.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
-                        <li>Crie o usuario em Administracao, Usuarios.</li>
-                        <li>Ative 2FA em Seguranca quando a conta exigir confirmacao dupla.</li>
-                        <li>Ao ocorrer novo login no mesmo canal, a sessao anterior e invalidada.</li>
-                        <li>Com 2FA ativo, a sessao anterior so cai depois da confirmacao do codigo.</li>
+                        <li>Crie o usuário em Administração, Usuários.</li>
+                        <li>Ative 2FA em Segurança quando a conta exigir confirmação dupla.</li>
+                        <li>Ao ocorrer novo login no mesmo canal, a sessão anterior é invalidada.</li>
+                        <li>Com 2FA ativo, a sessão anterior só cai depois da confirmação do código.</li>
                     </ol>
                 </div>
             </x-panel>
 
             <x-panel id="api">
                 <div class="space-y-3 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">5. Liberacao da API</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Antes de chamar login mobile ou integracoes, crie um cliente em Liberacao API. O app deve enviar a chave e o segredo em todas as chamadas publicas de autenticacao.</p>
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white">5. Liberação da API</h2>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Antes de chamar login do APP ou integrações, crie um cliente em Liberação API. O APP deve enviar a chave e o segredo em todas as chamadas públicas de autenticação.</p>
                     <a href="{{ route('api-guide.index') }}" class="inline-flex rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-600">Abrir guia da API</a>
                 </div>
             </x-panel>

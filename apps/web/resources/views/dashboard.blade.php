@@ -1,19 +1,19 @@
 <x-app-layout>
-    <x-page-header title="Sales Dashboard" description="Track revenue, performance, and sales growth in real-time." />
+    <x-page-header title="Dashboard de vendas" description="Acompanhe receita, desempenho e crescimento comercial em tempo real." />
 
     <div class="space-y-6">
         <x-panel>
             <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-5 dark:border-gray-800 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Sales Dashboard</h2>
+                    <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Dashboard de vendas</h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $company->trade_name }}</p>
                 </div>
                 <div class="flex flex-wrap gap-3">
                     <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
                         Jun 10 - Jun 16
                     </button>
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Filter</button>
-                    <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Export</button>
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Filtrar</button>
+                    <button class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Exportar</button>
                 </div>
             </div>
 
@@ -28,7 +28,7 @@
                         <div class="flex items-start justify-between">
                             <div>
                                 <p class="text-sm font-semibold text-gray-800 dark:text-white/90">{{ $indicator['label'] }}</p>
-                                <p class="mt-1 text-xs text-success-600">+ 32% vs last month</p>
+                                <p class="mt-1 text-xs text-success-600">+ 32% vs mês anterior</p>
                             </div>
                             <span class="{{ $indicator['accent'] }}">
                                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19V5M9 19V9M14 19V3M19 19v-7" stroke-linecap="round"/></svg>
@@ -51,7 +51,7 @@
             <x-panel>
                 <div class="border-b border-gray-200 px-5 py-5 dark:border-gray-800">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Resumo de pedidos</h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pedidos por periodo operacional.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Pedidos por período operacional.</p>
                 </div>
                 <div class="grid divide-y divide-gray-200 dark:divide-gray-800 sm:grid-cols-2 sm:divide-x sm:divide-y-0">
                     <div class="p-6">
@@ -59,7 +59,7 @@
                         <p class="mt-3 text-title-sm font-semibold text-gray-800 dark:text-white/90">{{ $indicators['orders_today'] }}</p>
                     </div>
                     <div class="p-6">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Pedidos neste mes</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Pedidos neste mês</p>
                         <p class="mt-3 text-title-sm font-semibold text-gray-800 dark:text-white/90">{{ $indicators['orders_month'] }}</p>
                     </div>
                 </div>
@@ -68,10 +68,10 @@
             <x-panel>
                 <div class="border-b border-gray-200 px-5 py-5 dark:border-gray-800">
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Canais</h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Visao rapida para web e mobile.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Visão rápida para web e APP.</p>
                 </div>
                 <div class="space-y-4 p-6">
-                    @foreach ([['Web Admin', 75], ['Mobile Ionic', 58], ['API Integracao', 35]] as [$label, $value])
+                    @foreach ([['Web Admin', 75], ['APP', 58], ['API Integração', 35]] as [$label, $value])
                         <div>
                             <div class="mb-2 flex items-center justify-between text-sm">
                                 <span class="font-medium text-gray-700 dark:text-gray-300">{{ $label }}</span>
@@ -90,9 +90,9 @@
             <div class="flex items-center justify-between border-b border-gray-200 px-5 py-5 dark:border-gray-800">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Pedidos recentes</h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Ultimos pedidos da empresa autenticada.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Últimos pedidos da empresa autenticada.</p>
                 </div>
-                <a href="{{ route('orders.index') }}" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">See All</a>
+                <a href="{{ route('orders.index') }}" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Ver todos</a>
             </div>
 
             <div class="overflow-x-auto">

@@ -17,7 +17,7 @@
     <x-panel>
         <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $title }}</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Campos no padrao TailAdmin, com foco no cadastro rapido e consistente.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Campos no padrão TailAdmin, com foco no cadastro rápido e consistente.</p>
         </div>
 
         <form method="POST" action="{{ $action }}" class="space-y-6 p-6">
@@ -29,7 +29,7 @@
             @if ($resource === 'customers')
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <x-input-label for="corporate_name" value="Razao social" />
+                        <x-input-label for="corporate_name" value="Razão social" />
                         <x-text-input id="corporate_name" name="corporate_name" class="mt-1 block w-full" :value="old('corporate_name', $model->corporate_name)" required />
                     </div>
                     <div>
@@ -37,9 +37,9 @@
                         <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
                     </div>
                     <div>
-                        <x-input-label for="region_id" value="Regiao" />
+                        <x-input-label for="region_id" value="Região" />
                         <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                            <option value="">Sem regiao</option>
+                            <option value="">Sem região</option>
                             @foreach ($regions as $region)
                                 <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
                             @endforeach
@@ -58,7 +58,7 @@
                         <x-text-input id="phone" name="phone" class="mt-1 block w-full" :value="old('phone', $model->phone)" />
                     </div>
                     <div>
-                        <x-input-label for="credit_limit" value="Limite de credito" />
+                        <x-input-label for="credit_limit" value="Limite de crédito" />
                         <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
                     </div>
                     <div class="md:col-span-2">
@@ -124,11 +124,11 @@
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="available_stock" value="Estoque disponivel" />
+                        <x-input-label for="available_stock" value="Estoque disponível" />
                         <x-text-input id="available_stock" name="available_stock" type="number" step="0.001" min="0" class="mt-1 block w-full" :value="old('available_stock', $model->available_stock)" />
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="short_description" value="Descricao curta" />
+                        <x-input-label for="short_description" value="Descrição curta" />
                         <textarea id="short_description" name="short_description" rows="3" class="{{ Str::replaceFirst('h-11', 'min-h-28', $inputClass) }}">{{ old('short_description', $model->short_description) }}</textarea>
                     </div>
                 </div>
@@ -149,25 +149,25 @@
                         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
                     </div>
                     <div>
-                        <x-input-label for="region_id" value="Regiao" />
+                        <x-input-label for="region_id" value="Região" />
                         <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                            <option value="">Sem regiao especifica</option>
+                            <option value="">Sem região específica</option>
                             @foreach ($regions as $region)
                                 <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="description" value="Descricao" />
+                        <x-input-label for="description" value="Descrição" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
                         <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <div>
-                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos e precos</h3>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos e preços</h3>
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Cadastre uma ou mais faixas por produto.</p>
                             </div>
-                            <button type="button" @click="rows.push({ product_id: '', minimum_quantity: 1, price: '' })" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Adicionar preco</button>
+                            <button type="button" @click="rows.push({ product_id: '', minimum_quantity: 1, price: '' })" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Adicionar preço</button>
                         </div>
                         <div class="divide-y divide-gray-100 dark:divide-gray-800">
                             <template x-for="(row, index) in rows" :key="index">
@@ -182,11 +182,11 @@
                                         </select>
                                     </div>
                                     <div>
-                                        <x-input-label value="Qtd. minima" />
+                                        <x-input-label value="Qtd. mínima" />
                                         <input type="number" step="0.001" min="0.001" :name="`product_prices[${index}][minimum_quantity]`" x-model="row.minimum_quantity" class="{{ $inputClass }}">
                                     </div>
                                     <div>
-                                        <x-input-label value="Preco" />
+                                        <x-input-label value="Preço" />
                                         <input type="number" step="0.01" min="0" :name="`product_prices[${index}][price]`" x-model="row.price" class="{{ $inputClass }}">
                                     </div>
                                     <div class="flex items-end">
@@ -213,7 +213,7 @@
                         </select>
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="description" value="Descricao" />
+                        <x-input-label for="description" value="Descrição" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
@@ -224,14 +224,14 @@
                         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
                     </div>
                     <div>
-                        <x-input-label for="description" value="Descricao" />
+                        <x-input-label for="description" value="Descrição" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'units')
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <x-input-label for="code" value="Codigo" />
+                        <x-input-label for="code" value="Código" />
                         <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" required />
                     </div>
                     <div>
@@ -239,7 +239,7 @@
                         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="description" value="Descricao" />
+                        <x-input-label for="description" value="Descrição" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
@@ -258,14 +258,14 @@
                         <x-text-input id="city" name="city" class="mt-1 block w-full" :value="old('city', $model->city)" />
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="description" value="Descricao" />
+                        <x-input-label for="description" value="Descrição" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'representatives')
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <x-input-label for="user_id" value="Usuario" />
+                        <x-input-label for="user_id" value="Usuário" />
                         <select id="user_id" name="user_id" class="{{ $inputClass }}" required>
                             <option value="">Selecione</option>
                             @foreach ($users as $user)
@@ -274,13 +274,13 @@
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="code" value="Codigo do representante" />
+                        <x-input-label for="code" value="Código do representante" />
                         <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" required />
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="region_id" value="Regiao" />
+                        <x-input-label for="region_id" value="Região" />
                         <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                            <option value="">Sem regiao</option>
+                            <option value="">Sem região</option>
                             @foreach ($regions as $region)
                                 <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
                             @endforeach
@@ -313,7 +313,7 @@
                 }">
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <x-input-label for="order_number" value="Numero do pedido" />
+                        <x-input-label for="order_number" value="Número do pedido" />
                         <x-text-input id="order_number" name="order_number" class="mt-1 block w-full" :value="old('order_number', $model->order_number ?: 'PED-'.now()->format('YmdHis'))" required />
                     </div>
                     <div>
@@ -343,7 +343,7 @@
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="price_table_id" value="Tabela de preco" />
+                        <x-input-label for="price_table_id" value="Tabela de preço" />
                         <select id="price_table_id" name="price_table_id" class="{{ $inputClass }}" required>
                             <option value="">Selecione</option>
                             @foreach ($priceTables as $priceTable)
@@ -358,13 +358,13 @@
                     <div>
                         <x-input-label for="source" value="Origem" />
                         <select id="source" name="source" class="{{ $inputClass }}" required>
-                            @foreach (['Admin', 'Mobile'] as $source)
-                                <option value="{{ $source }}" @selected(old('source', $model->source ?: 'Admin') === $source)>{{ $source }}</option>
+                            @foreach (['Admin' => 'Admin', 'Mobile' => 'APP'] as $source => $label)
+                                <option value="{{ $source }}" @selected(old('source', $model->source ?: 'Admin') === $source)>{{ $label }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="md:col-span-2">
-                        <x-input-label for="notes" value="Observacoes" />
+                        <x-input-label for="notes" value="Observações" />
                         <textarea id="notes" name="notes" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('notes', $model->notes) }}</textarea>
                     </div>
                 </div>
@@ -376,7 +376,7 @@
                                         <th class="px-5 py-4">S. No.</th>
                                         <th class="px-5 py-4">Produto</th>
                                         <th class="px-5 py-4">Quantidade</th>
-                                        <th class="px-5 py-4">Preco unitario</th>
+                                        <th class="px-5 py-4">Preço unitário</th>
                                         <th class="px-5 py-4">Desconto</th>
                                         <th class="px-5 py-4">Total</th>
                                         <th class="px-5 py-4"></th>
@@ -409,7 +409,7 @@
                         <div class="grid gap-4 lg:grid-cols-[1fr_260px] lg:items-end">
                             <div>
                                 <button type="button" @click="addItem()" class="rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Adicionar produto</button>
-                                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Adicione quantos itens forem necessarios. Os totais sao recalculados pelo servidor ao salvar.</p>
+                                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Adicione quantos itens forem necessários. Os totais são recalculados pelo servidor ao salvar.</p>
                             </div>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between"><span>Sub Total</span><strong x-text="money(subtotal())"></strong></div>
