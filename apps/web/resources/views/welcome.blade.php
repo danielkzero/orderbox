@@ -3,134 +3,247 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>OrderBox · Força de vendas conectada</title>
-    <meta name="description" content="Pedidos, clientes, catálogo e representantes em uma operação comercial conectada.">
+    <title>Orderbox | Forca de vendas para distribuidores</title>
+    <meta name="description" content="Orderbox organiza representantes, clientes, produtos, tabelas de preco, pedidos e API em uma plataforma comercial para web e mobile.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen overflow-x-hidden bg-[#080b12] text-white">
-    <div class="pointer-events-none fixed inset-0 opacity-70">
-        <div class="absolute -left-32 top-20 size-96 rounded-full bg-brand-500/20 blur-[120px]"></div>
-        <div class="absolute -right-20 top-1/3 size-[30rem] rounded-full bg-cyan-400/10 blur-[150px]"></div>
-        <div class="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,.025)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.025)_1px,transparent_1px)] bg-[size:72px_72px]"></div>
-    </div>
+<body class="min-h-screen bg-gray-50 text-gray-800 antialiased dark:bg-gray-950 dark:text-white">
+    <header class="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
+        <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+            <a href="{{ url('/') }}" class="flex items-center gap-3">
+                <span class="flex size-11 items-center justify-center rounded-xl bg-brand-500 shadow-theme-xs">
+                    <x-application-logo class="size-6 fill-current text-white" />
+                </span>
+                <span>
+                    <strong class="block text-xl font-semibold text-gray-900 dark:text-white">Orderbox</strong>
+                    <small class="block text-xs text-gray-500 dark:text-gray-400">Sales force platform</small>
+                </span>
+            </a>
 
-    <header class="relative z-10 mx-auto flex max-w-7xl items-center justify-between px-6 py-7 lg:px-8">
-        <a href="/" class="flex items-center gap-3">
-            <span class="flex size-11 items-center justify-center rounded-2xl bg-brand-500 text-xl font-bold shadow-[0_0_40px_rgba(70,95,255,.45)]">O</span>
-            <span>
-                <strong class="block text-lg leading-none">OrderBox</strong>
-                <small class="mt-1 block text-[10px] uppercase tracking-[.28em] text-gray-400">Sales command</small>
-            </span>
-        </a>
-        <nav class="flex items-center gap-3">
+            <nav class="hidden items-center gap-8 text-sm font-medium text-gray-600 dark:text-gray-300 md:flex">
+                <a href="#gestao" class="hover:text-brand-500">Gestao</a>
+                <a href="#vendedor" class="hover:text-brand-500">Vendedores</a>
+                <a href="#recursos" class="hover:text-brand-500">Recursos</a>
+                <a href="#seguranca" class="hover:text-brand-500">Seguranca</a>
+            </nav>
+
             @auth
-                <a href="{{ route('dashboard') }}" class="rounded-xl bg-white px-5 py-2.5 text-sm font-semibold text-gray-950">Abrir painel</a>
+                <a href="{{ route('dashboard') }}" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Abrir painel</a>
             @else
-                <a href="{{ route('login') }}" class="rounded-xl border border-white/15 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/10">Entrar</a>
+                <a href="{{ route('login') }}" class="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 dark:hover:bg-white/[0.03]">Entrar</a>
             @endauth
-        </nav>
+        </div>
     </header>
 
-    <main class="relative z-10">
-        <section class="mx-auto grid min-h-[calc(100vh-100px)] max-w-7xl items-center gap-16 px-6 py-16 lg:grid-cols-[1fr_1.08fr] lg:px-8">
-            <div>
-                <div class="mb-7 inline-flex items-center gap-3 rounded-full border border-brand-400/25 bg-brand-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[.2em] text-brand-200">
-                    <span class="size-2 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,.8)]"></span>
-                    Operação comercial em movimento
-                </div>
-                <h1 class="max-w-3xl text-5xl font-semibold leading-[1.02] tracking-[-.055em] sm:text-6xl lg:text-[5.5rem]">
-                    Venda em campo.
-                    <span class="block bg-gradient-to-r from-brand-300 via-cyan-300 to-emerald-300 bg-clip-text text-transparent">Controle no escritório.</span>
-                </h1>
-                <p class="mt-8 max-w-xl text-lg leading-8 text-gray-400">
-                    Uma central de força de vendas para transformar clientes, catálogo, preços e pedidos em uma operação comercial simples, rastreável e pronta para trabalhar online ou offline.
-                </p>
-                <div class="mt-10 flex flex-col gap-4 sm:flex-row">
-                    <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="group inline-flex items-center justify-center gap-3 rounded-2xl bg-brand-500 px-7 py-4 text-sm font-semibold text-white shadow-[0_18px_60px_rgba(70,95,255,.3)] transition hover:-translate-y-1 hover:bg-brand-400">
-                        Acessar operação
-                        <span class="transition group-hover:translate-x-1">→</span>
-                    </a>
-                    <a href="#estrutura" class="inline-flex items-center justify-center rounded-2xl border border-white/10 bg-white/5 px-7 py-4 text-sm font-semibold text-gray-200 backdrop-blur transition hover:bg-white/10">
-                        Conhecer estrutura
-                    </a>
-                </div>
-                <div class="mt-14 grid max-w-xl grid-cols-3 gap-6 border-t border-white/10 pt-7">
-                    <div><strong class="block text-2xl">1 + 1</strong><span class="mt-1 block text-xs text-gray-500">sessão Web e Mobile</span></div>
-                    <div><strong class="block text-2xl">2FA</strong><span class="mt-1 block text-xs text-gray-500">proteção inteligente</span></div>
-                    <div><strong class="block text-2xl">Offline</strong><span class="mt-1 block text-xs text-gray-500">vendas sem pausa</span></div>
-                </div>
-            </div>
+    <main>
+        <section class="relative overflow-hidden">
+            <div class="absolute inset-x-0 top-0 -z-10 h-[560px] bg-gradient-to-b from-brand-50 via-white to-gray-50 dark:from-brand-500/10 dark:via-gray-950 dark:to-gray-950"></div>
+            <div class="mx-auto grid max-w-7xl items-center gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[0.92fr_1.08fr] lg:px-8 lg:py-24">
+                <div>
+                    <span class="inline-flex rounded-full bg-brand-50 px-4 py-2 text-xs font-medium text-brand-500 ring-1 ring-brand-500/10 dark:bg-brand-500/15 dark:text-brand-300">
+                        Plataforma comercial web + mobile
+                    </span>
+                    <h1 class="mt-6 max-w-3xl text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl lg:text-6xl">
+                        Controle sua forca de vendas do cliente ao pedido.
+                    </h1>
+                    <p class="mt-6 max-w-2xl text-lg leading-8 text-gray-600 dark:text-gray-400">
+                        Orderbox centraliza representantes, carteiras de clientes, catalogo, tabelas de preco, regioes, pedidos e liberacao de API em uma operacao simples para distribuidores.
+                    </p>
 
-            <div class="relative">
-                <div class="absolute -inset-8 rounded-[3rem] bg-gradient-to-br from-brand-500/25 via-transparent to-cyan-400/15 blur-2xl"></div>
-                <div class="relative overflow-hidden rounded-[2rem] border border-white/10 bg-[#101520]/90 p-3 shadow-2xl backdrop-blur">
-                    <div class="flex items-center justify-between border-b border-white/8 px-4 py-3">
-                        <div class="flex gap-2"><span class="size-2.5 rounded-full bg-rose-400"></span><span class="size-2.5 rounded-full bg-amber-300"></span><span class="size-2.5 rounded-full bg-emerald-400"></span></div>
-                        <span class="text-[10px] uppercase tracking-[.25em] text-gray-500">hydradigital · live desk</span>
-                        <span class="rounded-full bg-emerald-400/10 px-2.5 py-1 text-[10px] text-emerald-300">Online</span>
+                    <div class="mt-8 flex flex-col gap-3 sm:flex-row">
+                        <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-6 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                            Acessar Orderbox
+                        </a>
+                        <a href="#recursos" class="inline-flex items-center justify-center rounded-lg border border-gray-300 bg-white px-6 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300">
+                            Ver recursos
+                        </a>
                     </div>
-                    <div class="grid gap-3 p-3 sm:grid-cols-[.38fr_1fr]">
-                        <aside class="hidden rounded-2xl border border-white/8 bg-white/[.025] p-4 sm:block">
-                            <div class="mb-6 h-2 w-20 rounded bg-white/15"></div>
-                            @foreach (['Dashboard','Clientes','Produtos','Pedidos','Segurança'] as $index => $item)
-                                <div class="mb-2 flex items-center gap-3 rounded-xl px-3 py-2.5 text-xs {{ $index === 0 ? 'bg-brand-500 text-white' : 'text-gray-500' }}">
-                                    <span class="size-2 rounded-full {{ $index === 0 ? 'bg-white' : 'bg-gray-700' }}"></span>{{ $item }}
+
+                    <div class="mt-10 grid max-w-xl grid-cols-3 gap-4">
+                        <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                            <strong class="block text-2xl text-gray-900 dark:text-white">Web</strong>
+                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">gestao administrativa</span>
+                        </div>
+                        <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                            <strong class="block text-2xl text-gray-900 dark:text-white">Ionic</strong>
+                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">vendas em campo</span>
+                        </div>
+                        <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                            <strong class="block text-2xl text-gray-900 dark:text-white">API</strong>
+                            <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">integracao liberada</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rounded-[2rem] border border-gray-200 bg-white p-4 shadow-theme-xl dark:border-gray-800 dark:bg-gray-900">
+                    <div class="flex items-center justify-between border-b border-gray-100 px-2 pb-4 dark:border-gray-800">
+                        <div>
+                            <p class="text-sm font-medium text-gray-900 dark:text-white">Dashboard comercial</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Hydradigital em tempo real</p>
+                        </div>
+                        <span class="rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/15 dark:text-success-400">Online</span>
+                    </div>
+
+                    <div class="grid gap-4 py-5 sm:grid-cols-4">
+                        @foreach ([['R$ 92k', 'Volume'], ['48', 'Pedidos'], ['126', 'Clientes'], ['3', 'Regioes']] as [$value, $label])
+                            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                                <strong class="block text-xl text-gray-900 dark:text-white">{{ $value }}</strong>
+                                <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{ $label }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+
+                    <div class="grid gap-4 lg:grid-cols-[1fr_260px]">
+                        <div class="rounded-2xl border border-gray-200 p-5 dark:border-gray-800">
+                            <div class="mb-6 flex items-center justify-between">
+                                <div>
+                                    <h2 class="font-semibold text-gray-900 dark:text-white">Pedidos por semana</h2>
+                                    <p class="text-sm text-gray-500 dark:text-gray-400">Ritmo de vendas por representante</p>
                                 </div>
-                            @endforeach
-                        </aside>
-                        <div class="space-y-3">
-                            <div class="grid grid-cols-3 gap-3">
-                                @foreach ([['48','Pedidos'],['126','Clientes'],['R$ 92k','Volume']] as [$value,$label])
-                                    <div class="rounded-2xl border border-white/8 bg-white/[.035] p-4">
-                                        <span class="block text-lg font-semibold">{{ $value }}</span>
-                                        <span class="mt-1 block text-[10px] uppercase tracking-wider text-gray-500">{{ $label }}</span>
-                                    </div>
+                                <span class="text-sm font-medium text-success-600">+18%</span>
+                            </div>
+                            <div class="flex h-56 items-end gap-2">
+                                @foreach ([34, 48, 42, 66, 58, 76, 72, 88, 82, 96, 90, 100] as $height)
+                                    <span class="flex-1 rounded-t-lg bg-brand-500/80" style="height: {{ $height }}%"></span>
                                 @endforeach
                             </div>
-                            <div class="rounded-2xl border border-white/8 bg-white/[.035] p-5">
-                                <div class="mb-7 flex items-center justify-between"><span class="text-xs font-medium">Ritmo comercial</span><span class="text-[10px] text-emerald-300">+18,4%</span></div>
-                                <div class="flex h-36 items-end gap-2">
-                                    @foreach ([28,42,36,58,48,72,62,88,74,96,82,100] as $height)
-                                        <span class="flex-1 rounded-t bg-gradient-to-t from-brand-600 to-cyan-300/80" style="height: {{ $height }}%"></span>
-                                    @endforeach
+                        </div>
+
+                        <div class="space-y-4">
+                            @foreach ([['Pedido enviado', 'PED-00048', 'success'], ['Tabela revisada', 'Atacado SP', 'brand'], ['Sessao 2FA', 'confirmada', 'warning']] as [$title, $detail, $tone])
+                                <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-white/[0.03]">
+                                    <p class="text-sm font-medium text-gray-900 dark:text-white">{{ $title }}</p>
+                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $detail }}</p>
                                 </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div class="rounded-2xl border border-white/8 bg-white/[.035] p-4"><span class="text-[10px] uppercase text-gray-500">Último pedido</span><strong class="mt-2 block text-sm">PED-00048 · Sent</strong></div>
-                                <div class="rounded-2xl border border-white/8 bg-white/[.035] p-4"><span class="text-[10px] uppercase text-gray-500">Sincronização</span><strong class="mt-2 block text-sm text-emerald-300">Tudo atualizado</strong></div>
-                            </div>
+                            @endforeach
                         </div>
                     </div>
                 </div>
             </div>
         </section>
 
-        <section id="estrutura" class="border-y border-white/8 bg-white/[.025]">
-            <div class="mx-auto max-w-7xl px-6 py-24 lg:px-8">
-                <div class="mb-14 max-w-2xl">
-                    <span class="text-xs font-semibold uppercase tracking-[.25em] text-brand-300">Uma operação, duas frentes</span>
-                    <h2 class="mt-4 text-4xl font-semibold tracking-tight">O escritório organiza. O representante vende.</h2>
+        <section id="gestao" class="border-y border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-900">
+            <div class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+                <div class="mx-auto max-w-3xl text-center">
+                    <span class="text-sm font-medium text-brand-500">Para gestores</span>
+                    <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Uma central de gestao comercial completa.</h2>
+                    <p class="mt-4 text-gray-600 dark:text-gray-400">Acompanhe resultado, carteira, representantes, regioes e pedidos em um painel unico.</p>
                 </div>
-                <div class="grid gap-5 md:grid-cols-3">
+
+                <div class="mt-12 grid gap-5 md:grid-cols-2 lg:grid-cols-4">
                     @foreach ([
-                        ['01','Comando comercial','Dashboard, clientes, catálogo, preços e pedidos reunidos em uma visão objetiva.'],
-                        ['02','Campo conectado','O Mobile Ionic leva carteira e catálogo para o representante, inclusive offline.'],
-                        ['03','Segurança por canal','Sessão única por Web e Mobile, proteção 2FA e auditoria das ações críticas.'],
-                    ] as [$number,$title,$description])
-                        <article class="rounded-[1.75rem] border border-white/8 bg-white/[.035] p-7 transition hover:-translate-y-1 hover:border-brand-400/30 hover:bg-white/[.055]">
-                            <span class="text-xs font-semibold text-brand-300">{{ $number }}</span>
-                            <h3 class="mt-12 text-xl font-semibold">{{ $title }}</h3>
-                            <p class="mt-3 text-sm leading-6 text-gray-400">{{ $description }}</p>
+                        ['Mais previsibilidade', 'Indicadores de pedidos, volume e desempenho por periodo.'],
+                        ['Mais controle', 'Regras de sessao, usuarios, auditoria e permissao de API.'],
+                        ['Mais assertividade', 'Clientes ligados a representantes, regioes e tabelas de preco.'],
+                        ['Mais organizacao', 'Catalogo, marcas, categorias, unidades e produtos em cadastros consistentes.'],
+                    ] as [$title, $description])
+                        <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-950">
+                            <div class="mb-5 flex size-11 items-center justify-center rounded-xl bg-brand-50 text-brand-500 dark:bg-brand-500/15">✓</div>
+                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
+                            <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">{{ $description }}</p>
                         </article>
                     @endforeach
                 </div>
             </div>
         </section>
+
+        <section id="vendedor" class="mx-auto grid max-w-7xl gap-10 px-4 py-20 sm:px-6 lg:grid-cols-2 lg:px-8">
+            <div>
+                <span class="text-sm font-medium text-brand-500">Para vendedores</span>
+                <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">O apoio que o representante precisa para vender em campo.</h2>
+                <p class="mt-5 text-gray-600 dark:text-gray-400">
+                    A operacao mobile foi pensada para consulta de carteira, catalogo, tabelas e criacao de pedidos com sincronizacao controlada.
+                </p>
+            </div>
+            <div class="grid gap-4 sm:grid-cols-2">
+                @foreach ([
+                    ['Carteira de clientes', 'Acesse os clientes vinculados ao representante e sua regiao.'],
+                    ['Pedido com varios itens', 'Monte pedidos com produtos, quantidades, descontos e totais calculados.'],
+                    ['Catalogo comercial', 'Consulte produtos, marcas, unidades, estoque e tabelas ativas.'],
+                    ['Sincronizacao', 'Estrutura preparada para operacao online e evolucao offline.'],
+                ] as [$title, $description])
+                    <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
+                        <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
+                        <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-400">{{ $description }}</p>
+                    </article>
+                @endforeach
+            </div>
+        </section>
+
+        <section id="recursos" class="bg-gray-100 py-20 dark:bg-gray-900/60">
+            <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+                <div class="mb-10 flex flex-col justify-between gap-4 lg:flex-row lg:items-end">
+                    <div>
+                        <span class="text-sm font-medium text-brand-500">Recursos do Orderbox</span>
+                        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Tudo que sustenta o ciclo comercial.</h2>
+                    </div>
+                    <p class="max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-400">
+                        A home foi pensada como vitrine do que ja existe no painel e do que esta documentado como base da operacao.
+                    </p>
+                </div>
+
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                    @foreach ([
+                        ['Clientes', 'Cadastro, documento, limite, regiao e representantes.'],
+                        ['Produtos', 'SKU, categoria, marca, unidade e disponibilidade.'],
+                        ['Tabelas de preco', 'Precos por produto e quantidade minima.'],
+                        ['Pedidos', 'Status, origem, representante, itens e totais.'],
+                        ['Regioes', 'Organizacao comercial por UF, cidade e carteira.'],
+                        ['API', 'Clientes autorizados, segredo e rotacao controlada.'],
+                        ['Manual', 'Passo a passo operacional dentro do painel.'],
+                        ['Auditoria', 'Registro das acoes administrativas importantes.'],
+                    ] as [$title, $description])
+                        <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-theme-xs dark:border-gray-800 dark:bg-gray-950">
+                            <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
+                            <p class="mt-2 text-sm leading-6 text-gray-600 dark:text-gray-400">{{ $description }}</p>
+                        </article>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        <section id="seguranca" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+            <div class="rounded-[2rem] border border-gray-200 bg-white p-8 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900 lg:p-10">
+                <div class="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+                    <div>
+                        <span class="text-sm font-medium text-brand-500">Seguranca e integracao</span>
+                        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white">Autenticacao unica por canal e API liberada por cliente.</h2>
+                        <p class="mt-5 text-gray-600 dark:text-gray-400">
+                            A mesma credencial pode ter uma sessao web e uma mobile, mas nunca duas sessoes simultaneas no mesmo tipo de acesso. Com 2FA, a invalidacao anterior exige confirmacao.
+                        </p>
+                    </div>
+                    <div class="grid gap-4 sm:grid-cols-3">
+                        @foreach ([['Web', 'Sessao administrativa'], ['Mobile', 'Sessao de campo'], ['2FA', 'Confirmacao dupla']] as [$title, $description])
+                            <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/[0.03]">
+                                <strong class="block text-xl text-gray-900 dark:text-white">{{ $title }}</strong>
+                                <span class="mt-2 block text-sm text-gray-500 dark:text-gray-400">{{ $description }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="px-4 pb-20 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-7xl rounded-[2rem] bg-brand-500 p-8 text-white shadow-theme-xl lg:p-12">
+                <div class="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
+                    <div>
+                        <h2 class="text-3xl font-semibold tracking-tight">Pronto para operar a Hydradigital no Orderbox?</h2>
+                        <p class="mt-3 max-w-2xl text-brand-50">Entre no painel, revise cadastros, valide pedidos e siga pelo manual interno para evoluir o uso da plataforma.</p>
+                    </div>
+                    <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-medium text-brand-600 shadow-theme-xs hover:bg-gray-50">
+                        {{ auth()->check() ? 'Abrir dashboard' : 'Entrar no sistema' }}
+                    </a>
+                </div>
+            </div>
+        </section>
     </main>
 
-    <footer class="relative z-10 mx-auto flex max-w-7xl flex-col gap-3 px-6 py-10 text-xs text-gray-500 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-        <span>OrderBox · força de vendas</span>
-        <span>Painel baseado em TailAdmin Laravel · MIT</span>
+    <footer class="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
+        <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+            <span>Orderbox | Forca de vendas conectada</span>
+            <span>Design simples baseado no padrao TailAdmin.</span>
+        </div>
     </footer>
 </body>
 </html>
