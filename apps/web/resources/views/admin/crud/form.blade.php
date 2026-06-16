@@ -2,19 +2,24 @@
     $editing = $model->exists;
     $title = ($editing ? 'Editar ' : 'Novo ') . $config['label'];
     $action = $editing ? route('crud.update', [$resource, $model->id]) : route('crud.store', $resource);
-    $inputClass = 'mt-1 block w-full rounded-lg border-gray-300 text-sm shadow-sm focus:border-brand-500 focus:ring-brand-500 dark:border-gray-700 dark:bg-gray-900 dark:text-white';
+    $inputClass = 'h-11 w-full rounded-lg border border-gray-300 bg-transparent px-4 py-2.5 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90 dark:placeholder:text-white/30';
 @endphp
 
 <x-app-layout>
     <x-page-header :title="$title" description="Preencha os dados principais e salve para atualizar o cadastro operacional.">
         <x-slot name="actions">
-            <a href="{{ route($config['index']) }}" class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">
+            <a href="{{ route($config['index']) }}" class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
                 Voltar
             </a>
         </x-slot>
     </x-page-header>
 
-    <x-panel class="max-w-4xl">
+    <x-panel>
+        <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
+            <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $title }}</h2>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Campos no padrao TailAdmin, com foco no cadastro rapido e consistente.</p>
+        </div>
+
         <form method="POST" action="{{ $action }}" class="space-y-6 p-6">
             @csrf
             @if ($editing)
@@ -91,7 +96,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="short_description" value="Descricao curta" />
-                        <textarea id="short_description" name="short_description" rows="3" class="{{ $inputClass }}">{{ old('short_description', $model->short_description) }}</textarea>
+                        <textarea id="short_description" name="short_description" rows="3" class="{{ Str::replaceFirst('h-11', 'min-h-28', $inputClass) }}">{{ old('short_description', $model->short_description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'price-tables')
@@ -102,7 +107,7 @@
                     </div>
                     <div>
                         <x-input-label for="description" value="Descricao" />
-                        <textarea id="description" name="description" rows="4" class="{{ $inputClass }}">{{ old('description', $model->description) }}</textarea>
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'categories')
@@ -122,7 +127,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="description" value="Descricao" />
-                        <textarea id="description" name="description" rows="4" class="{{ $inputClass }}">{{ old('description', $model->description) }}</textarea>
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'brands')
@@ -133,7 +138,7 @@
                     </div>
                     <div>
                         <x-input-label for="description" value="Descricao" />
-                        <textarea id="description" name="description" rows="4" class="{{ $inputClass }}">{{ old('description', $model->description) }}</textarea>
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'units')
@@ -148,7 +153,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="description" value="Descricao" />
-                        <textarea id="description" name="description" rows="4" class="{{ $inputClass }}">{{ old('description', $model->description) }}</textarea>
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
             @elseif ($resource === 'representatives')
@@ -242,7 +247,7 @@
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observacoes" />
-                        <textarea id="notes" name="notes" rows="4" class="{{ $inputClass }}">{{ old('notes', $model->notes) }}</textarea>
+                        <textarea id="notes" name="notes" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('notes', $model->notes) }}</textarea>
                     </div>
                 </div>
             @endif
@@ -255,9 +260,9 @@
                 </label>
             @endif
 
-            <div class="flex flex-wrap gap-3 border-t border-gray-100 pt-6 dark:border-gray-800">
-                <button class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white hover:bg-brand-600">Salvar</button>
-                <a href="{{ route($config['index']) }}" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">Cancelar</a>
+            <div class="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-6 dark:border-gray-800">
+                <a href="{{ route($config['index']) }}" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Cancelar</a>
+                <button class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Salvar</button>
             </div>
         </form>
     </x-panel>
