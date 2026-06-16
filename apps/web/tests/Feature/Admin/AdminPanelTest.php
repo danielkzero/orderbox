@@ -180,6 +180,40 @@ class AdminPanelTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_manage_price_tables_from_products_datatable(): void
+    {
+        $region = Region::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
+        $this->actingAs($this->admin)->post(route('products.price-tables.store'), [
+            'name' => 'Tabela Datatable',
+            'region_id' => $region->id,
+        ])->assertRedirect();
+
+        $priceTable = PriceTable::query()->where('name', 'Tabela Datatable')->firstOrFail();
+
+        ProductPrice::query()->create([
+            'product_id' => $product->id,
+            'price_table_id' => $priceTable->id,
+            'minimum_quantity' => '3',
+            'price' => '77.70',
+        ]);
+
+        $this->actingAs($this->admin)->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('Tabela Datatable')
+            ->assertSee('R$ 77,70');
+
+        $this->actingAs($this->admin)->patch(route('products.price-tables.update', $priceTable), [
+            'name' => 'Tabela Datatable Editada',
+        ])->assertRedirect();
+
+        $this->assertDatabaseHas('price_tables', [
+            'id' => $priceTable->id,
+            'name' => 'Tabela Datatable Editada',
+        ]);
+    }
+
     public function test_admin_can_create_region_and_price_table_products(): void
     {
         $this->actingAs($this->admin)->post('/crud/regions', [

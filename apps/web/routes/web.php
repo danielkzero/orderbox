@@ -31,6 +31,8 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/audit-logs', [AdminModuleController::class, 'auditLogs'])->name('audit-logs.index');
     Route::get('/manual', [DocumentationController::class, 'manual'])->name('manual.index');
     Route::get('/api-guide', [DocumentationController::class, 'apiGuide'])->name('api-guide.index');
+    Route::post('/products/price-tables', [CatalogCrudController::class, 'storeProductPriceTable'])->name('products.price-tables.store');
+    Route::patch('/products/price-tables/{priceTable}', [CatalogCrudController::class, 'updateProductPriceTable'])->name('products.price-tables.update');
     Route::get('/crud/{resource}/create', [CatalogCrudController::class, 'create'])->name('crud.create');
     Route::post('/crud/{resource}', [CatalogCrudController::class, 'store'])->name('crud.store');
     Route::get('/crud/{resource}/{id}/edit', [CatalogCrudController::class, 'edit'])->name('crud.edit');

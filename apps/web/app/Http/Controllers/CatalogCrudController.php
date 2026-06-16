@@ -79,6 +79,47 @@ class CatalogCrudController extends Controller
         return back()->with('status', $resource === 'orders' ? 'Pedido atualizado.' : $this->config($resource)['label'].' inativado.');
     }
 
+    public function storeProductPriceTable(Request $request, AuditService $audit): RedirectResponse
+    {
+        $companyId = $request->user()->company_id;
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:255', Rule::unique('price_tables', 'name')->where('company_id', $companyId)],
+            'region_id' => ['nullable', Rule::exists('regions', 'id')->where('company_id', $companyId)],
+        ]);
+
+        $priceTable = PriceTable::query()->create($data + [
+            'company_id' => $companyId,
+            'description' => 'Criada pelo datatable de produtos.',
+            'active' => true,
+        ]);
+
+        $audit->record($request->user(), 'Create', $priceTable, null, $priceTable->toArray());
+
+        return back()->with('status', 'Tabela de preço criada.');
+    }
+
+    public function updateProductPriceTable(Request $request, PriceTable $priceTable, AuditService $audit): RedirectResponse
+    {
+        abort_unless($priceTable->company_id === $request->user()->company_id, 404);
+
+        $oldValues = $priceTable->toArray();
+        $data = $request->validate([
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('price_tables', 'name')
+                    ->where('company_id', $request->user()->company_id)
+                    ->ignore($priceTable),
+            ],
+        ]);
+
+        $priceTable->update($data);
+        $audit->record($request->user(), 'Update', $priceTable, $oldValues, $priceTable->fresh()->toArray());
+
+        return back()->with('status', 'Tabela de preço atualizada.');
+    }
+
     private function form(Request $request, string $resource, Model $model): View
     {
         $companyId = $request->user()->company_id;

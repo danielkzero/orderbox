@@ -68,6 +68,13 @@ class AdminModuleController extends Controller
             'products' => $query->paginate(15)->withQueryString(),
             'categories' => Category::query()->where('company_id', $companyId)->orderBy('name')->get(),
             'brands' => Brand::query()->where('company_id', $companyId)->orderBy('name')->get(),
+            'regions' => Region::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
+            'priceTables' => PriceTable::query()
+                ->with('region')
+                ->where('company_id', $companyId)
+                ->where('active', true)
+                ->orderBy('id')
+                ->get(),
             'filters' => [
                 'search' => $search,
                 'category_id' => $categoryId,
