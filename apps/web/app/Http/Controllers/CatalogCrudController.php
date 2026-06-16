@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
@@ -123,6 +124,7 @@ class CatalogCrudController extends Controller
                 'sku' => ['required', 'string', 'max:100', Rule::unique('products')->where('company_id', $companyId)->ignore($model)],
                 'barcode' => ['nullable', 'string', 'max:50'],
                 'image_url' => ['nullable', 'url', 'max:255'],
+                'image' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,gif', 'max:2048'],
                 'name' => ['required', 'string', 'max:255'],
                 'short_description' => ['nullable', 'string', 'max:500'],
                 'description' => ['nullable', 'string'],
@@ -210,6 +212,16 @@ class CatalogCrudController extends Controller
 
     private function saveProduct(Request $request, array $data, ?Model $model = null): Product
     {
+        unset($data['image']);
+
+        if ($request->hasFile('image')) {
+            if ($model instanceof Product && $model->image_url && str_contains($model->image_url, '/storage/products/')) {
+                Storage::disk('public')->delete(str_replace('/storage/', '', parse_url($model->image_url, PHP_URL_PATH) ?? ''));
+            }
+
+            $data['image_url'] = Storage::disk('public')->url($request->file('image')->store('products', 'public'));
+        }
+
         $data['active'] = (bool) ($data['active'] ?? false);
         $data['stock_status'] = $data['stock_status'] ?? 'InStock';
         $data['published_at'] = $data['active']

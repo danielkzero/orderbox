@@ -20,7 +20,7 @@
             <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Campos no padrão TailAdmin, com foco no cadastro rápido e consistente.</p>
         </div>
 
-        <form method="POST" action="{{ $action }}" class="space-y-6 p-6">
+        <form method="POST" action="{{ $action }}" class="space-y-6 p-6" @if ($resource === 'products') enctype="multipart/form-data" @endif>
             @csrf
             @if ($editing)
                 @method('PUT')
@@ -87,7 +87,15 @@
                     </div>
                 </div>
             @elseif ($resource === 'products')
-                <div class="space-y-6" x-data="{ imageUrl: @js(old('image_url', $model->image_url)) }">
+                <div class="space-y-6" x-data="{
+                    imageUrl: @js(old('image_url', $model->image_url)),
+                    previewUrl: @js(old('image_url', $model->image_url)),
+                    isDragging: false,
+                    setFile(file) {
+                        if (!file) return;
+                        this.previewUrl = URL.createObjectURL(file);
+                    }
+                }">
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <h3 class="font-semibold text-gray-800 dark:text-white/90">Descrição do produto</h3>
@@ -199,21 +207,40 @@
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <h3 class="font-semibold text-gray-800 dark:text-white/90">Imagem do produto</h3>
                         </div>
-                        <div class="grid gap-5 p-5 lg:grid-cols-[260px_1fr]">
-                            <div class="flex min-h-48 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
-                                <template x-if="imageUrl">
-                                    <img :src="imageUrl" alt="Prévia do produto" class="size-full object-cover">
+                        <div class="grid gap-5 p-5 lg:grid-cols-[360px_1fr]">
+                            <label
+                                for="image"
+                                class="group flex min-h-60 cursor-pointer flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-gray-50 p-5 text-center transition hover:border-brand-300 hover:bg-brand-50/40 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-brand-500/60 dark:hover:bg-brand-500/10"
+                                :class="{ 'border-brand-400 bg-brand-50 dark:border-brand-500 dark:bg-brand-500/10': isDragging }"
+                                @dragover.prevent="isDragging = true"
+                                @dragleave.prevent="isDragging = false"
+                                @drop.prevent="isDragging = false; const file = $event.dataTransfer.files[0]; if (file) { $refs.imageInput.files = $event.dataTransfer.files; setFile(file); }"
+                            >
+                                <template x-if="previewUrl">
+                                    <img :src="previewUrl" alt="Prévia do produto" class="max-h-52 w-full rounded-xl object-cover">
                                 </template>
-                                <template x-if="!imageUrl">
-                                    <div class="px-6 text-center text-sm text-gray-500 dark:text-gray-400">
-                                        Informe uma URL de imagem para exibir a prévia.
+                                <template x-if="!previewUrl">
+                                    <div>
+                                        <div class="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-white text-gray-500 shadow-theme-xs dark:bg-gray-800 dark:text-gray-400">
+                                            <svg class="size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path d="M12 16V4m0 0-4 4m4-4 4 4" stroke-linecap="round" stroke-linejoin="round" />
+                                                <path d="M20 16.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-2.5" stroke-linecap="round" />
+                                            </svg>
+                                        </div>
+                                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Clique para enviar ou arraste a imagem</p>
+                                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">SVG, PNG, JPG, WEBP ou GIF até 2 MB</p>
                                     </div>
                                 </template>
-                            </div>
-                            <div>
-                                <x-input-label for="image_url" value="URL da imagem" />
-                                <x-text-input id="image_url" name="image_url" x-model="imageUrl" type="url" class="mt-1 block w-full" :value="old('image_url', $model->image_url)" placeholder="https://exemplo.com/produto.jpg" />
-                                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Use imagens quadradas ou horizontais para manter a listagem equilibrada.</p>
+                                <input id="image" name="image" type="file" accept="image/*" class="sr-only" x-ref="imageInput" @change="setFile($event.target.files[0])">
+                            </label>
+                            <div class="space-y-4">
+                                <div>
+                                    <x-input-label for="image_url" value="URL externa da imagem" />
+                                    <x-text-input id="image_url" name="image_url" x-model="imageUrl" @input="previewUrl = imageUrl" type="url" class="mt-1 block w-full" :value="old('image_url', $model->image_url)" placeholder="https://exemplo.com/produto.jpg" />
+                                </div>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">A dropzone salva a imagem no armazenamento público do Laravel. A URL externa é opcional e pode ser usada quando a imagem já estiver hospedada.</p>
+                                <x-input-error :messages="$errors->get('image')" class="mt-2" />
+                                <x-input-error :messages="$errors->get('image_url')" class="mt-2" />
                             </div>
                         </div>
                     </div>

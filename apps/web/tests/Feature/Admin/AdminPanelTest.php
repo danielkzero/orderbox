@@ -20,6 +20,8 @@ use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -114,6 +116,7 @@ class AdminPanelTest extends TestCase
 
     public function test_admin_can_create_product_from_references(): void
     {
+        Storage::fake('public');
         $category = Category::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $brand = Brand::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $unit = Unit::query()->where('company_id', $this->admin->company_id)->firstOrFail();
@@ -136,6 +139,7 @@ class AdminPanelTest extends TestCase
             'available_stock' => '12.5',
             'stock_status' => 'LowStock',
             'active' => '1',
+            'image' => UploadedFile::fake()->image('produto-teste.jpg', 800, 400),
         ])->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('products', [
@@ -150,6 +154,8 @@ class AdminPanelTest extends TestCase
         $this->assertSame('Produto Teste', $product->name);
         $this->assertTrue($product->active);
         $this->assertNotNull($product->published_at);
+        $this->assertStringContainsString('/storage/products/', $product->image_url);
+        Storage::disk('public')->assertExists(str_replace('/storage/', '', parse_url($product->image_url, PHP_URL_PATH)));
     }
 
     public function test_admin_can_create_region_and_price_table_products(): void
