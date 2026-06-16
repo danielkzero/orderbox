@@ -154,8 +154,8 @@ class AdminPanelTest extends TestCase
         $this->assertSame('Produto Teste', $product->name);
         $this->assertTrue($product->active);
         $this->assertNotNull($product->published_at);
-        $this->assertStringContainsString('/storage/products/', $product->image_url);
-        Storage::disk('public')->assertExists(str_replace('/storage/', '', parse_url($product->image_url, PHP_URL_PATH)));
+        $this->assertStringStartsWith('storage/products/', $product->image_url);
+        Storage::disk('public')->assertExists(str_replace('storage/', '', $product->image_url));
     }
 
     public function test_admin_can_create_region_and_price_table_products(): void

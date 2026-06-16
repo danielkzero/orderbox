@@ -88,8 +88,8 @@
                 </div>
             @elseif ($resource === 'products')
                 <div class="space-y-6" x-data="{
-                    imageUrl: @js(old('image_url', $model->image_url)),
-                    previewUrl: @js(old('image_url', $model->image_url)),
+                    imageUrl: @js(old('image_url', str_starts_with((string) $model->image_url, 'http') ? $model->image_url : null)),
+                    previewUrl: @js(old('image_url', $model->imageSrc())),
                     isDragging: false,
                     setFile(file) {
                         if (!file) return;

@@ -81,8 +81,8 @@
                             <td class="min-w-[280px] px-5 py-5">
                                 <div class="flex items-center gap-4">
                                     <div class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                        @if ($product->image_url)
-                                            <img src="{{ $product->image_url }}" alt="{{ $product->name }}" class="size-full object-cover">
+                                        @if ($product->imageSrc())
+                                            <img src="{{ $product->imageSrc() }}" alt="{{ $product->name }}" class="size-full object-cover">
                                         @else
                                             <span class="text-sm font-semibold text-brand-500">{{ Str::substr($product->name, 0, 1) }}</span>
                                         @endif

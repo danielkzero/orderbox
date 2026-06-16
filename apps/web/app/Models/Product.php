@@ -54,6 +54,19 @@ class Product extends Model
         return (float) ($this->base_price ?? $this->prices->sortBy('minimum_quantity')->first()?->price ?? 0);
     }
 
+    public function imageSrc(): ?string
+    {
+        if (! $this->image_url) {
+            return null;
+        }
+
+        if (str_starts_with($this->image_url, 'http://') || str_starts_with($this->image_url, 'https://')) {
+            return $this->image_url;
+        }
+
+        return asset($this->image_url);
+    }
+
     public function stockStatusLabel(): string
     {
         return match ($this->stock_status) {

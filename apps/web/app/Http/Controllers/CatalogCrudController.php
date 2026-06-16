@@ -215,11 +215,11 @@ class CatalogCrudController extends Controller
         unset($data['image']);
 
         if ($request->hasFile('image')) {
-            if ($model instanceof Product && $model->image_url && str_contains($model->image_url, '/storage/products/')) {
-                Storage::disk('public')->delete(str_replace('/storage/', '', parse_url($model->image_url, PHP_URL_PATH) ?? ''));
+            if ($model instanceof Product && $model->image_url && str_starts_with($model->image_url, 'storage/products/')) {
+                Storage::disk('public')->delete(str_replace('storage/', '', $model->image_url));
             }
 
-            $data['image_url'] = Storage::disk('public')->url($request->file('image')->store('products', 'public'));
+            $data['image_url'] = 'storage/'.$request->file('image')->store('products', 'public');
         }
 
         $data['active'] = (bool) ($data['active'] ?? false);
