@@ -46,6 +46,11 @@ class Company extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function regions(): HasMany
+    {
+        return $this->hasMany(Region::class);
+    }
+
     public function auditLogs(): HasMany
     {
         return $this->hasMany(AuditLog::class);

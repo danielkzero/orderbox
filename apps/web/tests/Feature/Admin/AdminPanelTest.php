@@ -9,9 +9,12 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\CustomerRepresentative;
 use App\Models\Order;
 use App\Models\PriceTable;
 use App\Models\Product;
+use App\Models\ProductPrice;
+use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
@@ -42,7 +45,7 @@ class AdminPanelTest extends TestCase
 
     public function test_operational_modules_are_rendered_for_the_authenticated_company(): void
     {
-        foreach (['customers', 'products', 'price-tables', 'representatives', 'orders', 'categories', 'brands', 'units'] as $path) {
+        foreach (['customers', 'products', 'price-tables', 'representatives', 'orders', 'categories', 'brands', 'units', 'regions'] as $path) {
             $this->actingAs($this->admin)->get('/'.$path)->assertOk();
         }
     }
@@ -92,14 +95,17 @@ class AdminPanelTest extends TestCase
         ]);
 
         $this->actingAs($this->admin)->post('/crud/customers', [
+            'region_id' => Region::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id,
             'corporate_name' => 'Cliente Teste Ltda',
             'trade_name' => 'Cliente Teste',
             'document' => '99999999000199',
             'email' => 'cliente.teste@example.test',
             'credit_limit' => '1500',
+            'representative_ids' => [SalesRepresentative::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id],
         ])->assertRedirect(route('customers.index'));
 
         $customer = Customer::query()->where('document', '99999999000199')->firstOrFail();
+        $this->assertSame(1, CustomerRepresentative::query()->where('customer_id', $customer->id)->count());
         $this->actingAs($this->admin)->post("/crud/customers/{$customer->id}/deactivate")
             ->assertRedirect();
 
@@ -130,6 +136,33 @@ class AdminPanelTest extends TestCase
         $this->assertSame('Produto Teste', Product::query()->where('sku', 'TEST-001')->firstOrFail()->name);
     }
 
+    public function test_admin_can_create_region_and_price_table_products(): void
+    {
+        $this->actingAs($this->admin)->post('/crud/regions', [
+            'name' => 'Vale do Paraiba',
+            'state' => 'SP',
+            'city' => 'Sao Jose dos Campos',
+            'description' => 'Regiao criada pelo teste.',
+        ])->assertRedirect(route('regions.index'));
+
+        $region = Region::query()->where('name', 'Vale do Paraiba')->firstOrFail();
+        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
+        $this->actingAs($this->admin)->post('/crud/price-tables', [
+            'region_id' => $region->id,
+            'name' => 'Especial Vale',
+            'description' => 'Tabela com produto vinculado.',
+            'product_prices' => [
+                ['product_id' => $product->id, 'minimum_quantity' => '1', 'price' => '99.90'],
+                ['product_id' => $product->id, 'minimum_quantity' => '10', 'price' => '89.90'],
+            ],
+        ])->assertRedirect(route('price-tables.index'));
+
+        $table = PriceTable::query()->where('name', 'Especial Vale')->firstOrFail();
+        $this->assertSame($region->id, $table->region_id);
+        $this->assertSame(2, ProductPrice::query()->where('price_table_id', $table->id)->count());
+    }
+
     public function test_admin_can_create_representative_and_order(): void
     {
         $user = User::factory()->create([
@@ -140,6 +173,7 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)->post('/crud/representatives', [
             'user_id' => $user->id,
+            'region_id' => Region::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id,
             'code' => 'REP-999',
         ])->assertRedirect(route('representatives.index'));
 
@@ -153,19 +187,21 @@ class AdminPanelTest extends TestCase
             'sales_representative_id' => $representative->id,
             'price_table_id' => $priceTable->id,
             'order_number' => 'PED-TEST-001',
-            'status' => 'Draft',
+            'status' => 'Sent',
             'order_date' => now()->format('Y-m-d H:i:s'),
             'source' => 'Admin',
-            'product_id' => $product->id,
-            'quantity' => '2',
-            'unit_price' => '15.50',
+            'items' => [
+                ['product_id' => $product->id, 'quantity' => '2', 'unit_price' => '15.50', 'discount' => '0'],
+                ['product_id' => $product->id, 'quantity' => '1', 'unit_price' => '10.00', 'discount' => '10'],
+            ],
             'notes' => 'Pedido criado pelo teste.',
         ])->assertRedirect(route('orders.index'));
 
         $order = Order::query()->where('order_number', 'PED-TEST-001')->firstOrFail();
 
-        $this->assertSame('31.00', $order->total_amount);
-        $this->assertSame(1, $order->items()->count());
+        $this->assertSame('41.00', $order->subtotal);
+        $this->assertSame('40.00', $order->total_amount);
+        $this->assertSame(2, $order->items()->count());
 
         $this->actingAs($this->admin)->post("/crud/orders/{$order->id}/deactivate")
             ->assertRedirect();

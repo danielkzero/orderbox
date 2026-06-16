@@ -15,6 +15,7 @@ use App\Models\OrderItem;
 use App\Models\PriceTable;
 use App\Models\Product;
 use App\Models\ProductPrice;
+use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
@@ -51,12 +52,34 @@ class HydradigitalDemoSeeder extends Seeder
 
             $admin->update(['name' => 'Daniel', 'role' => 'Admin', 'active' => true]);
 
-            [$manager, $representatives] = $this->seedUsers($company);
+            $regions = $this->seedRegions($company);
+            [$manager, $representatives] = $this->seedUsers($company, $regions);
             [$categories, $brands, $units] = $this->seedCatalogReferences($company);
-            [$products, $priceTables] = $this->seedProducts($company, $categories, $brands, $units);
-            $customers = $this->seedCustomers($company, $representatives);
+            [$products, $priceTables] = $this->seedProducts($company, $categories, $brands, $units, $regions);
+            $customers = $this->seedCustomers($company, $representatives, $regions);
             $this->seedOrders($company, $manager, $representatives, $customers, $products, $priceTables);
             $this->seedApiClient($company);
+        });
+    }
+
+    private function seedRegions(Company $company)
+    {
+        return collect([
+            ['name' => 'Grande Sao Paulo', 'state' => 'SP', 'city' => 'Sao Paulo'],
+            ['name' => 'Interior SP', 'state' => 'SP', 'city' => 'Campinas'],
+            ['name' => 'Litoral SP', 'state' => 'SP', 'city' => 'Santos'],
+        ])->mapWithKeys(function (array $data) use ($company): array {
+            $region = Region::query()->updateOrCreate(
+                ['company_id' => $company->id, 'name' => $data['name']],
+                [
+                    'state' => $data['state'],
+                    'city' => $data['city'],
+                    'description' => 'Regiao comercial demonstrativa.',
+                    'active' => true,
+                ],
+            );
+
+            return [$region->name => $region];
         });
     }
 
@@ -74,7 +97,7 @@ class HydradigitalDemoSeeder extends Seeder
         );
     }
 
-    private function seedUsers(Company $company): array
+    private function seedUsers(Company $company, $regions): array
     {
         $manager = User::query()->updateOrCreate(
             ['email' => 'gestor@hydradigital.test'],
@@ -91,7 +114,7 @@ class HydradigitalDemoSeeder extends Seeder
         $representativeUsers = collect([
             ['name' => 'João Silva', 'email' => 'joao@hydradigital.test', 'code' => 'REP-001'],
             ['name' => 'Carla Souza', 'email' => 'carla@hydradigital.test', 'code' => 'REP-002'],
-        ])->map(function (array $data) use ($company): SalesRepresentative {
+        ])->map(function (array $data) use ($company, $regions): SalesRepresentative {
             $user = User::query()->updateOrCreate(
                 ['email' => $data['email']],
                 [
@@ -106,7 +129,7 @@ class HydradigitalDemoSeeder extends Seeder
 
             return SalesRepresentative::query()->updateOrCreate(
                 ['company_id' => $company->id, 'code' => $data['code']],
-                ['user_id' => $user->id, 'active' => true],
+                ['user_id' => $user->id, 'region_id' => $regions[$data['code'] === 'REP-001' ? 'Grande Sao Paulo' : 'Interior SP']->id, 'active' => true],
             );
         });
 
@@ -153,15 +176,15 @@ class HydradigitalDemoSeeder extends Seeder
         return [$categories, $brands, $units];
     }
 
-    private function seedProducts(Company $company, $categories, $brands, $units): array
+    private function seedProducts(Company $company, $categories, $brands, $units, $regions): array
     {
         $priceTables = collect([
             ['name' => 'Varejo', 'description' => 'Tabela padrão de varejo.'],
             ['name' => 'Atacado', 'description' => 'Tabela para compras em volume.'],
-        ])->mapWithKeys(function (array $data) use ($company): array {
+        ])->mapWithKeys(function (array $data) use ($company, $regions): array {
             $table = PriceTable::query()->updateOrCreate(
                 ['company_id' => $company->id, 'name' => $data['name']],
-                ['description' => $data['description'], 'active' => true],
+                ['region_id' => $data['name'] === 'Atacado' ? $regions['Interior SP']->id : null, 'description' => $data['description'], 'active' => true],
             );
 
             return [$table->name => $table];
@@ -208,7 +231,7 @@ class HydradigitalDemoSeeder extends Seeder
         return [$products, $priceTables];
     }
 
-    private function seedCustomers(Company $company, $representatives)
+    private function seedCustomers(Company $company, $representatives, $regions)
     {
         $definitions = [
             ['document' => '11111111000101', 'corporate' => 'Construtora Horizonte Ltda.', 'trade' => 'Horizonte Obras', 'city' => 'São Paulo', 'state' => 'SP'],
@@ -219,11 +242,16 @@ class HydradigitalDemoSeeder extends Seeder
             ['document' => '66666666000106', 'corporate' => 'Comercial Avenida Ltda.', 'trade' => 'Comercial Avenida', 'city' => 'Guarulhos', 'state' => 'SP'],
         ];
 
-        return collect($definitions)->mapWithKeys(function (array $data, int $index) use ($company, $representatives): array {
+        return collect($definitions)->mapWithKeys(function (array $data, int $index) use ($company, $representatives, $regions): array {
             $customer = Customer::query()->updateOrCreate(
                 ['company_id' => $company->id, 'document' => $data['document']],
                 [
                     'client_reference' => (string) Str::uuid(),
+                    'region_id' => match ($data['city']) {
+                        'Campinas', 'Sorocaba', 'Jundiai' => $regions['Interior SP']->id,
+                        'Santos' => $regions['Litoral SP']->id,
+                        default => $regions['Grande Sao Paulo']->id,
+                    },
                     'corporate_name' => $data['corporate'],
                     'trade_name' => $data['trade'],
                     'email' => 'compras'.($index + 1).'@cliente.test',

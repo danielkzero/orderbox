@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class SalesRepresentative extends Model
+class Region extends Model
 {
     protected $guarded = [];
 
@@ -20,23 +20,18 @@ class SalesRepresentative extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function region(): BelongsTo
-    {
-        return $this->belongsTo(Region::class);
-    }
-
-    public function user(): BelongsTo
-    {
-        return $this->belongsTo(User::class);
-    }
-
     public function customers(): HasMany
     {
-        return $this->hasMany(CustomerRepresentative::class);
+        return $this->hasMany(Customer::class);
     }
 
-    public function orders(): HasMany
+    public function representatives(): HasMany
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(SalesRepresentative::class);
+    }
+
+    public function priceTables(): HasMany
+    {
+        return $this->hasMany(PriceTable::class);
     }
 }

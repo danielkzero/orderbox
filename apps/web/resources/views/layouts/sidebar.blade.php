@@ -12,6 +12,7 @@
             ['route' => 'categories.index', 'label' => 'Categorias', 'icon' => 'folder'],
             ['route' => 'brands.index', 'label' => 'Marcas', 'icon' => 'badge'],
             ['route' => 'units.index', 'label' => 'Unidades', 'icon' => 'ruler'],
+            ['route' => 'regions.index', 'label' => 'Regioes', 'icon' => 'map'],
         ],
         'ADMINISTRACAO' => [
             ['route' => 'users.index', 'label' => 'Usuarios', 'icon' => 'shield', 'roles' => ['Admin']],

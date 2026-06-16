@@ -37,6 +37,15 @@
                         <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
                     </div>
                     <div>
+                        <x-input-label for="region_id" value="Regiao" />
+                        <select id="region_id" name="region_id" class="{{ $inputClass }}">
+                            <option value="">Sem regiao</option>
+                            @foreach ($regions as $region)
+                                <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <x-input-label for="document" value="Documento" />
                         <x-text-input id="document" name="document" class="mt-1 block w-full" :value="old('document', $model->document)" required />
                     </div>
@@ -51,6 +60,30 @@
                     <div>
                         <x-input-label for="credit_limit" value="Limite de credito" />
                         <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label value="Representantes vinculados" />
+                        <div class="grid gap-3 rounded-2xl border border-gray-200 p-4 dark:border-gray-800 sm:grid-cols-2 lg:grid-cols-3">
+                            @php
+                                $linkedRepresentatives = collect(old('representative_ids', $model->exists ? $model->representatives->pluck('sales_representative_id')->all() : []))->map(fn ($id) => (int) $id);
+                                $primaryRepresentative = (int) old('primary_representative_id', $model->exists ? $model->representatives->firstWhere('is_primary', true)?->sales_representative_id : null);
+                            @endphp
+                            @foreach ($representatives as $representative)
+                                <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
+                                    <input type="checkbox" name="representative_ids[]" value="{{ $representative->id }}" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked($linkedRepresentatives->contains($representative->id))>
+                                    <span>{{ $representative->code }} - {{ $representative->user->name }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="primary_representative_id" value="Representante principal" />
+                        <select id="primary_representative_id" name="primary_representative_id" class="{{ $inputClass }}">
+                            <option value="">Selecione</option>
+                            @foreach ($representatives as $representative)
+                                <option value="{{ $representative->id }}" @selected($primaryRepresentative === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
+                            @endforeach
+                        </select>
                     </div>
                 </div>
             @elseif ($resource === 'products')
@@ -100,14 +133,68 @@
                     </div>
                 </div>
             @elseif ($resource === 'price-tables')
-                <div class="space-y-5">
+                @php
+                    $priceRows = collect(old('product_prices', $model->exists ? $model->prices->map(fn ($price) => [
+                        'product_id' => $price->product_id,
+                        'minimum_quantity' => $price->minimum_quantity,
+                        'price' => $price->price,
+                    ])->values()->all() : []));
+                    if ($priceRows->isEmpty()) {
+                        $priceRows = collect([['product_id' => '', 'minimum_quantity' => 1, 'price' => '']]);
+                    }
+                @endphp
+                <div class="space-y-5" x-data="{ rows: @js($priceRows->values()) }">
                     <div>
                         <x-input-label for="name" value="Nome" />
                         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
                     </div>
                     <div>
+                        <x-input-label for="region_id" value="Regiao" />
+                        <select id="region_id" name="region_id" class="{{ $inputClass }}">
+                            <option value="">Sem regiao especifica</option>
+                            @foreach ($regions as $region)
+                                <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <x-input-label for="description" value="Descricao" />
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
+                    </div>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos e precos</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Cadastre uma ou mais faixas por produto.</p>
+                            </div>
+                            <button type="button" @click="rows.push({ product_id: '', minimum_quantity: 1, price: '' })" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Adicionar preco</button>
+                        </div>
+                        <div class="divide-y divide-gray-100 dark:divide-gray-800">
+                            <template x-for="(row, index) in rows" :key="index">
+                                <div class="grid gap-4 p-5 md:grid-cols-[1fr_160px_180px_80px]">
+                                    <div>
+                                        <x-input-label value="Produto" />
+                                        <select :name="`product_prices[${index}][product_id]`" x-model="row.product_id" class="{{ $inputClass }}">
+                                            <option value="">Selecione</option>
+                                            @foreach ($products as $product)
+                                                <option value="{{ $product->id }}">{{ $product->sku }} - {{ $product->name }}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Qtd. minima" />
+                                        <input type="number" step="0.001" min="0.001" :name="`product_prices[${index}][minimum_quantity]`" x-model="row.minimum_quantity" class="{{ $inputClass }}">
+                                    </div>
+                                    <div>
+                                        <x-input-label value="Preco" />
+                                        <input type="number" step="0.01" min="0" :name="`product_prices[${index}][price]`" x-model="row.price" class="{{ $inputClass }}">
+                                    </div>
+                                    <div class="flex items-end">
+                                        <button type="button" @click="rows.splice(index, 1)" class="rounded-lg border border-error-200 px-3 py-2.5 text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
             @elseif ($resource === 'categories')
@@ -156,6 +243,25 @@
                         <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
+            @elseif ($resource === 'regions')
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <x-input-label for="name" value="Nome" />
+                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
+                    </div>
+                    <div>
+                        <x-input-label for="state" value="UF" />
+                        <x-text-input id="state" name="state" maxlength="2" class="mt-1 block w-full uppercase" :value="old('state', $model->state)" />
+                    </div>
+                    <div>
+                        <x-input-label for="city" value="Cidade" />
+                        <x-text-input id="city" name="city" class="mt-1 block w-full" :value="old('city', $model->city)" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="description" value="Descricao" />
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
+                    </div>
+                </div>
             @elseif ($resource === 'representatives')
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
@@ -171,11 +277,40 @@
                         <x-input-label for="code" value="Codigo do representante" />
                         <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" required />
                     </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="region_id" value="Regiao" />
+                        <select id="region_id" name="region_id" class="{{ $inputClass }}">
+                            <option value="">Sem regiao</option>
+                            @foreach ($regions as $region)
+                                <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                 </div>
             @elseif ($resource === 'orders')
                 @php
-                    $firstItem = $model->exists ? $model->items()->first() : null;
+                    $orderRows = collect(old('items', $model->exists ? $model->items->map(fn ($item) => [
+                        'product_id' => $item->product_id,
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'discount' => collect($item->discounts)->first()['value'] ?? 0,
+                    ])->values()->all() : []));
+                    if ($orderRows->isEmpty()) {
+                        $orderRows = collect([['product_id' => '', 'quantity' => 1, 'unit_price' => 0, 'discount' => 0]]);
+                    }
                 @endphp
+                <div class="space-y-6" x-data="{
+                    items: @js($orderRows->values()),
+                    addItem() { this.items.push({ product_id: '', quantity: 1, unit_price: 0, discount: 0 }) },
+                    removeItem(index) { this.items.splice(index, 1) },
+                    lineTotal(item) {
+                        const subtotal = Number(item.quantity || 0) * Number(item.unit_price || 0);
+                        return Math.max(0, subtotal - (subtotal * (Number(item.discount || 0) / 100)));
+                    },
+                    subtotal() { return this.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0) },
+                    total() { return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0) },
+                    money(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0) }
+                }">
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
                         <x-input-label for="order_number" value="Numero do pedido" />
@@ -184,7 +319,7 @@
                     <div>
                         <x-input-label for="status" value="Status" />
                         <select id="status" name="status" class="{{ $inputClass }}" required>
-                            @foreach (['Draft' => 'Rascunho', 'Sent' => 'Enviado', 'Approved' => 'Aprovado', 'Cancelled' => 'Cancelado'] as $value => $label)
+                            @foreach (['Draft' => 'Rascunho', 'Sent' => 'Enviado', 'Cancelled' => 'Cancelado'] as $value => $label)
                                 <option value="{{ $value }}" @selected(old('status', $model->status ?: 'Draft') === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
@@ -218,7 +353,7 @@
                     </div>
                     <div>
                         <x-input-label for="order_date" value="Data do pedido" />
-                        <x-text-input id="order_date" name="order_date" type="datetime-local" class="mt-1 block w-full" :value="old('order_date', optional($model->order_date)->format('Y-m-d\\TH:i') ?: now()->format('Y-m-d\\TH:i'))" required />
+                        <x-text-input id="order_date" name="order_date" data-datepicker class="mt-1 block w-full" :value="old('order_date', optional($model->order_date)->format('Y-m-d') ?: now()->format('Y-m-d'))" required />
                     </div>
                     <div>
                         <x-input-label for="source" value="Origem" />
@@ -228,26 +363,60 @@
                             @endforeach
                         </select>
                     </div>
-                    <div>
-                        <x-input-label for="product_id" value="Produto" />
-                        <select id="product_id" name="product_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($products as $product)
-                                <option value="{{ $product->id }}" @selected((int) old('product_id', $firstItem?->product_id) === $product->id)>{{ $product->sku }} - {{ $product->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <x-input-label for="quantity" value="Quantidade" />
-                        <x-text-input id="quantity" name="quantity" type="number" step="0.001" min="0.001" class="mt-1 block w-full" :value="old('quantity', $firstItem?->quantity ?: 1)" required />
-                    </div>
-                    <div>
-                        <x-input-label for="unit_price" value="Preco unitario" />
-                        <x-text-input id="unit_price" name="unit_price" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('unit_price', $firstItem?->unit_price ?: 0)" required />
-                    </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observacoes" />
                         <textarea id="notes" name="notes" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('notes', $model->notes) }}</textarea>
+                    </div>
+                </div>
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-gray-800">
+                                <thead class="bg-gray-50 text-left text-theme-xs font-medium text-gray-500 dark:bg-white/[0.02]">
+                                    <tr>
+                                        <th class="px-5 py-4">S. No.</th>
+                                        <th class="px-5 py-4">Produto</th>
+                                        <th class="px-5 py-4">Quantidade</th>
+                                        <th class="px-5 py-4">Preco unitario</th>
+                                        <th class="px-5 py-4">Desconto</th>
+                                        <th class="px-5 py-4">Total</th>
+                                        <th class="px-5 py-4"></th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                                    <template x-for="(item, index) in items" :key="index">
+                                        <tr>
+                                            <td class="px-5 py-4" x-text="index + 1"></td>
+                                            <td class="min-w-[280px] px-5 py-4">
+                                                <select :name="`items[${index}][product_id]`" x-model="item.product_id" class="{{ $inputClass }}" required>
+                                                    <option value="">Selecione</option>
+                                                    @foreach ($products as $product)
+                                                        <option value="{{ $product->id }}">{{ $product->sku }} - {{ $product->name }}</option>
+                                                    @endforeach
+                                                </select>
+                                            </td>
+                                            <td class="px-5 py-4"><input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }} min-w-28" required></td>
+                                            <td class="px-5 py-4"><input type="number" step="0.01" min="0" :name="`items[${index}][unit_price]`" x-model="item.unit_price" class="{{ $inputClass }} min-w-32" required></td>
+                                            <td class="px-5 py-4"><input type="number" step="0.01" min="0" max="100" :name="`items[${index}][discount]`" x-model="item.discount" class="{{ $inputClass }} min-w-28"></td>
+                                            <td class="px-5 py-4 font-medium text-gray-800 dark:text-white/90" x-text="money(lineTotal(item))"></td>
+                                            <td class="px-5 py-4 text-right"><button type="button" @click="removeItem(index)" class="font-medium text-error-600">Remover</button></td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/[0.02]">
+                        <div class="grid gap-4 lg:grid-cols-[1fr_260px] lg:items-end">
+                            <div>
+                                <button type="button" @click="addItem()" class="rounded-lg bg-brand-500 px-5 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Adicionar produto</button>
+                                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Adicione quantos itens forem necessarios. Os totais sao recalculados pelo servidor ao salvar.</p>
+                            </div>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between"><span>Sub Total</span><strong x-text="money(subtotal())"></strong></div>
+                                <div class="flex justify-between text-gray-500"><span>Descontos</span><span x-text="money(subtotal() - total())"></span></div>
+                                <div class="flex justify-between text-lg font-semibold text-gray-800 dark:text-white/90"><span>Total</span><span x-text="money(total())"></span></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @endif

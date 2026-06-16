@@ -20,6 +20,11 @@ class Customer extends Model
         return $this->belongsTo(Company::class);
     }
 
+    public function region(): BelongsTo
+    {
+        return $this->belongsTo(Region::class);
+    }
+
     public function addresses(): HasMany
     {
         return $this->hasMany(CustomerAddress::class);

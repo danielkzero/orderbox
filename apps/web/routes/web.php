@@ -27,6 +27,7 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/categories', [AdminModuleController::class, 'categories'])->name('categories.index');
     Route::get('/brands', [AdminModuleController::class, 'brands'])->name('brands.index');
     Route::get('/units', [AdminModuleController::class, 'units'])->name('units.index');
+    Route::get('/regions', [AdminModuleController::class, 'regions'])->name('regions.index');
     Route::get('/audit-logs', [AdminModuleController::class, 'auditLogs'])->name('audit-logs.index');
     Route::get('/manual', [DocumentationController::class, 'manual'])->name('manual.index');
     Route::get('/api-guide', [DocumentationController::class, 'apiGuide'])->name('api-guide.index');

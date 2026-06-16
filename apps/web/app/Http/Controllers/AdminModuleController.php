@@ -9,6 +9,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\PriceTable;
 use App\Models\Product;
+use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,10 +20,11 @@ class AdminModuleController extends Controller
 {
     public function customers(Request $request): View
     {
-        return $this->module($request, Customer::query()->with('addresses'), 'Clientes', 'customers', [
+        return $this->module($request, Customer::query()->with(['addresses', 'region']), 'Clientes', 'customers', [
             'Nome' => fn (Customer $item) => $item->trade_name ?: $item->corporate_name,
             'Documento' => 'document',
             'Cidade' => fn (Customer $item) => $item->addresses->first()?->city ?? '-',
+            'Região' => fn (Customer $item) => $item->region?->name ?? '-',
             'Limite' => fn (Customer $item) => 'R$ '.number_format((float) $item->credit_limit, 2, ',', '.'),
             'Status' => fn (Customer $item) => view('components.status-badge', ['active' => $item->active]),
             'Ações' => fn (Customer $item) => view('admin.modules.actions', ['resource' => 'customers', 'item' => $item]),
@@ -44,8 +46,9 @@ class AdminModuleController extends Controller
 
     public function priceTables(Request $request): View
     {
-        return $this->module($request, PriceTable::query()->withCount('prices'), 'Tabelas de preço', 'price_tables', [
+        return $this->module($request, PriceTable::query()->with('region')->withCount('prices'), 'Tabelas de preço', 'price_tables', [
             'Nome' => 'name',
+            'Região' => fn (PriceTable $item) => $item->region?->name ?? '-',
             'Descrição' => 'description',
             'Faixas de preço' => 'prices_count',
             'Status' => fn (PriceTable $item) => view('components.status-badge', ['active' => $item->active]),
@@ -55,9 +58,10 @@ class AdminModuleController extends Controller
 
     public function representatives(Request $request): View
     {
-        return $this->module($request, SalesRepresentative::query()->with('user')->withCount('customers'), 'Representantes', 'sales_representatives', [
+        return $this->module($request, SalesRepresentative::query()->with(['user', 'region'])->withCount('customers'), 'Representantes', 'sales_representatives', [
             'Código' => 'code',
             'Nome' => fn (SalesRepresentative $item) => $item->user->name,
+            'Região' => fn (SalesRepresentative $item) => $item->region?->name ?? '-',
             'E-mail' => fn (SalesRepresentative $item) => $item->user->email,
             'Clientes' => 'customers_count',
             'Status' => fn (SalesRepresentative $item) => view('components.status-badge', ['active' => $item->active]),
@@ -111,6 +115,20 @@ class AdminModuleController extends Controller
         ]);
     }
 
+    public function regions(Request $request): View
+    {
+        return $this->module($request, Region::query()->withCount(['customers', 'representatives', 'priceTables']), 'Regiões', 'regions', [
+            'Nome' => 'name',
+            'UF' => fn (Region $item) => $item->state ?? '-',
+            'Cidade' => fn (Region $item) => $item->city ?? '-',
+            'Clientes' => 'customers_count',
+            'Representantes' => 'representatives_count',
+            'Tabelas' => 'price_tables_count',
+            'Status' => fn (Region $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Region $item) => view('admin.modules.actions', ['resource' => 'regions', 'item' => $item]),
+        ]);
+    }
+
     public function auditLogs(Request $request): View
     {
         abort_unless(in_array($request->user()->role, ['Admin', 'Manager'], true), 403);
@@ -134,7 +152,7 @@ class AdminModuleController extends Controller
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search, $table): void {
-                foreach (['name', 'trade_name', 'corporate_name', 'document', 'sku', 'code', 'order_number'] as $column) {
+                foreach (['name', 'trade_name', 'corporate_name', 'document', 'sku', 'code', 'order_number', 'city', 'state'] as $column) {
                     if (\Schema::hasColumn($table, $column)) {
                         $query->orWhere($table.'.'.$column, 'like', '%'.$search.'%');
                     }
@@ -153,6 +171,7 @@ class AdminModuleController extends Controller
                 'price_tables' => 'price-tables',
                 'sales_representatives' => 'representatives',
                 'orders' => 'orders',
+                'regions' => 'regions',
                 'categories' => 'categories',
                 'brands' => 'brands',
                 'units' => 'units',

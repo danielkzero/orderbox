@@ -3,7 +3,9 @@
     @if ($resource === 'orders' ? $item->status !== 'Cancelled' : ($item->active ?? false))
         <form method="POST" action="{{ route('crud.deactivate', [$resource, $item->id]) }}">
             @csrf
-            <button class="font-medium text-error-600 hover:text-error-700">{{ $resource === 'orders' ? 'Cancelar' : 'Inativar' }}</button>
+            <button class="font-medium text-error-600 hover:text-error-700">
+                {{ $resource === 'orders' ? ($item->status === 'Draft' ? 'Excluir' : 'Cancelar') : 'Inativar' }}
+            </button>
         </form>
     @endif
 </div>
