@@ -2,9 +2,11 @@
 
 namespace Tests\Feature\Api;
 
+use App\Models\ApiClient;
 use App\Models\AuthenticationSession;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
 
@@ -12,16 +14,27 @@ class MobileAuthenticationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_mobile_login_requires_allowed_api_client(): void
+    {
+        $user = User::factory()->create();
+
+        $this->postJson('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertForbidden()
+            ->assertJsonPath('error.code', 'api_client_not_allowed');
+    }
+
     public function test_new_mobile_login_revokes_previous_mobile_token(): void
     {
         $user = User::factory()->create();
 
-        $firstToken = $this->postJson('/api/v1/auth/login', [
+        $firstToken = $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'password',
         ])->assertOk()->json('data.access_token');
 
-        $secondToken = $this->postJson('/api/v1/auth/login', [
+        $secondToken = $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'password',
         ])->assertOk()->json('data.access_token');
@@ -44,7 +57,7 @@ class MobileAuthenticationTest extends TestCase
             'password' => 'password',
         ])->assertRedirect(route('dashboard', absolute: false));
 
-        $this->postJson('/api/v1/auth/login', [
+        $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'password',
         ])->assertOk();
@@ -61,7 +74,7 @@ class MobileAuthenticationTest extends TestCase
         $secret = $google2fa->generateSecretKey();
         $user = User::factory()->create();
 
-        $previousToken = $this->postJson('/api/v1/auth/login', [
+        $previousToken = $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'password',
         ])->assertOk()->json('data.access_token');
@@ -71,14 +84,14 @@ class MobileAuthenticationTest extends TestCase
             'two_factor_secret' => $secret,
         ]);
 
-        $challengeId = $this->postJson('/api/v1/auth/login', [
+        $challengeId = $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/login', [
             'email' => $user->email,
             'password' => 'password',
         ])->assertStatus(202)->json('data.challenge_id');
 
         $this->withToken($previousToken)->getJson('/api/v1/auth/me')->assertOk();
 
-        $newToken = $this->postJson('/api/v1/auth/2fa/confirm', [
+        $newToken = $this->withHeaders($this->apiHeaders($user))->postJson('/api/v1/auth/2fa/confirm', [
             'challenge_id' => $challengeId,
             'code' => $google2fa->getCurrentOtp($secret),
         ])->assertOk()->json('data.access_token');
@@ -100,5 +113,24 @@ class MobileAuthenticationTest extends TestCase
         $this->withToken($newToken)
             ->getJson('/api/v1/auth/me')
             ->assertOk();
+    }
+
+    private function apiHeaders(User $user): array
+    {
+        ApiClient::query()->updateOrCreate(
+            ['client_key' => 'test-mobile-client'],
+            [
+                'company_id' => $user->company_id,
+                'name' => 'Test mobile client',
+                'channel' => 'Mobile',
+                'secret_hash' => Hash::make('test-secret'),
+                'active' => true,
+            ],
+        );
+
+        return [
+            'X-OrderBox-Client-Key' => 'test-mobile-client',
+            'X-OrderBox-Client-Secret' => 'test-secret',
+        ];
     }
 }

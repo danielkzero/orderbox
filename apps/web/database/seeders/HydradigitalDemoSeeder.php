@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\ApiClient;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
@@ -55,7 +56,22 @@ class HydradigitalDemoSeeder extends Seeder
             [$products, $priceTables] = $this->seedProducts($company, $categories, $brands, $units);
             $customers = $this->seedCustomers($company, $representatives);
             $this->seedOrders($company, $manager, $representatives, $customers, $products, $priceTables);
+            $this->seedApiClient($company);
         });
+    }
+
+    private function seedApiClient(Company $company): void
+    {
+        ApiClient::query()->updateOrCreate(
+            ['client_key' => 'obx_hydradigital_mobile'],
+            [
+                'company_id' => $company->id,
+                'name' => 'Hydradigital Mobile Demo',
+                'channel' => 'Mobile',
+                'secret_hash' => Hash::make('demo-api-secret'),
+                'active' => true,
+            ],
+        );
     }
 
     private function seedUsers(Company $company): array

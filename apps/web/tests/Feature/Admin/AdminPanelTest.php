@@ -3,8 +3,14 @@
 namespace Tests\Feature\Admin;
 
 use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
+use App\Models\ApiClient;
 use App\Models\AuditLog;
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Company;
+use App\Models\Customer;
+use App\Models\Product;
+use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -36,6 +42,89 @@ class AdminPanelTest extends TestCase
         foreach (['customers', 'products', 'price-tables', 'representatives', 'orders', 'categories', 'brands', 'units'] as $path) {
             $this->actingAs($this->admin)->get('/'.$path)->assertOk();
         }
+    }
+
+    public function test_documentation_pages_are_rendered(): void
+    {
+        $this->actingAs($this->admin)->get('/manual')
+            ->assertOk()
+            ->assertSee('Manual de uso');
+
+        $this->actingAs($this->admin)->get('/api-guide')
+            ->assertOk()
+            ->assertSee('X-OrderBox-Client-Key');
+    }
+
+    public function test_admin_can_create_api_client_and_receive_plain_secret_once(): void
+    {
+        $this->actingAs($this->admin)->post('/api-clients', [
+            'name' => 'Ionic Mobile',
+            'channel' => 'Mobile',
+        ])->assertRedirect(route('api-clients.index'));
+
+        $client = ApiClient::query()->where('name', 'Ionic Mobile')->firstOrFail();
+
+        $this->assertSame($this->admin->company_id, $client->company_id);
+        $this->assertNotEmpty($client->client_key);
+        $this->assertDatabaseHas('audit_logs', ['action' => 'CreateApiClient', 'entity_id' => $client->id]);
+    }
+
+    public function test_admin_can_create_update_and_deactivate_catalog_records(): void
+    {
+        $this->actingAs($this->admin)->post('/crud/categories', [
+            'name' => 'Nova Categoria',
+            'description' => 'Cadastro criado pelo teste.',
+        ])->assertRedirect(route('categories.index'));
+
+        $category = Category::query()->where('name', 'Nova Categoria')->firstOrFail();
+        $this->actingAs($this->admin)->put("/crud/categories/{$category->id}", [
+            'name' => 'Categoria Revisada',
+            'description' => 'Cadastro atualizado pelo teste.',
+            'active' => '1',
+        ])->assertRedirect(route('categories.index'));
+
+        $this->assertDatabaseHas('categories', [
+            'id' => $category->id,
+            'name' => 'Categoria Revisada',
+        ]);
+
+        $this->actingAs($this->admin)->post('/crud/customers', [
+            'corporate_name' => 'Cliente Teste Ltda',
+            'trade_name' => 'Cliente Teste',
+            'document' => '99999999000199',
+            'email' => 'cliente.teste@example.test',
+            'credit_limit' => '1500',
+        ])->assertRedirect(route('customers.index'));
+
+        $customer = Customer::query()->where('document', '99999999000199')->firstOrFail();
+        $this->actingAs($this->admin)->post("/crud/customers/{$customer->id}/deactivate")
+            ->assertRedirect();
+
+        $this->assertFalse($customer->refresh()->active);
+    }
+
+    public function test_admin_can_create_product_from_references(): void
+    {
+        $category = Category::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $brand = Brand::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $unit = Unit::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
+        $this->actingAs($this->admin)->post('/crud/products', [
+            'category_id' => $category->id,
+            'brand_id' => $brand->id,
+            'unit_id' => $unit->id,
+            'sku' => 'TEST-001',
+            'name' => 'Produto Teste',
+            'short_description' => 'Produto criado pelo teste.',
+            'available_stock' => '12.5',
+        ])->assertRedirect(route('products.index'));
+
+        $this->assertDatabaseHas('products', [
+            'company_id' => $this->admin->company_id,
+            'sku' => 'TEST-001',
+            'name' => 'Produto Teste',
+        ]);
+        $this->assertSame('Produto Teste', Product::query()->where('sku', 'TEST-001')->firstOrFail()->name);
     }
 
     public function test_admin_can_create_a_user_and_the_action_is_audited(): void

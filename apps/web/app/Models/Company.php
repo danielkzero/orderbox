@@ -50,4 +50,9 @@ class Company extends Model
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function apiClients(): HasMany
+    {
+        return $this->hasMany(ApiClient::class);
+    }
 }

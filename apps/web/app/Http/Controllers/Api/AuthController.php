@@ -32,6 +32,12 @@ class AuthController extends Controller
             throw ValidationException::withMessages(['email' => __('auth.failed')]);
         }
 
+        $apiClient = $request->attributes->get('api_client');
+
+        if ($apiClient && $apiClient->company_id !== $user->company_id) {
+            throw ValidationException::withMessages(['email' => __('auth.failed')]);
+        }
+
         if ($user->two_factor_enabled) {
             $challenge = $challenges->create($user, 'Mobile');
 
@@ -64,6 +70,11 @@ class AuthController extends Controller
         ]);
 
         $challenge = $challenges->valid($validated['challenge_id'], 'Mobile');
+        $apiClient = $request->attributes->get('api_client');
+
+        if ($apiClient && $apiClient->company_id !== $challenge->company_id) {
+            throw ValidationException::withMessages(['challenge_id' => __('The authentication challenge is invalid.')]);
+        }
 
         if (! $twoFactor->verify($challenge->user, $validated['code'])) {
             throw ValidationException::withMessages(['code' => __('The authentication code is invalid.')]);

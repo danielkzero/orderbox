@@ -15,9 +15,14 @@
         ],
         'Administração' => [
             ['route' => 'users.index', 'label' => 'Usuários', 'icon' => 'shield', 'roles' => ['Admin']],
+            ['route' => 'api-clients.index', 'label' => 'Liberação API', 'icon' => 'key', 'roles' => ['Admin']],
             ['route' => 'security.index', 'label' => 'Segurança e 2FA', 'icon' => 'lock'],
             ['route' => 'audit-logs.index', 'label' => 'Auditoria', 'icon' => 'history', 'roles' => ['Admin', 'Manager']],
             ['route' => 'profile.edit', 'label' => 'Meu perfil', 'icon' => 'user'],
+        ],
+        'Ajuda' => [
+            ['route' => 'manual.index', 'label' => 'Manual de uso', 'icon' => 'book'],
+            ['route' => 'api-guide.index', 'label' => 'Guia da API', 'icon' => 'code'],
         ],
     ];
 @endphp

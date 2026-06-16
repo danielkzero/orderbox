@@ -1,5 +1,11 @@
 <x-app-layout>
-    <x-page-header :title="$title" :description="$description" />
+    <x-page-header :title="$title" :description="$description">
+        @if ($resource)
+            <x-slot name="actions">
+                <a href="{{ route('crud.create', $resource) }}" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Novo registro</a>
+            </x-slot>
+        @endif
+    </x-page-header>
 
     <x-panel>
         <div class="border-b border-gray-200 p-5 dark:border-gray-800">

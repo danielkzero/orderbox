@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\BindCompanyContext;
+use App\Http\Middleware\EnsureApiClientIsAllowed;
 use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
@@ -19,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'active.session' => EnsureAuthenticationSessionIsActive::class,
+            'api.client' => EnsureApiClientIsAllowed::class,
             'company.context' => BindCompanyContext::class,
         ]);
     })

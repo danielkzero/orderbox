@@ -25,6 +25,7 @@ class AdminModuleController extends Controller
             'Cidade' => fn (Customer $item) => $item->addresses->first()?->city ?? '-',
             'Limite' => fn (Customer $item) => 'R$ '.number_format((float) $item->credit_limit, 2, ',', '.'),
             'Status' => fn (Customer $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Customer $item) => view('admin.modules.actions', ['resource' => 'customers', 'item' => $item]),
         ]);
     }
 
@@ -37,6 +38,7 @@ class AdminModuleController extends Controller
             'Marca' => fn (Product $item) => $item->brand?->name ?? '-',
             'Estoque' => fn (Product $item) => $item->available_stock.' '.$item->unit->code,
             'Status' => fn (Product $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Product $item) => view('admin.modules.actions', ['resource' => 'products', 'item' => $item]),
         ]);
     }
 
@@ -47,6 +49,7 @@ class AdminModuleController extends Controller
             'Descrição' => 'description',
             'Faixas de preço' => 'prices_count',
             'Status' => fn (PriceTable $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (PriceTable $item) => view('admin.modules.actions', ['resource' => 'price-tables', 'item' => $item]),
         ]);
     }
 
@@ -80,6 +83,7 @@ class AdminModuleController extends Controller
             'Categoria pai' => fn (Category $item) => $item->parent?->name ?? '-',
             'Produtos' => 'products_count',
             'Status' => fn (Category $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Category $item) => view('admin.modules.actions', ['resource' => 'categories', 'item' => $item]),
         ]);
     }
 
@@ -90,6 +94,7 @@ class AdminModuleController extends Controller
             'Descrição' => 'description',
             'Produtos' => 'products_count',
             'Status' => fn (Brand $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Brand $item) => view('admin.modules.actions', ['resource' => 'brands', 'item' => $item]),
         ]);
     }
 
@@ -100,6 +105,7 @@ class AdminModuleController extends Controller
             'Nome' => 'name',
             'Produtos' => 'products_count',
             'Status' => fn (Unit $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (Unit $item) => view('admin.modules.actions', ['resource' => 'units', 'item' => $item]),
         ]);
     }
 
@@ -139,6 +145,7 @@ class AdminModuleController extends Controller
             'description' => 'Dados reais da empresa autenticada.',
             'items' => $query->paginate(15)->withQueryString(),
             'columns' => $columns,
+            'resource' => in_array($table, ['customers', 'products', 'price_tables', 'categories', 'brands', 'units'], true) ? str_replace('_', '-', $table) : null,
             'search' => $search,
         ]);
     }
