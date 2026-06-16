@@ -195,6 +195,13 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)
             ->withSession(['two_factor_setup_secret' => $secret])
+            ->get('/security')
+            ->assertOk()
+            ->assertSee('Chave manual')
+            ->assertSee('<svg', false);
+
+        $this->actingAs($this->admin)
+            ->withSession(['two_factor_setup_secret' => $secret])
             ->post('/security/2fa', ['code' => $google2fa->getCurrentOtp($secret)])
             ->assertRedirect();
 

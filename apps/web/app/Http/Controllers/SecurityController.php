@@ -5,6 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\AuthenticationSession;
 use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationSessionService;
+use BaconQrCode\Renderer\Image\SvgImageBackEnd;
+use BaconQrCode\Renderer\ImageRenderer;
+use BaconQrCode\Renderer\RendererStyle\RendererStyle;
+use BaconQrCode\Writer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -23,8 +27,15 @@ class SecurityController extends Controller
             $request->session()->put('two_factor_setup_secret', $secret);
         }
 
+        $qrCodeSvg = $secret ? $this->qrCodeSvg($google2fa->getQRCodeUrl(
+            config('app.name', 'OrderBox'),
+            $request->user()->email,
+            $secret,
+        )) : null;
+
         return view('admin.security.index', [
             'secret' => $secret,
+            'qrCodeSvg' => $qrCodeSvg,
             'sessions' => AuthenticationSession::query()
                 ->where('user_id', $request->user()->id)
                 ->latest()
@@ -70,5 +81,15 @@ class SecurityController extends Controller
         $audit->record($request->user(), 'RevokeSession', $authenticationSession, ['active' => true], ['active' => false]);
 
         return back()->with('status', 'Sessão revogada.');
+    }
+
+    private function qrCodeSvg(string $payload): string
+    {
+        $renderer = new ImageRenderer(
+            new RendererStyle(220, 2),
+            new SvgImageBackEnd,
+        );
+
+        return (new Writer($renderer))->writeString($payload);
     }
 }
