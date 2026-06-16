@@ -94,7 +94,7 @@ class CatalogCrudController extends Controller
             'users' => User::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'customers' => Customer::query()->where('company_id', $companyId)->where('active', true)->orderBy('trade_name')->orderBy('corporate_name')->get(),
             'representatives' => SalesRepresentative::query()->with('user')->where('company_id', $companyId)->where('active', true)->get()->sortBy('user.name'),
-            'priceTables' => PriceTable::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
+            'priceTables' => PriceTable::query()->with('region')->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'products' => Product::query()->with(['unit', 'prices'])->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
         ]);
     }
@@ -136,6 +136,15 @@ class CatalogCrudController extends Controller
                 'base_price' => ['nullable', 'numeric', 'min:0'],
                 'available_stock' => ['nullable', 'numeric', 'min:0'],
                 'stock_status' => ['nullable', 'in:InStock,LowStock,OutOfStock'],
+                'table_prices' => ['nullable', 'array'],
+                'table_prices.*.price_table_id' => ['required_with:table_prices', Rule::exists('price_tables', 'id')->where('company_id', $companyId)],
+                'table_prices.*.minimum_quantity' => ['nullable', 'numeric', 'min:0.001'],
+                'table_prices.*.price' => ['nullable', 'numeric', 'min:0'],
+                'new_price_tables' => ['nullable', 'array'],
+                'new_price_tables.*.name' => ['nullable', 'string', 'max:255', Rule::unique('price_tables', 'name')->where('company_id', $companyId)],
+                'new_price_tables.*.region_id' => ['nullable', Rule::exists('regions', 'id')->where('company_id', $companyId)],
+                'new_price_tables.*.minimum_quantity' => ['nullable', 'numeric', 'min:0.001'],
+                'new_price_tables.*.price' => ['nullable', 'numeric', 'min:0'],
                 'active' => ['sometimes', 'boolean'],
             ]),
             'price-tables' => $request->validate([
@@ -212,6 +221,9 @@ class CatalogCrudController extends Controller
 
     private function saveProduct(Request $request, array $data, ?Model $model = null): Product
     {
+        $tablePrices = collect($data['table_prices'] ?? []);
+        $newPriceTables = collect($data['new_price_tables'] ?? []);
+        unset($data['table_prices'], $data['new_price_tables']);
         unset($data['image']);
 
         if ($request->hasFile('image')) {
@@ -228,12 +240,67 @@ class CatalogCrudController extends Controller
             ? ($model instanceof Product && $model->published_at ? $model->published_at : now())
             : null;
 
-        /** @var Product $product */
-        $product = $model instanceof Product
-            ? tap($model)->update($data)
-            : Product::query()->create($data + ['company_id' => $request->user()->company_id]);
+        return DB::transaction(function () use ($request, $data, $model, $tablePrices, $newPriceTables): Product {
+            /** @var Product $product */
+            $product = $model instanceof Product
+                ? tap($model)->update($data)
+                : Product::query()->create($data + ['company_id' => $request->user()->company_id]);
 
-        return $product;
+            $this->syncProductPrices($product, $tablePrices, $newPriceTables, $request->user()->company_id);
+
+            return $product->load('prices');
+        });
+    }
+
+    private function syncProductPrices(Product $product, $tablePrices, $newPriceTables, int $companyId): void
+    {
+        $existingTableIds = $tablePrices
+            ->pluck('price_table_id')
+            ->filter()
+            ->map(fn ($id): int => (int) $id)
+            ->unique()
+            ->values();
+
+        if ($existingTableIds->isNotEmpty()) {
+            ProductPrice::query()
+                ->where('product_id', $product->id)
+                ->whereIn('price_table_id', $existingTableIds)
+                ->delete();
+        }
+
+        foreach ($tablePrices as $row) {
+            if (! filled($row['price'] ?? null)) {
+                continue;
+            }
+
+            ProductPrice::query()->create([
+                'product_id' => $product->id,
+                'price_table_id' => (int) $row['price_table_id'],
+                'minimum_quantity' => $row['minimum_quantity'] ?: 1,
+                'price' => $row['price'],
+            ]);
+        }
+
+        foreach ($newPriceTables as $row) {
+            if (! filled($row['name'] ?? null) || ! filled($row['price'] ?? null)) {
+                continue;
+            }
+
+            $priceTable = PriceTable::query()->create([
+                'company_id' => $companyId,
+                'region_id' => $row['region_id'] ?? null,
+                'name' => $row['name'],
+                'description' => 'Criada no cadastro do produto.',
+                'active' => true,
+            ]);
+
+            ProductPrice::query()->create([
+                'product_id' => $product->id,
+                'price_table_id' => $priceTable->id,
+                'minimum_quantity' => $row['minimum_quantity'] ?: 1,
+                'price' => $row['price'],
+            ]);
+        }
     }
 
     private function saveCustomer(Request $request, array $data, ?Model $model = null): Customer

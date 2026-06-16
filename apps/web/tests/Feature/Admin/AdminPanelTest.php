@@ -120,6 +120,8 @@ class AdminPanelTest extends TestCase
         $category = Category::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $brand = Brand::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $unit = Unit::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $priceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $region = Region::query()->where('company_id', $this->admin->company_id)->firstOrFail();
 
         $this->actingAs($this->admin)->post('/crud/products', [
             'category_id' => $category->id,
@@ -140,6 +142,12 @@ class AdminPanelTest extends TestCase
             'stock_status' => 'LowStock',
             'active' => '1',
             'image' => UploadedFile::fake()->image('produto-teste.jpg', 800, 400),
+            'table_prices' => [
+                ['price_table_id' => $priceTable->id, 'minimum_quantity' => '1', 'price' => '47.90'],
+            ],
+            'new_price_tables' => [
+                ['name' => 'Tabela Produto Teste', 'region_id' => $region->id, 'minimum_quantity' => '5', 'price' => '44.90'],
+            ],
         ])->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('products', [
@@ -156,6 +164,20 @@ class AdminPanelTest extends TestCase
         $this->assertNotNull($product->published_at);
         $this->assertStringStartsWith('storage/products/', $product->image_url);
         Storage::disk('public')->assertExists(str_replace('storage/', '', $product->image_url));
+        $this->assertDatabaseHas('product_prices', [
+            'product_id' => $product->id,
+            'price_table_id' => $priceTable->id,
+            'minimum_quantity' => '1.000',
+            'price' => '47.90',
+        ]);
+        $createdTable = PriceTable::query()->where('name', 'Tabela Produto Teste')->firstOrFail();
+        $this->assertSame($region->id, $createdTable->region_id);
+        $this->assertDatabaseHas('product_prices', [
+            'product_id' => $product->id,
+            'price_table_id' => $createdTable->id,
+            'minimum_quantity' => '5.000',
+            'price' => '44.90',
+        ]);
     }
 
     public function test_admin_can_create_region_and_price_table_products(): void

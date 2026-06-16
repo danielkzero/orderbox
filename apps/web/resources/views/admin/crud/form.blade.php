@@ -87,9 +87,25 @@
                     </div>
                 </div>
             @elseif ($resource === 'products')
+                @php
+                    $currentProductPrices = $model->exists
+                        ? $model->prices->sortBy('minimum_quantity')->groupBy('price_table_id')
+                        : collect();
+                    $tablePriceRows = collect(old('table_prices', $priceTables->values()->map(function ($priceTable) use ($currentProductPrices) {
+                        $price = $currentProductPrices->get($priceTable->id)?->first();
+
+                        return [
+                            'price_table_id' => $priceTable->id,
+                            'minimum_quantity' => $price?->minimum_quantity ?? 1,
+                            'price' => $price?->price,
+                        ];
+                    })->all()));
+                    $newPriceTableRows = collect(old('new_price_tables', []))->values();
+                @endphp
                 <div class="space-y-6" x-data="{
                     imageUrl: @js(old('image_url', str_starts_with((string) $model->image_url, 'http') ? $model->image_url : null)),
                     previewUrl: @js(old('image_url', $model->imageSrc())),
+                    newTables: @js($newPriceTableRows),
                     isDragging: false,
                     setFile(file) {
                         if (!file) return;
@@ -176,6 +192,97 @@
                                     <option value="OutOfStock" @selected(old('stock_status', $model->stock_status) === 'OutOfStock')>Sem estoque</option>
                                 </select>
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Preços de tabela</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edite os preços do produto nas tabelas existentes ou crie uma nova tabela pelo botão de adicionar.</p>
+                            </div>
+                            <button type="button" @click="newTables.push({ name: '', region_id: '', minimum_quantity: 1, price: '' })" class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                                +
+                                <span class="ml-2">Nova tabela</span>
+                            </button>
+                        </div>
+
+                        <div class="space-y-5 p-5">
+                            @if ($priceTables->isNotEmpty())
+                                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                                    @foreach ($priceTables as $index => $priceTable)
+                                        @php
+                                            $row = $tablePriceRows->firstWhere('price_table_id', $priceTable->id) ?? [
+                                                'price_table_id' => $priceTable->id,
+                                                'minimum_quantity' => 1,
+                                                'price' => null,
+                                            ];
+                                        @endphp
+                                        <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+                                            <div class="mb-4 flex items-start justify-between gap-3">
+                                                <div>
+                                                    <p class="font-medium text-gray-800 dark:text-white/90">{{ $priceTable->name }}</p>
+                                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $priceTable->region?->name ?? 'Todas as regiões' }}</p>
+                                                </div>
+                                                <span class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">Tabela</span>
+                                            </div>
+                                            <input type="hidden" name="table_prices[{{ $index }}][price_table_id]" value="{{ $priceTable->id }}">
+                                            <div class="grid gap-3 sm:grid-cols-[120px_1fr]">
+                                                <div>
+                                                    <x-input-label value="Qtd. mínima" />
+                                                    <input type="number" step="0.001" min="0.001" name="table_prices[{{ $index }}][minimum_quantity]" value="{{ old("table_prices.$index.minimum_quantity", $row['minimum_quantity'] ?? 1) }}" class="{{ $inputClass }}">
+                                                </div>
+                                                <div>
+                                                    <x-input-label value="Preço" />
+                                                    <div class="mt-1 flex">
+                                                        <span class="inline-flex h-11 items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">R$</span>
+                                                        <input type="number" step="0.01" min="0" name="table_prices[{{ $index }}][price]" value="{{ old("table_prices.$index.price", $row['price'] ?? '') }}" class="{{ Str::replaceFirst('rounded-lg', 'rounded-r-lg', $inputClass) }}">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                    Nenhuma tabela de preço cadastrada. Use o botão <strong>Nova tabela</strong> para criar a primeira junto com este produto.
+                                </div>
+                            @endif
+
+                            <template x-for="(table, index) in newTables" :key="index">
+                                <div class="rounded-2xl border border-brand-200 bg-brand-50/30 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
+                                    <div class="mb-4 flex items-center justify-between">
+                                        <h4 class="font-medium text-gray-800 dark:text-white/90">Nova tabela de preço</h4>
+                                        <button type="button" @click="newTables.splice(index, 1)" class="text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                    <div class="grid gap-4 md:grid-cols-[1fr_220px_160px_180px]">
+                                        <div>
+                                            <x-input-label value="Nome da tabela" />
+                                            <input type="text" :name="`new_price_tables[${index}][name]`" x-model="table.name" class="{{ $inputClass }}" placeholder="Ex.: GLOBAL 1 (2000)">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Região" />
+                                            <select :name="`new_price_tables[${index}][region_id]`" x-model="table.region_id" class="{{ $inputClass }}">
+                                                <option value="">Todas as regiões</option>
+                                                @foreach ($regions as $region)
+                                                    <option value="{{ $region->id }}">{{ $region->name }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Qtd. mínima" />
+                                            <input type="number" step="0.001" min="0.001" :name="`new_price_tables[${index}][minimum_quantity]`" x-model="table.minimum_quantity" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Preço" />
+                                            <div class="mt-1 flex">
+                                                <span class="inline-flex h-11 items-center rounded-l-lg border border-r-0 border-gray-300 bg-white px-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">R$</span>
+                                                <input type="number" step="0.01" min="0" :name="`new_price_tables[${index}][price]`" x-model="table.price" class="{{ Str::replaceFirst('rounded-lg', 'rounded-r-lg', $inputClass) }}">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
