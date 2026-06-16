@@ -61,6 +61,7 @@ class AdminModuleController extends Controller
             'E-mail' => fn (SalesRepresentative $item) => $item->user->email,
             'Clientes' => 'customers_count',
             'Status' => fn (SalesRepresentative $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (SalesRepresentative $item) => view('admin.modules.actions', ['resource' => 'representatives', 'item' => $item]),
         ]);
     }
 
@@ -73,6 +74,7 @@ class AdminModuleController extends Controller
             'Origem' => 'source',
             'Status' => fn (Order $item) => view('components.status-badge', ['active' => $item->status !== 'Cancelled', 'label' => $item->status]),
             'Total' => fn (Order $item) => 'R$ '.number_format((float) $item->total_amount, 2, ',', '.'),
+            'Ações' => fn (Order $item) => view('admin.modules.actions', ['resource' => 'orders', 'item' => $item]),
         ]);
     }
 
@@ -145,7 +147,16 @@ class AdminModuleController extends Controller
             'description' => 'Dados reais da empresa autenticada.',
             'items' => $query->paginate(15)->withQueryString(),
             'columns' => $columns,
-            'resource' => in_array($table, ['customers', 'products', 'price_tables', 'categories', 'brands', 'units'], true) ? str_replace('_', '-', $table) : null,
+            'resource' => [
+                'customers' => 'customers',
+                'products' => 'products',
+                'price_tables' => 'price-tables',
+                'sales_representatives' => 'representatives',
+                'orders' => 'orders',
+                'categories' => 'categories',
+                'brands' => 'brands',
+                'units' => 'units',
+            ][$table] ?? null,
             'search' => $search,
         ]);
     }

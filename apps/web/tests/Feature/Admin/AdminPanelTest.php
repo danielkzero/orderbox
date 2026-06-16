@@ -9,7 +9,10 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\Order;
+use App\Models\PriceTable;
 use App\Models\Product;
+use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
 use Database\Seeders\HydradigitalDemoSeeder;
@@ -125,6 +128,49 @@ class AdminPanelTest extends TestCase
             'name' => 'Produto Teste',
         ]);
         $this->assertSame('Produto Teste', Product::query()->where('sku', 'TEST-001')->firstOrFail()->name);
+    }
+
+    public function test_admin_can_create_representative_and_order(): void
+    {
+        $user = User::factory()->create([
+            'company_id' => $this->admin->company_id,
+            'email' => 'representante.novo@hydradigital.test',
+            'role' => 'SalesRepresentative',
+        ]);
+
+        $this->actingAs($this->admin)->post('/crud/representatives', [
+            'user_id' => $user->id,
+            'code' => 'REP-999',
+        ])->assertRedirect(route('representatives.index'));
+
+        $representative = SalesRepresentative::query()->where('code', 'REP-999')->firstOrFail();
+        $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $priceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
+        $this->actingAs($this->admin)->post('/crud/orders', [
+            'customer_id' => $customer->id,
+            'sales_representative_id' => $representative->id,
+            'price_table_id' => $priceTable->id,
+            'order_number' => 'PED-TEST-001',
+            'status' => 'Draft',
+            'order_date' => now()->format('Y-m-d H:i:s'),
+            'source' => 'Admin',
+            'product_id' => $product->id,
+            'quantity' => '2',
+            'unit_price' => '15.50',
+            'notes' => 'Pedido criado pelo teste.',
+        ])->assertRedirect(route('orders.index'));
+
+        $order = Order::query()->where('order_number', 'PED-TEST-001')->firstOrFail();
+
+        $this->assertSame('31.00', $order->total_amount);
+        $this->assertSame(1, $order->items()->count());
+
+        $this->actingAs($this->admin)->post("/crud/orders/{$order->id}/deactivate")
+            ->assertRedirect();
+
+        $this->assertSame('Cancelled', $order->refresh()->status);
     }
 
     public function test_admin_can_create_a_user_and_the_action_is_audited(): void

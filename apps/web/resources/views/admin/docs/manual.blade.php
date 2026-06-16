@@ -40,11 +40,11 @@
             <x-panel id="pedidos">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">3. Pedidos e consulta</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos atuais aparecem em modo consulta. O proximo passo funcional e completar criacao, itens e envio de pedidos.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos podem ser criados pelo painel com cliente, representante, tabela de preco e um item inicial para teste do fluxo.</p>
                     <ul class="list-disc space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Pedidos vindos do mobile entram com origem "Mobile".</li>
                         <li>Pedidos feitos pelo painel entram com origem "Admin".</li>
-                        <li>A auditoria registra as principais alteracoes feitas por usuario.</li>
+                        <li>Use "Cancelar" para encerrar um pedido preservando historico e auditoria.</li>
                     </ul>
                 </div>
             </x-panel>

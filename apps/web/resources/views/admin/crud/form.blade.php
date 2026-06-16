@@ -151,9 +151,103 @@
                         <textarea id="description" name="description" rows="4" class="{{ $inputClass }}">{{ old('description', $model->description) }}</textarea>
                     </div>
                 </div>
+            @elseif ($resource === 'representatives')
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <x-input-label for="user_id" value="Usuario" />
+                        <select id="user_id" name="user_id" class="{{ $inputClass }}" required>
+                            <option value="">Selecione</option>
+                            @foreach ($users as $user)
+                                <option value="{{ $user->id }}" @selected((int) old('user_id', $model->user_id) === $user->id)>{{ $user->name }} - {{ $user->email }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="code" value="Codigo do representante" />
+                        <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" required />
+                    </div>
+                </div>
+            @elseif ($resource === 'orders')
+                @php
+                    $firstItem = $model->exists ? $model->items()->first() : null;
+                @endphp
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <x-input-label for="order_number" value="Numero do pedido" />
+                        <x-text-input id="order_number" name="order_number" class="mt-1 block w-full" :value="old('order_number', $model->order_number ?: 'PED-'.now()->format('YmdHis'))" required />
+                    </div>
+                    <div>
+                        <x-input-label for="status" value="Status" />
+                        <select id="status" name="status" class="{{ $inputClass }}" required>
+                            @foreach (['Draft' => 'Rascunho', 'Sent' => 'Enviado', 'Approved' => 'Aprovado', 'Cancelled' => 'Cancelado'] as $value => $label)
+                                <option value="{{ $value }}" @selected(old('status', $model->status ?: 'Draft') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="customer_id" value="Cliente" />
+                        <select id="customer_id" name="customer_id" class="{{ $inputClass }}" required>
+                            <option value="">Selecione</option>
+                            @foreach ($customers as $customer)
+                                <option value="{{ $customer->id }}" @selected((int) old('customer_id', $model->customer_id) === $customer->id)>{{ $customer->trade_name ?: $customer->corporate_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="sales_representative_id" value="Representante" />
+                        <select id="sales_representative_id" name="sales_representative_id" class="{{ $inputClass }}" required>
+                            <option value="">Selecione</option>
+                            @foreach ($representatives as $representative)
+                                <option value="{{ $representative->id }}" @selected((int) old('sales_representative_id', $model->sales_representative_id) === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="price_table_id" value="Tabela de preco" />
+                        <select id="price_table_id" name="price_table_id" class="{{ $inputClass }}" required>
+                            <option value="">Selecione</option>
+                            @foreach ($priceTables as $priceTable)
+                                <option value="{{ $priceTable->id }}" @selected((int) old('price_table_id', $model->price_table_id) === $priceTable->id)>{{ $priceTable->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="order_date" value="Data do pedido" />
+                        <x-text-input id="order_date" name="order_date" type="datetime-local" class="mt-1 block w-full" :value="old('order_date', optional($model->order_date)->format('Y-m-d\\TH:i') ?: now()->format('Y-m-d\\TH:i'))" required />
+                    </div>
+                    <div>
+                        <x-input-label for="source" value="Origem" />
+                        <select id="source" name="source" class="{{ $inputClass }}" required>
+                            @foreach (['Admin', 'Mobile'] as $source)
+                                <option value="{{ $source }}" @selected(old('source', $model->source ?: 'Admin') === $source)>{{ $source }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="product_id" value="Produto" />
+                        <select id="product_id" name="product_id" class="{{ $inputClass }}" required>
+                            <option value="">Selecione</option>
+                            @foreach ($products as $product)
+                                <option value="{{ $product->id }}" @selected((int) old('product_id', $firstItem?->product_id) === $product->id)>{{ $product->sku }} - {{ $product->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="quantity" value="Quantidade" />
+                        <x-text-input id="quantity" name="quantity" type="number" step="0.001" min="0.001" class="mt-1 block w-full" :value="old('quantity', $firstItem?->quantity ?: 1)" required />
+                    </div>
+                    <div>
+                        <x-input-label for="unit_price" value="Preco unitario" />
+                        <x-text-input id="unit_price" name="unit_price" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('unit_price', $firstItem?->unit_price ?: 0)" required />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="notes" value="Observacoes" />
+                        <textarea id="notes" name="notes" rows="4" class="{{ $inputClass }}">{{ old('notes', $model->notes) }}</textarea>
+                    </div>
+                </div>
             @endif
 
-            @if ($editing)
+            @if ($editing && $resource !== 'orders')
                 <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm dark:border-gray-800">
                     <input type="hidden" name="active" value="0">
                     <input type="checkbox" name="active" value="1" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked(old('active', $model->active))>
