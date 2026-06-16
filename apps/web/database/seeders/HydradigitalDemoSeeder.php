@@ -191,14 +191,14 @@ class HydradigitalDemoSeeder extends Seeder
         });
 
         $definitions = [
-            ['sku' => 'HID-001', 'name' => 'Torneira de Cozinha Hydra', 'category' => 'Hidráulica', 'brand' => 'Hydra', 'unit' => 'UN', 'stock' => 48, 'retail' => 89.90],
-            ['sku' => 'HID-002', 'name' => 'Registro de Pressão 3/4', 'category' => 'Hidráulica', 'brand' => 'Tigre', 'unit' => 'UN', 'stock' => 120, 'retail' => 34.50],
-            ['sku' => 'HID-003', 'name' => 'Tubo PVC Soldável 25mm', 'category' => 'Hidráulica', 'brand' => 'Tigre', 'unit' => 'MT', 'stock' => 360, 'retail' => 12.90],
-            ['sku' => 'ELE-001', 'name' => 'Tomada Dupla 10A', 'category' => 'Elétrica', 'brand' => 'Hydra', 'unit' => 'UN', 'stock' => 95, 'retail' => 18.70],
-            ['sku' => 'ELE-002', 'name' => 'Cabo Flexível 2,5mm', 'category' => 'Elétrica', 'brand' => 'Hydra', 'unit' => 'MT', 'stock' => 850, 'retail' => 4.80],
-            ['sku' => 'FER-001', 'name' => 'Alicate Universal 8"', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'UN', 'stock' => 32, 'retail' => 54.90],
-            ['sku' => 'FER-002', 'name' => 'Jogo de Chaves de Fenda', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'CX', 'stock' => 20, 'retail' => 72.00],
-            ['sku' => 'FER-003', 'name' => 'Trena Emborrachada 5m', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'UN', 'stock' => 64, 'retail' => 29.90],
+            ['sku' => 'HID-001', 'name' => 'Torneira de Cozinha Hydra', 'category' => 'Hidráulica', 'brand' => 'Hydra', 'unit' => 'UN', 'stock' => 48, 'retail' => 89.90, 'color' => 'Cromado', 'weight' => 0.850],
+            ['sku' => 'HID-002', 'name' => 'Registro de Pressão 3/4', 'category' => 'Hidráulica', 'brand' => 'Tigre', 'unit' => 'UN', 'stock' => 120, 'retail' => 34.50, 'color' => 'Bruto', 'weight' => 0.320],
+            ['sku' => 'HID-003', 'name' => 'Tubo PVC Soldável 25mm', 'category' => 'Hidráulica', 'brand' => 'Tigre', 'unit' => 'MT', 'stock' => 360, 'retail' => 12.90, 'color' => 'Marrom', 'weight' => 0.180],
+            ['sku' => 'ELE-001', 'name' => 'Tomada Dupla 10A', 'category' => 'Elétrica', 'brand' => 'Hydra', 'unit' => 'UN', 'stock' => 95, 'retail' => 18.70, 'color' => 'Branco', 'weight' => 0.120],
+            ['sku' => 'ELE-002', 'name' => 'Cabo Flexível 2,5mm', 'category' => 'Elétrica', 'brand' => 'Hydra', 'unit' => 'MT', 'stock' => 850, 'retail' => 4.80, 'color' => 'Azul', 'weight' => 0.045],
+            ['sku' => 'FER-001', 'name' => 'Alicate Universal 8"', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'UN', 'stock' => 32, 'retail' => 54.90, 'color' => 'Laranja', 'weight' => 0.410],
+            ['sku' => 'FER-002', 'name' => 'Jogo de Chaves de Fenda', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'CX', 'stock' => 20, 'retail' => 72.00, 'color' => 'Vermelho', 'weight' => 1.100],
+            ['sku' => 'FER-003', 'name' => 'Trena Emborrachada 5m', 'category' => 'Ferramentas', 'brand' => 'Tramontina', 'unit' => 'UN', 'stock' => 64, 'retail' => 29.90, 'color' => 'Amarelo', 'weight' => 0.260],
         ];
 
         $products = collect($definitions)->mapWithKeys(function (array $data) use ($company, $categories, $brands, $units, $priceTables): array {
@@ -211,8 +211,17 @@ class HydradigitalDemoSeeder extends Seeder
                     'external_id' => 'ERP-'.$data['sku'],
                     'name' => $data['name'],
                     'short_description' => 'Produto fictício para testes do OrderBox.',
+                    'description' => 'Item de catálogo usado para validar pedidos, tabelas de preço e disponibilidade comercial.',
+                    'color' => $data['color'],
+                    'weight_kg' => $data['weight'],
+                    'length_cm' => 15,
+                    'width_cm' => 10,
+                    'height_cm' => 8,
+                    'base_price' => $data['retail'],
                     'active' => true,
                     'available_stock' => $data['stock'],
+                    'stock_status' => $data['stock'] <= 30 ? 'LowStock' : 'InStock',
+                    'published_at' => now(),
                 ],
             );
 

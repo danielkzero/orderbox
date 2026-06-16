@@ -33,14 +33,47 @@ class AdminModuleController extends Controller
 
     public function products(Request $request): View
     {
-        return $this->module($request, Product::query()->with(['category', 'brand', 'unit', 'prices']), 'Produtos', 'products', [
-            'SKU' => 'sku',
-            'Produto' => 'name',
-            'Categoria' => fn (Product $item) => $item->category->name,
-            'Marca' => fn (Product $item) => $item->brand?->name ?? '-',
-            'Estoque' => fn (Product $item) => $item->available_stock.' '.$item->unit->code,
-            'Status' => fn (Product $item) => view('components.status-badge', ['active' => $item->active]),
-            'Ações' => fn (Product $item) => view('admin.modules.actions', ['resource' => 'products', 'item' => $item]),
+        $companyId = $request->user()->company_id;
+        $search = trim($request->string('search')->toString());
+        $categoryId = $request->integer('category_id') ?: null;
+        $brandId = $request->integer('brand_id') ?: null;
+        $stockStatus = $request->string('stock_status')->toString();
+
+        $query = Product::query()
+            ->with(['category', 'brand', 'unit', 'prices'])
+            ->where('company_id', $companyId)
+            ->latest();
+
+        if ($search !== '') {
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('name', 'like', '%'.$search.'%')
+                    ->orWhere('sku', 'like', '%'.$search.'%')
+                    ->orWhere('barcode', 'like', '%'.$search.'%');
+            });
+        }
+
+        if ($categoryId) {
+            $query->where('category_id', $categoryId);
+        }
+
+        if ($brandId) {
+            $query->where('brand_id', $brandId);
+        }
+
+        if (in_array($stockStatus, ['InStock', 'LowStock', 'OutOfStock'], true)) {
+            $query->where('stock_status', $stockStatus);
+        }
+
+        return view('admin.products.index', [
+            'products' => $query->paginate(15)->withQueryString(),
+            'categories' => Category::query()->where('company_id', $companyId)->orderBy('name')->get(),
+            'brands' => Brand::query()->where('company_id', $companyId)->orderBy('name')->get(),
+            'filters' => [
+                'search' => $search,
+                'category_id' => $categoryId,
+                'brand_id' => $brandId,
+                'stock_status' => $stockStatus,
+            ],
         ]);
     }
 

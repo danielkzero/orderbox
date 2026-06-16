@@ -87,50 +87,138 @@
                     </div>
                 </div>
             @elseif ($resource === 'products')
-                <div class="grid gap-5 md:grid-cols-2">
-                    <div>
-                        <x-input-label for="sku" value="SKU" />
-                        <x-text-input id="sku" name="sku" class="mt-1 block w-full" :value="old('sku', $model->sku)" required />
+                <div class="space-y-6" x-data="{ imageUrl: @js(old('image_url', $model->image_url)) }">
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Descrição do produto</h3>
+                        </div>
+                        <div class="grid gap-5 p-5 md:grid-cols-2">
+                            <div>
+                                <x-input-label for="name" value="Nome do produto" />
+                                <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
+                            </div>
+                            <div>
+                                <x-input-label for="sku" value="SKU" />
+                                <x-text-input id="sku" name="sku" class="mt-1 block w-full" :value="old('sku', $model->sku)" required />
+                            </div>
+                            <div>
+                                <x-input-label for="barcode" value="Código de barras" />
+                                <x-text-input id="barcode" name="barcode" class="mt-1 block w-full" :value="old('barcode', $model->barcode)" />
+                            </div>
+                            <div>
+                                <x-input-label for="category_id" value="Categoria" />
+                                <select id="category_id" name="category_id" class="{{ $inputClass }}" required>
+                                    <option value="">Selecione a categoria</option>
+                                    @foreach ($categories as $category)
+                                        <option value="{{ $category->id }}" @selected((int) old('category_id', $model->category_id) === $category->id)>{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="brand_id" value="Marca" />
+                                <select id="brand_id" name="brand_id" class="{{ $inputClass }}">
+                                    <option value="">Selecione a marca</option>
+                                    @foreach ($brands as $brand)
+                                        <option value="{{ $brand->id }}" @selected((int) old('brand_id', $model->brand_id) === $brand->id)>{{ $brand->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="color" value="Cor" />
+                                <x-text-input id="color" name="color" class="mt-1 block w-full" :value="old('color', $model->color)" placeholder="Preto, branco, azul..." />
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-input-label for="short_description" value="Descrição curta" />
+                                <textarea id="short_description" name="short_description" rows="3" class="{{ Str::replaceFirst('h-11', 'min-h-28', $inputClass) }}">{{ old('short_description', $model->short_description) }}</textarea>
+                            </div>
+                            <div class="md:col-span-2">
+                                <x-input-label for="description" value="Descrição completa" />
+                                <textarea id="description" name="description" rows="5" class="{{ Str::replaceFirst('h-11', 'min-h-40', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="name" value="Nome" />
-                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Preço e disponibilidade</h3>
+                        </div>
+                        <div class="grid gap-5 p-5 md:grid-cols-2">
+                            <div>
+                                <x-input-label for="base_price" value="Preço base" />
+                                <x-text-input id="base_price" name="base_price" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('base_price', $model->base_price)" />
+                            </div>
+                            <div>
+                                <x-input-label for="unit_id" value="Unidade" />
+                                <select id="unit_id" name="unit_id" class="{{ $inputClass }}" required>
+                                    <option value="">Selecione a unidade</option>
+                                    @foreach ($units as $unit)
+                                        <option value="{{ $unit->id }}" @selected((int) old('unit_id', $model->unit_id) === $unit->id)>{{ $unit->code }} - {{ $unit->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="available_stock" value="Quantidade em estoque" />
+                                <x-text-input id="available_stock" name="available_stock" type="number" step="0.001" min="0" class="mt-1 block w-full" :value="old('available_stock', $model->available_stock)" />
+                            </div>
+                            <div>
+                                <x-input-label for="stock_status" value="Status de disponibilidade" />
+                                <select id="stock_status" name="stock_status" class="{{ $inputClass }}" required>
+                                    <option value="InStock" @selected(old('stock_status', $model->stock_status ?: 'InStock') === 'InStock')>Em estoque</option>
+                                    <option value="LowStock" @selected(old('stock_status', $model->stock_status) === 'LowStock')>Estoque baixo</option>
+                                    <option value="OutOfStock" @selected(old('stock_status', $model->stock_status) === 'OutOfStock')>Sem estoque</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="category_id" value="Categoria" />
-                        <select id="category_id" name="category_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($categories as $category)
-                                <option value="{{ $category->id }}" @selected((int) old('category_id', $model->category_id) === $category->id)>{{ $category->name }}</option>
-                            @endforeach
-                        </select>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Dimensões e logística</h3>
+                        </div>
+                        <div class="grid gap-5 p-5 md:grid-cols-4">
+                            <div>
+                                <x-input-label for="weight_kg" value="Peso (kg)" />
+                                <x-text-input id="weight_kg" name="weight_kg" type="number" step="0.001" min="0" class="mt-1 block w-full" :value="old('weight_kg', $model->weight_kg)" />
+                            </div>
+                            <div>
+                                <x-input-label for="length_cm" value="Comprimento (cm)" />
+                                <x-text-input id="length_cm" name="length_cm" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('length_cm', $model->length_cm)" />
+                            </div>
+                            <div>
+                                <x-input-label for="width_cm" value="Largura (cm)" />
+                                <x-text-input id="width_cm" name="width_cm" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('width_cm', $model->width_cm)" />
+                            </div>
+                            <div>
+                                <x-input-label for="height_cm" value="Altura (cm)" />
+                                <x-text-input id="height_cm" name="height_cm" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('height_cm', $model->height_cm)" />
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="brand_id" value="Marca" />
-                        <select id="brand_id" name="brand_id" class="{{ $inputClass }}">
-                            <option value="">Sem marca</option>
-                            @foreach ($brands as $brand)
-                                <option value="{{ $brand->id }}" @selected((int) old('brand_id', $model->brand_id) === $brand->id)>{{ $brand->name }}</option>
-                            @endforeach
-                        </select>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Imagem do produto</h3>
+                        </div>
+                        <div class="grid gap-5 p-5 lg:grid-cols-[260px_1fr]">
+                            <div class="flex min-h-48 items-center justify-center overflow-hidden rounded-2xl border border-dashed border-gray-300 bg-gray-50 dark:border-gray-700 dark:bg-gray-900">
+                                <template x-if="imageUrl">
+                                    <img :src="imageUrl" alt="Prévia do produto" class="size-full object-cover">
+                                </template>
+                                <template x-if="!imageUrl">
+                                    <div class="px-6 text-center text-sm text-gray-500 dark:text-gray-400">
+                                        Informe uma URL de imagem para exibir a prévia.
+                                    </div>
+                                </template>
+                            </div>
+                            <div>
+                                <x-input-label for="image_url" value="URL da imagem" />
+                                <x-text-input id="image_url" name="image_url" x-model="imageUrl" type="url" class="mt-1 block w-full" :value="old('image_url', $model->image_url)" placeholder="https://exemplo.com/produto.jpg" />
+                                <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">Use imagens quadradas ou horizontais para manter a listagem equilibrada.</p>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="unit_id" value="Unidade" />
-                        <select id="unit_id" name="unit_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($units as $unit)
-                                <option value="{{ $unit->id }}" @selected((int) old('unit_id', $model->unit_id) === $unit->id)>{{ $unit->code }} - {{ $unit->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <x-input-label for="available_stock" value="Estoque disponível" />
-                        <x-text-input id="available_stock" name="available_stock" type="number" step="0.001" min="0" class="mt-1 block w-full" :value="old('available_stock', $model->available_stock)" />
-                    </div>
-                    <div class="md:col-span-2">
-                        <x-input-label for="short_description" value="Descrição curta" />
-                        <textarea id="short_description" name="short_description" rows="3" class="{{ Str::replaceFirst('h-11', 'min-h-28', $inputClass) }}">{{ old('short_description', $model->short_description) }}</textarea>
-                    </div>
+
+                    <input type="hidden" name="active" value="0">
                 </div>
             @elseif ($resource === 'price-tables')
                 @php
@@ -421,7 +509,7 @@
                 </div>
             @endif
 
-            @if ($editing && $resource !== 'orders')
+            @if ($editing && ! in_array($resource, ['orders', 'products'], true))
                 <label class="flex items-center gap-3 rounded-lg border border-gray-200 p-4 text-sm dark:border-gray-800">
                     <input type="hidden" name="active" value="0">
                     <input type="checkbox" name="active" value="1" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked(old('active', $model->active))>
@@ -431,7 +519,12 @@
 
             <div class="flex flex-wrap justify-end gap-3 border-t border-gray-100 pt-6 dark:border-gray-800">
                 <a href="{{ route($config['index']) }}" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Cancelar</a>
-                <button class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Salvar</button>
+                @if ($resource === 'products')
+                    <button name="active" value="0" class="rounded-lg border border-gray-300 px-5 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Rascunho</button>
+                    <button name="active" value="1" class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Publicar produto</button>
+                @else
+                    <button class="rounded-lg bg-brand-500 px-5 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Salvar</button>
+                @endif
             </div>
         </form>
     </x-panel>

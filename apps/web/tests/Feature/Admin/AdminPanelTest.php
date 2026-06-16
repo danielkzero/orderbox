@@ -123,17 +123,33 @@ class AdminPanelTest extends TestCase
             'brand_id' => $brand->id,
             'unit_id' => $unit->id,
             'sku' => 'TEST-001',
+            'barcode' => '7891000000010',
             'name' => 'Produto Teste',
             'short_description' => 'Produto criado pelo teste.',
+            'description' => 'Descrição completa do produto de teste.',
+            'color' => 'Azul',
+            'weight_kg' => '1.250',
+            'length_cm' => '20',
+            'width_cm' => '10',
+            'height_cm' => '8',
+            'base_price' => '49.90',
             'available_stock' => '12.5',
+            'stock_status' => 'LowStock',
+            'active' => '1',
         ])->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('products', [
             'company_id' => $this->admin->company_id,
             'sku' => 'TEST-001',
             'name' => 'Produto Teste',
+            'barcode' => '7891000000010',
+            'base_price' => '49.90',
+            'stock_status' => 'LowStock',
         ]);
-        $this->assertSame('Produto Teste', Product::query()->where('sku', 'TEST-001')->firstOrFail()->name);
+        $product = Product::query()->where('sku', 'TEST-001')->firstOrFail();
+        $this->assertSame('Produto Teste', $product->name);
+        $this->assertTrue($product->active);
+        $this->assertNotNull($product->published_at);
     }
 
     public function test_admin_can_create_region_and_price_table_products(): void

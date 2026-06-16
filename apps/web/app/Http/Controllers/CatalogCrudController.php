@@ -121,9 +121,19 @@ class CatalogCrudController extends Controller
                 'brand_id' => ['nullable', Rule::exists('brands', 'id')->where('company_id', $companyId)],
                 'unit_id' => ['required', Rule::exists('units', 'id')->where('company_id', $companyId)],
                 'sku' => ['required', 'string', 'max:100', Rule::unique('products')->where('company_id', $companyId)->ignore($model)],
+                'barcode' => ['nullable', 'string', 'max:50'],
+                'image_url' => ['nullable', 'url', 'max:255'],
                 'name' => ['required', 'string', 'max:255'],
                 'short_description' => ['nullable', 'string', 'max:500'],
+                'description' => ['nullable', 'string'],
+                'color' => ['nullable', 'string', 'max:80'],
+                'weight_kg' => ['nullable', 'numeric', 'min:0'],
+                'length_cm' => ['nullable', 'numeric', 'min:0'],
+                'width_cm' => ['nullable', 'numeric', 'min:0'],
+                'height_cm' => ['nullable', 'numeric', 'min:0'],
+                'base_price' => ['nullable', 'numeric', 'min:0'],
                 'available_stock' => ['nullable', 'numeric', 'min:0'],
+                'stock_status' => ['nullable', 'in:InStock,LowStock,OutOfStock'],
                 'active' => ['sometimes', 'boolean'],
             ]),
             'price-tables' => $request->validate([
@@ -189,12 +199,29 @@ class CatalogCrudController extends Controller
     {
         return match ($resource) {
             'customers' => $this->saveCustomer($request, $data, $model),
+            'products' => $this->saveProduct($request, $data, $model),
             'price-tables' => $this->savePriceTable($request, $data, $model),
             'orders' => $this->saveOrder($request, $data, $model),
             default => $model
                 ? tap($model)->update($data)
                 : $this->config($resource)['model']::query()->create($data + ['company_id' => $request->user()->company_id]),
         };
+    }
+
+    private function saveProduct(Request $request, array $data, ?Model $model = null): Product
+    {
+        $data['active'] = (bool) ($data['active'] ?? false);
+        $data['stock_status'] = $data['stock_status'] ?? 'InStock';
+        $data['published_at'] = $data['active']
+            ? ($model instanceof Product && $model->published_at ? $model->published_at : now())
+            : null;
+
+        /** @var Product $product */
+        $product = $model instanceof Product
+            ? tap($model)->update($data)
+            : Product::query()->create($data + ['company_id' => $request->user()->company_id]);
+
+        return $product;
     }
 
     private function saveCustomer(Request $request, array $data, ?Model $model = null): Customer
