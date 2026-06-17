@@ -26,6 +26,7 @@
             ['route' => 'api-guide.index', 'label' => 'Guia da API', 'icon' => 'code'],
         ],
     ];
+    $crudResource = request()->routeIs('crud.*') ? request()->route('resource') : null;
 @endphp
 
 <aside
@@ -61,7 +62,10 @@
                     @foreach ($items as $item)
                         @continue(isset($item['roles']) && ! in_array(auth()->user()->role, $item['roles'], true))
                         @php
-                            $active = request()->routeIs($item['route']) || request()->routeIs(Str::before($item['route'], '.').'.*');
+                            $routeGroup = Str::before($item['route'], '.');
+                            $active = request()->routeIs($item['route'])
+                                || request()->routeIs($routeGroup.'.*')
+                                || $crudResource === $routeGroup;
                         @endphp
                         <li>
                             <a href="{{ route($item['route']) }}" class="group menu-item {{ $active ? 'menu-item-active' : 'menu-item-inactive' }}" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center px-0' : 'justify-start px-3'">
