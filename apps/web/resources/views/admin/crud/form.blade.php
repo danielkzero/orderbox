@@ -821,28 +821,177 @@
                 </div>
             @elseif ($resource === 'orders')
                 @php
+                    $loggedRepresentative = auth()->user()->role === 'SalesRepresentative'
+                        ? auth()->user()->salesRepresentative
+                        : null;
+                    $selectedCustomerId = (int) old('customer_id', $model->customer_id);
+                    $selectedPriceTableId = (int) old('price_table_id', $model->price_table_id);
+                    $selectedRepresentativeId = (int) old('sales_representative_id', $loggedRepresentative?->id ?: $model->sales_representative_id);
+                    $customerOptions = $customers->map(function ($customer) {
+                        return [
+                            'id' => $customer->id,
+                            'label' => $customer->trade_name ?: $customer->corporate_name,
+                            'document' => $customer->document,
+                            'search' => strtolower(($customer->trade_name ?: $customer->corporate_name).' '.$customer->corporate_name.' '.$customer->document),
+                            'price_tables' => $customer->applicablePriceTables()->map(fn ($table) => [
+                                'id' => $table->id,
+                                'name' => $table->name,
+                                'region' => $table->region?->name,
+                            ])->values(),
+                        ];
+                    })->values();
+                    $representativeOptions = $representatives->map(fn ($representative) => [
+                        'id' => $representative->id,
+                        'label' => $representative->code.' - '.$representative->user->name,
+                    ])->values();
+                    $productOptions = $products->map(fn ($product) => [
+                        'id' => $product->id,
+                        'label' => $product->sku.' - '.$product->name,
+                        'name' => $product->name,
+                        'sku' => $product->sku,
+                        'image' => $product->imageSrc(),
+                        'default_price' => $product->displayPrice(),
+                        'prices' => $product->prices
+                            ->sortByDesc('minimum_quantity')
+                            ->groupBy('price_table_id')
+                            ->map(fn ($prices) => (float) $prices->first()->price),
+                        'search' => strtolower($product->sku.' '.$product->name.' '.$product->barcode),
+                    ])->values();
                     $orderRows = collect(old('items', $model->exists ? $model->items->map(fn ($item) => [
                         'product_id' => $item->product_id,
                         'quantity' => $item->quantity,
                         'unit_price' => $item->unit_price,
-                        'discount' => collect($item->discounts)->first()['value'] ?? 0,
+                        'product_search' => $item->product?->sku.' - '.$item->product?->name,
+                        'adjustments' => collect($item->discounts ?? [])->map(function ($discount) {
+                            $legacyType = $discount['type'] ?? 'percentage';
+
+                            return [
+                                'name' => $discount['name'] ?? 'Desconto comercial',
+                                'type' => in_array($legacyType, ['discount', 'surcharge'], true) ? $legacyType : 'discount',
+                                'mode' => $discount['mode'] ?? ($legacyType === 'fixed' ? 'fixed' : 'percentage'),
+                                'value' => $discount['value'] ?? 0,
+                            ];
+                        })->values()->all(),
                     ])->values()->all() : []));
                     if ($orderRows->isEmpty()) {
-                        $orderRows = collect([['product_id' => '', 'quantity' => 1, 'unit_price' => 0, 'discount' => 0]]);
+                        $orderRows = collect([['product_id' => '', 'quantity' => 1, 'unit_price' => 0, 'product_search' => '', 'adjustments' => []]]);
                     }
                 @endphp
                 <div class="space-y-6" x-data="{
+                    customers: @js($customerOptions),
+                    representatives: @js($representativeOptions),
+                    products: @js($productOptions),
+                    selectedCustomerId: @js($selectedCustomerId ?: null),
+                    selectedPriceTableId: @js($selectedPriceTableId ?: null),
+                    selectedRepresentativeId: @js($selectedRepresentativeId ?: null),
+                    loggedRepresentativeId: @js($loggedRepresentative?->id),
+                    customerSearch: '',
+                    tableModalOpen: false,
+                    productSearch: '',
+                    bulkAdjustment: { name: 'Desconto em massa', type: 'discount', mode: 'percentage', value: '' },
                     items: @js($orderRows->values()),
-                    addItem() { this.items.push({ product_id: '', quantity: 1, unit_price: 0, discount: 0 }) },
+                    init() {
+                        const customer = this.selectedCustomer();
+                        if (customer) {
+                            this.customerSearch = `${customer.label} - ${customer.document}`;
+                            if (! this.selectedPriceTableId && customer.price_tables.length === 1) {
+                                this.selectedPriceTableId = customer.price_tables[0].id;
+                            }
+                        }
+                        this.items = this.items.map((item) => this.hydrateItem(item));
+                        this.refreshItemPrices();
+                    },
+                    addItem() { this.items.push({ product_id: '', quantity: 1, unit_price: 0, product_search: '', adjustments: [] }) },
                     removeItem(index) { this.items.splice(index, 1) },
+                    selectedCustomer() { return this.customers.find((customer) => customer.id === Number(this.selectedCustomerId)); },
+                    selectedPriceTable() {
+                        const customer = this.selectedCustomer();
+                        return customer ? customer.price_tables.find((table) => table.id === Number(this.selectedPriceTableId)) : null;
+                    },
+                    customerMatches() {
+                        const term = this.customerSearch.toLowerCase();
+                        if (! term) return [];
+                        return this.customers.filter((customer) => customer.search.includes(term)).slice(0, 8);
+                    },
+                    selectCustomer(customer) {
+                        this.selectedCustomerId = customer.id;
+                        this.customerSearch = `${customer.label} - ${customer.document}`;
+                        this.selectedPriceTableId = null;
+                        if (customer.price_tables.length === 1) {
+                            this.selectedPriceTableId = customer.price_tables[0].id;
+                        } else if (customer.price_tables.length > 1) {
+                            this.tableModalOpen = true;
+                        }
+                        this.refreshItemPrices();
+                    },
+                    choosePriceTable(tableId) {
+                        this.selectedPriceTableId = tableId;
+                        this.tableModalOpen = false;
+                        this.refreshItemPrices();
+                    },
+                    hydrateItem(item) {
+                        const product = this.products.find((product) => product.id === Number(item.product_id));
+                        return {
+                            product_id: item.product_id || '',
+                            product_search: item.product_search || (product ? product.label : ''),
+                            quantity: item.quantity || 1,
+                            unit_price: item.unit_price || 0,
+                            adjustments: item.adjustments || [],
+                        };
+                    },
+                    productMatches(term) {
+                        const search = String(term || '').toLowerCase();
+                        if (! search) return [];
+                        return this.products.filter((product) => product.search.includes(search)).slice(0, 8);
+                    },
+                    selectProduct(index, product) {
+                        this.items[index].product_id = product.id;
+                        this.items[index].product_search = product.label;
+                        this.items[index].unit_price = this.productPrice(product);
+                    },
+                    selectedProduct(item) { return this.products.find((product) => product.id === Number(item.product_id)); },
+                    productPrice(product) {
+                        if (! product) return 0;
+                        return Number(product.prices[this.selectedPriceTableId] ?? product.default_price ?? 0);
+                    },
+                    refreshItemPrices() {
+                        this.items.forEach((item) => {
+                            const product = this.selectedProduct(item);
+                            if (product) item.unit_price = this.productPrice(product);
+                        });
+                    },
+                    addAdjustment(item, type = 'discount') {
+                        item.adjustments.push({ name: type === 'surcharge' ? 'Acréscimo comercial' : 'Desconto comercial', type, mode: 'percentage', value: '' });
+                    },
+                    removeAdjustment(item, index) { item.adjustments.splice(index, 1); },
+                    applyBulkAdjustment() {
+                        const value = Number(this.bulkAdjustment.value || 0);
+                        if (value <= 0) return;
+                        this.items.forEach((item) => {
+                            item.adjustments.push({ ...this.bulkAdjustment, value });
+                        });
+                        this.bulkAdjustment.value = '';
+                    },
+                    applyAdjustments(amount, adjustments) {
+                        return (adjustments || []).reduce((total, adjustment) => {
+                            const value = Number(adjustment.value || 0);
+                            if (value <= 0) return total;
+                            const adjustmentAmount = adjustment.mode === 'percentage' ? total * (value / 100) : value;
+                            return Math.max(0, adjustment.type === 'surcharge' ? total + adjustmentAmount : total - adjustmentAmount);
+                        }, amount);
+                    },
                     lineTotal(item) {
                         const subtotal = Number(item.quantity || 0) * Number(item.unit_price || 0);
-                        return Math.max(0, subtotal - (subtotal * (Number(item.discount || 0) / 100)));
+                        return this.applyAdjustments(subtotal, item.adjustments);
                     },
                     subtotal() { return this.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0) },
                     total() { return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0) },
                     money(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0) }
                 }">
+                    <input type="hidden" name="source" value="Web">
+                    <input type="hidden" name="customer_id" :value="selectedCustomerId || ''">
+                    <input type="hidden" name="price_table_id" :value="selectedPriceTableId || ''">
+
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
                         <x-input-label for="order_number" value="Número do pedido" />
@@ -857,43 +1006,47 @@
                         </select>
                     </div>
                     <div>
-                        <x-input-label for="customer_id" value="Cliente" />
-                        <select id="customer_id" name="customer_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($customers as $customer)
-                                <option value="{{ $customer->id }}" @selected((int) old('customer_id', $model->customer_id) === $customer->id)>{{ $customer->trade_name ?: $customer->corporate_name }}</option>
-                            @endforeach
-                        </select>
+                        <x-input-label value="Buscar cliente" />
+                        <div class="relative">
+                            <input x-model="customerSearch" class="{{ $inputClass }}" placeholder="Digite nome, fantasia ou documento do cliente..." required>
+                            <div x-show="customerMatches().length > 0" x-cloak class="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                <template x-for="customer in customerMatches()" :key="customer.id">
+                                    <button type="button" @click="selectCustomer(customer)" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                        <span><strong class="block text-gray-800 dark:text-white/90" x-text="customer.label"></strong><span class="text-gray-500" x-text="customer.document"></span></span>
+                                        <span class="text-brand-500">Selecionar</span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
                     </div>
                     <div>
                         <x-input-label for="sales_representative_id" value="Representante" />
-                        <select id="sales_representative_id" name="sales_representative_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($representatives as $representative)
-                                <option value="{{ $representative->id }}" @selected((int) old('sales_representative_id', $model->sales_representative_id) === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
-                            @endforeach
-                        </select>
+                        @if ($loggedRepresentative)
+                            <input type="hidden" name="sales_representative_id" value="{{ $loggedRepresentative->id }}">
+                            <input class="{{ $inputClass }}" value="{{ $loggedRepresentative->code }} - {{ $loggedRepresentative->user->name }}" readonly>
+                        @else
+                            <select id="sales_representative_id" name="sales_representative_id" x-model="selectedRepresentativeId" class="{{ $inputClass }}" required>
+                                <option value="">Selecione</option>
+                                @foreach ($representatives as $representative)
+                                    <option value="{{ $representative->id }}">{{ $representative->code }} - {{ $representative->user->name }}</option>
+                                @endforeach
+                            </select>
+                        @endif
                     </div>
                     <div>
-                        <x-input-label for="price_table_id" value="Tabela de preço" />
-                        <select id="price_table_id" name="price_table_id" class="{{ $inputClass }}" required>
-                            <option value="">Selecione</option>
-                            @foreach ($priceTables as $priceTable)
-                                <option value="{{ $priceTable->id }}" @selected((int) old('price_table_id', $model->price_table_id) === $priceTable->id)>{{ $priceTable->name }}</option>
-                            @endforeach
-                        </select>
+                        <x-input-label value="Tabela de preço" />
+                        <button type="button" @click="selectedCustomer() && selectedCustomer().price_tables.length > 1 ? tableModalOpen = true : null" class="{{ $inputClass }} text-left" :class="! selectedPriceTable() ? 'text-gray-400' : ''">
+                            <span x-text="selectedPriceTable() ? selectedPriceTable().name : 'Selecione um cliente para carregar as tabelas'"></span>
+                        </button>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Quando houver uma única tabela habilitada, ela será selecionada automaticamente.</p>
                     </div>
                     <div>
                         <x-input-label for="order_date" value="Data do pedido" />
                         <x-text-input id="order_date" name="order_date" data-datepicker class="mt-1 block w-full" :value="old('order_date', optional($model->order_date)->format('Y-m-d') ?: now()->format('Y-m-d'))" required />
                     </div>
                     <div>
-                        <x-input-label for="source" value="Origem" />
-                        <select id="source" name="source" class="{{ $inputClass }}" required>
-                            @foreach (['Admin' => 'Admin', 'Mobile' => 'APP'] as $source => $label)
-                                <option value="{{ $source }}" @selected(old('source', $model->source ?: 'Admin') === $source)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <x-input-label value="Origem" />
+                        <input class="{{ $inputClass }}" value="Web" readonly>
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observações" />
@@ -901,15 +1054,37 @@
                     </div>
                 </div>
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800 lg:flex-row lg:items-end lg:justify-between">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos do pedido</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Busque produtos, confira imagem e preço da tabela selecionada.</p>
+                            </div>
+                            <div class="grid gap-2 sm:grid-cols-[150px_150px_130px_auto]">
+                                <input x-model="bulkAdjustment.name" class="{{ $inputClass }}" placeholder="Nome">
+                                <select x-model="bulkAdjustment.type" class="{{ $inputClass }}">
+                                    <option value="discount">Desconto</option>
+                                    <option value="surcharge">Acréscimo</option>
+                                </select>
+                                <select x-model="bulkAdjustment.mode" class="{{ $inputClass }}">
+                                    <option value="percentage">%</option>
+                                    <option value="fixed">R$</option>
+                                </select>
+                                <div class="flex gap-2">
+                                    <input type="number" min="0" step="0.01" x-model="bulkAdjustment.value" class="{{ $inputClass }} w-28" placeholder="Valor">
+                                    <button type="button" @click="applyBulkAdjustment()" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Aplicar</button>
+                                </div>
+                            </div>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-gray-800">
                                 <thead class="bg-gray-50 text-left text-theme-xs font-medium text-gray-500 dark:bg-white/[0.02]">
                                     <tr>
                                         <th class="px-5 py-4">S. No.</th>
                                         <th class="px-5 py-4">Produto</th>
+                                        <th class="px-5 py-4">Imagem</th>
                                         <th class="px-5 py-4">Quantidade</th>
                                         <th class="px-5 py-4">Preço unitário</th>
-                                        <th class="px-5 py-4">Desconto</th>
+                                        <th class="px-5 py-4">Descontos/Acréscimos</th>
                                         <th class="px-5 py-4">Total</th>
                                         <th class="px-5 py-4"></th>
                                     </tr>
@@ -919,16 +1094,58 @@
                                         <tr>
                                             <td class="px-5 py-4" x-text="index + 1"></td>
                                             <td class="min-w-[280px] px-5 py-4">
-                                                <select :name="`items[${index}][product_id]`" x-model="item.product_id" class="{{ $inputClass }}" required>
-                                                    <option value="">Selecione</option>
-                                                    @foreach ($products as $product)
-                                                        <option value="{{ $product->id }}">{{ $product->sku }} - {{ $product->name }}</option>
-                                                    @endforeach
-                                                </select>
+                                                <input type="hidden" :name="`items[${index}][product_id]`" x-model="item.product_id">
+                                                <div class="relative">
+                                                    <input x-model="item.product_search" class="{{ $inputClass }}" placeholder="Buscar SKU, nome ou código de barras..." required>
+                                                    <div x-show="productMatches(item.product_search).length > 0" x-cloak class="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                                        <template x-for="product in productMatches(item.product_search)" :key="product.id">
+                                                            <button type="button" @click="selectProduct(index, product)" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                                                <span class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                                    <img x-show="product.image" :src="product.image" class="size-full object-cover" alt="">
+                                                                    <span x-show="! product.image" class="text-xs text-gray-400">Sem imagem</span>
+                                                                </span>
+                                                                <span><strong class="block text-gray-800 dark:text-white/90" x-text="product.name"></strong><span class="text-gray-500" x-text="product.sku"></span></span>
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td class="px-5 py-4">
+                                                <div class="flex size-14 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                    <template x-if="selectedProduct(item)?.image">
+                                                        <img :src="selectedProduct(item).image" class="size-full object-cover" alt="">
+                                                    </template>
+                                                    <span x-show="! selectedProduct(item)?.image" class="text-xs text-gray-400">Sem imagem</span>
+                                                </div>
                                             </td>
                                             <td class="px-5 py-4"><input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }} min-w-28" required></td>
-                                            <td class="px-5 py-4"><input type="number" step="0.01" min="0" :name="`items[${index}][unit_price]`" x-model="item.unit_price" class="{{ $inputClass }} min-w-32" required></td>
-                                            <td class="px-5 py-4"><input type="number" step="0.01" min="0" max="100" :name="`items[${index}][discount]`" x-model="item.discount" class="{{ $inputClass }} min-w-28"></td>
+                                            <td class="px-5 py-4">
+                                                <input type="hidden" :name="`items[${index}][unit_price]`" x-model="item.unit_price">
+                                                <span class="font-medium text-gray-800 dark:text-white/90" x-text="money(item.unit_price)"></span>
+                                            </td>
+                                            <td class="min-w-[360px] px-5 py-4">
+                                                <div class="space-y-2">
+                                                    <template x-for="(adjustment, adjustmentIndex) in item.adjustments" :key="adjustmentIndex">
+                                                        <div class="grid gap-2 sm:grid-cols-[1fr_120px_90px_100px_auto]">
+                                                            <input :name="`items[${index}][adjustments][${adjustmentIndex}][name]`" x-model="adjustment.name" class="{{ $inputClass }}" placeholder="Nome">
+                                                            <select :name="`items[${index}][adjustments][${adjustmentIndex}][type]`" x-model="adjustment.type" class="{{ $inputClass }}">
+                                                                <option value="discount">Desconto</option>
+                                                                <option value="surcharge">Acréscimo</option>
+                                                            </select>
+                                                            <select :name="`items[${index}][adjustments][${adjustmentIndex}][mode]`" x-model="adjustment.mode" class="{{ $inputClass }}">
+                                                                <option value="percentage">%</option>
+                                                                <option value="fixed">R$</option>
+                                                            </select>
+                                                            <input type="number" min="0" step="0.01" :name="`items[${index}][adjustments][${adjustmentIndex}][value]`" x-model="adjustment.value" class="{{ $inputClass }}" placeholder="Valor">
+                                                            <button type="button" @click="removeAdjustment(item, adjustmentIndex)" class="text-error-600">Remover</button>
+                                                        </div>
+                                                    </template>
+                                                    <div class="flex flex-wrap gap-2">
+                                                        <button type="button" @click="addAdjustment(item, 'discount')" class="text-sm font-medium text-brand-600">+ Desconto</button>
+                                                        <button type="button" @click="addAdjustment(item, 'surcharge')" class="text-sm font-medium text-brand-600">+ Acréscimo</button>
+                                                    </div>
+                                                </div>
+                                            </td>
                                             <td class="px-5 py-4 font-medium text-gray-800 dark:text-white/90" x-text="money(lineTotal(item))"></td>
                                             <td class="px-5 py-4 text-right"><button type="button" @click="removeItem(index)" class="font-medium text-error-600">Remover</button></td>
                                         </tr>
@@ -947,6 +1164,25 @@
                                 <div class="flex justify-between"><span>Sub Total</span><strong x-text="money(subtotal())"></strong></div>
                                 <div class="flex justify-between text-gray-500"><span>Descontos</span><span x-text="money(subtotal() - total())"></span></div>
                                 <div class="flex justify-between text-lg font-semibold text-gray-800 dark:text-white/90"><span>Total</span><span x-text="money(total())"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="tableModalOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-gray-900/40 p-4">
+                        <div class="w-full max-w-xl rounded-2xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 dark:text-white/90">Escolha a tabela de preço</h3>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Este cliente possui mais de uma tabela habilitada.</p>
+                                </div>
+                                <button type="button" @click="tableModalOpen = false" class="text-gray-500">Fechar</button>
+                            </div>
+                            <div class="space-y-3 p-5">
+                                <template x-for="table in selectedCustomer()?.price_tables || []" :key="table.id">
+                                    <button type="button" @click="choosePriceTable(table.id)" class="flex w-full items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-left hover:border-brand-300 hover:bg-brand-50 dark:border-gray-800 dark:hover:bg-brand-500/10">
+                                        <span><strong class="block text-gray-800 dark:text-white/90" x-text="table.name"></strong><span class="text-sm text-gray-500" x-text="table.region || 'Todas as regiões'"></span></span>
+                                        <span class="text-brand-500">Usar tabela</span>
+                                    </button>
+                                </template>
                             </div>
                         </div>
                     </div>

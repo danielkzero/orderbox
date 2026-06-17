@@ -43,7 +43,7 @@
                     <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos podem ser criados pelo painel com cliente, representante, tabela de preço e vários itens para teste do fluxo.</p>
                     <ul class="list-disc space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Pedidos vindos do APP entram com origem "APP".</li>
-                        <li>Pedidos feitos pelo painel entram com origem "Admin".</li>
+                        <li>Pedidos feitos pelo painel entram com origem "Web".</li>
                         <li>Use "Cancelar" para encerrar um pedido preservando histórico e auditoria.</li>
                     </ul>
                 </div>

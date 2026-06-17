@@ -319,7 +319,7 @@
                                 <td class="whitespace-nowrap px-5 py-5 font-medium text-gray-800 dark:text-white/90">{{ $order->order_number }}</td>
                                 <td class="whitespace-nowrap px-5 py-5 text-gray-600 dark:text-gray-300">{{ $order->customer->trade_name ?: $order->customer->corporate_name }}</td>
                                 <td class="whitespace-nowrap px-5 py-5 text-gray-600 dark:text-gray-300">{{ $order->salesRepresentative->user->name }}</td>
-                                <td class="whitespace-nowrap px-5 py-5 text-gray-600 dark:text-gray-300">{{ $order->source === 'Mobile' ? 'APP' : $order->source }}</td>
+                                <td class="whitespace-nowrap px-5 py-5 text-gray-600 dark:text-gray-300">{{ in_array($order->source, ['Mobile', 'App'], true) ? 'APP' : 'Web' }}</td>
                                 <td class="whitespace-nowrap px-5 py-5"><x-status-badge :active="$order->status !== 'Cancelled'" :label="$order->status" /></td>
                                 <td class="whitespace-nowrap px-5 py-5 text-right font-medium text-gray-800 dark:text-white/90">R$ {{ number_format((float) $order->total_amount, 2, ',', '.') }}</td>
                             </tr>

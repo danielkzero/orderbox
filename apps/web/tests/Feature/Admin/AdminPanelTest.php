@@ -329,7 +329,17 @@ class AdminPanelTest extends TestCase
         $representative = SalesRepresentative::query()->where('code', 'REP-999')->firstOrFail();
         $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $priceTable = $customer->applicablePriceTables()->first();
-        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $products = Product::query()->where('company_id', $this->admin->company_id)->limit(2)->get();
+        $firstProduct = $products->first();
+        $secondProduct = $products->last();
+        ProductPrice::query()->updateOrCreate(
+            ['product_id' => $firstProduct->id, 'price_table_id' => $priceTable->id, 'minimum_quantity' => 1],
+            ['price' => '15.50'],
+        );
+        ProductPrice::query()->updateOrCreate(
+            ['product_id' => $secondProduct->id, 'price_table_id' => $priceTable->id, 'minimum_quantity' => 1],
+            ['price' => '10.00'],
+        );
 
         $this->actingAs($this->admin)->post('/crud/orders', [
             'customer_id' => $customer->id,
@@ -340,8 +350,8 @@ class AdminPanelTest extends TestCase
             'order_date' => now()->format('Y-m-d H:i:s'),
             'source' => 'Admin',
             'items' => [
-                ['product_id' => $product->id, 'quantity' => '2', 'unit_price' => '15.50', 'discount' => '0'],
-                ['product_id' => $product->id, 'quantity' => '1', 'unit_price' => '10.00', 'discount' => '10'],
+                ['product_id' => $firstProduct->id, 'quantity' => '2', 'unit_price' => '999.99', 'discount' => '0'],
+                ['product_id' => $secondProduct->id, 'quantity' => '1', 'unit_price' => '999.99', 'discount' => '10'],
             ],
             'notes' => 'Pedido criado pelo teste.',
         ])->assertRedirect(route('orders.index'));
@@ -350,7 +360,9 @@ class AdminPanelTest extends TestCase
 
         $this->assertSame('41.00', $order->subtotal);
         $this->assertSame('40.00', $order->total_amount);
+        $this->assertSame('Web', $order->source);
         $this->assertSame(2, $order->items()->count());
+        $this->assertSame('10.00', $order->items()->where('product_id', $secondProduct->id)->firstOrFail()->unit_price);
 
         $this->actingAs($this->admin)->post("/crud/orders/{$order->id}/deactivate")
             ->assertRedirect();

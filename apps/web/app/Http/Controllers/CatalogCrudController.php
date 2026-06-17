@@ -132,6 +132,10 @@ class CatalogCrudController extends Controller
             $model->loadMissing(['addresses', 'contacts', 'representatives', 'priceTables']);
         }
 
+        if ($resource === 'orders' && $model->exists) {
+            $model->loadMissing(['items.product']);
+        }
+
         return view('admin.crud.form', [
             'resource' => $resource,
             'model' => $model,
@@ -285,13 +289,18 @@ class CatalogCrudController extends Controller
                 'order_number' => ['required', 'string', 'max:50', Rule::unique('orders')->where('company_id', $companyId)->ignore($model)],
                 'status' => ['required', 'in:Draft,Sent,Approved,Cancelled'],
                 'order_date' => ['required', 'date'],
-                'source' => ['required', 'in:Admin,Mobile'],
+                'source' => ['nullable', 'in:Web,App,Admin,Mobile'],
                 'notes' => ['nullable', 'string'],
                 'items' => ['required', 'array', 'min:1'],
                 'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('company_id', $companyId)->where('active', true)],
                 'items.*.quantity' => ['required', 'numeric', 'min:0.001'],
                 'items.*.unit_price' => ['required', 'numeric', 'min:0'],
                 'items.*.discount' => ['nullable', 'numeric', 'min:0', 'max:100'],
+                'items.*.adjustments' => ['nullable', 'array'],
+                'items.*.adjustments.*.name' => ['nullable', 'string', 'max:100'],
+                'items.*.adjustments.*.type' => ['required_with:items.*.adjustments', 'in:discount,surcharge'],
+                'items.*.adjustments.*.mode' => ['required_with:items.*.adjustments', 'in:percentage,fixed'],
+                'items.*.adjustments.*.value' => ['required_with:items.*.adjustments', 'numeric', 'min:0'],
             ]),
             default => abort(404),
         };
@@ -530,6 +539,21 @@ class CatalogCrudController extends Controller
 
     private function saveOrder(Request $request, array $data, ?Model $model = null): Order
     {
+        if ($request->user()->role === 'SalesRepresentative') {
+            $representativeId = $request->user()->salesRepresentative()
+                ->where('company_id', $request->user()->company_id)
+                ->where('active', true)
+                ->value('id');
+
+            if (! $representativeId) {
+                throw ValidationException::withMessages([
+                    'sales_representative_id' => 'Seu usuário não possui um representante ativo vinculado.',
+                ]);
+            }
+
+            $data['sales_representative_id'] = $representativeId;
+        }
+
         $customer = Customer::query()
             ->with(['addresses', 'priceTables'])
             ->where('company_id', $request->user()->company_id)
@@ -544,16 +568,17 @@ class CatalogCrudController extends Controller
         return DB::transaction(function () use ($request, $data, $model): Order {
             abort_if($model instanceof Order && $model->status !== 'Draft', 422, 'Somente pedidos Draft podem ser alterados.');
 
-            $items = collect($data['items'])->map(function (array $row): array {
-                $discount = (float) ($row['discount'] ?? 0);
-                $subtotal = round((float) $row['quantity'] * (float) $row['unit_price'], 2);
-                $total = round(max(0, $subtotal - ($subtotal * ($discount / 100))), 2);
+            $items = collect($data['items'])->map(function (array $row) use ($data): array {
+                $adjustments = $this->normalizeOrderAdjustments($row);
+                $unitPrice = $this->resolveOrderProductPrice((int) $row['product_id'], (int) $data['price_table_id'], (float) $row['quantity']);
+                $subtotal = round((float) $row['quantity'] * $unitPrice, 2);
+                $total = $this->applyOrderAdjustments($subtotal, $adjustments);
 
                 return [
                     'product_id' => (int) $row['product_id'],
                     'quantity' => $row['quantity'],
-                    'unit_price' => $row['unit_price'],
-                    'discounts' => $discount > 0 ? [['name' => 'Desconto Comercial', 'type' => 'percentage', 'value' => $discount]] : null,
+                    'unit_price' => $unitPrice,
+                    'discounts' => $adjustments->isNotEmpty() ? $adjustments->values()->all() : null,
                     'total_amount' => $total,
                 ];
             });
@@ -561,6 +586,7 @@ class CatalogCrudController extends Controller
 
             $data['company_id'] = $request->user()->company_id;
             $data['user_id'] = $request->user()->id;
+            $data['source'] = $request->bearerToken() ? 'App' : 'Web';
             $data['subtotal'] = $items->sum(fn (array $item): float => round((float) $item['quantity'] * (float) $item['unit_price'], 2));
             $data['total_amount'] = $items->sum('total_amount');
             $data['sent_at'] = $data['status'] === 'Sent' ? now() : null;
@@ -576,6 +602,59 @@ class CatalogCrudController extends Controller
 
             return $order->load('items');
         });
+    }
+
+    private function resolveOrderProductPrice(int $productId, int $priceTableId, float $quantity): float
+    {
+        $price = ProductPrice::query()
+            ->where('product_id', $productId)
+            ->where('price_table_id', $priceTableId)
+            ->where('minimum_quantity', '<=', $quantity)
+            ->orderByDesc('minimum_quantity')
+            ->value('price');
+
+        if ($price !== null) {
+            return (float) $price;
+        }
+
+        return (float) Product::query()->whereKey($productId)->value('base_price');
+    }
+
+    private function normalizeOrderAdjustments(array $row)
+    {
+        $adjustments = collect($row['adjustments'] ?? [])
+            ->filter(fn (array $adjustment): bool => filled($adjustment['value'] ?? null) && (float) $adjustment['value'] > 0)
+            ->map(fn (array $adjustment): array => [
+                'name' => $adjustment['name'] ?: ($adjustment['type'] === 'surcharge' ? 'Acréscimo comercial' : 'Desconto comercial'),
+                'type' => $adjustment['type'],
+                'mode' => $adjustment['mode'],
+                'value' => (float) $adjustment['value'],
+            ]);
+
+        if ($adjustments->isEmpty() && filled($row['discount'] ?? null) && (float) $row['discount'] > 0) {
+            $adjustments->push([
+                'name' => 'Desconto comercial',
+                'type' => 'discount',
+                'mode' => 'percentage',
+                'value' => (float) $row['discount'],
+            ]);
+        }
+
+        return $adjustments;
+    }
+
+    private function applyOrderAdjustments(float $subtotal, $adjustments): float
+    {
+        $total = $subtotal;
+
+        foreach ($adjustments as $adjustment) {
+            $value = (float) $adjustment['value'];
+            $amount = $adjustment['mode'] === 'percentage' ? $total * ($value / 100) : $value;
+            $total = $adjustment['type'] === 'surcharge' ? $total + $amount : $total - $amount;
+            $total = max(0, $total);
+        }
+
+        return round($total, 2);
     }
 
     private function findModel(Request $request, string $resource, int $id): Model

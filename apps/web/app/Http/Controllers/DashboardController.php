@@ -86,7 +86,7 @@ class DashboardController extends Controller
                         $order->customer?->trade_name ?: $order->customer?->corporate_name,
                         $order->salesRepresentative?->user?->name,
                         $order->status,
-                        $order->source === 'Mobile' ? 'APP' : $order->source,
+                        $this->sourceLabel($order->source),
                         $order->order_date?->format('d/m/Y H:i'),
                         number_format((float) $order->subtotal, 2, ',', '.'),
                         number_format((float) $order->total_amount, 2, ',', '.'),
@@ -158,8 +158,8 @@ class DashboardController extends Controller
             ->count();
 
         return collect([
-            ['label' => 'Web', 'sources' => ['Admin']],
-            ['label' => 'APP', 'sources' => ['Mobile']],
+            ['label' => 'Web', 'sources' => ['Web', 'Admin']],
+            ['label' => 'APP', 'sources' => ['App', 'Mobile']],
             ['label' => 'API', 'sources' => ['API', 'Api']],
         ])
             ->map(function (array $channel) use ($companyId, $start, $end, $total): array {
@@ -202,5 +202,14 @@ class DashboardController extends Controller
             'total' => $total,
             'height' => max(10, (int) round(($total / $max) * 140)),
         ])->values()->all();
+    }
+
+    private function sourceLabel(?string $source): string
+    {
+        return match ($source) {
+            'Mobile', 'App' => 'APP',
+            'Admin', 'Web' => 'Web',
+            default => $source ?: '-',
+        };
     }
 }
