@@ -12,57 +12,161 @@
     <x-page-header title="Dashboard de vendas" description="Acompanhe receita, desempenho e crescimento comercial em tempo real." />
 
     <div class="space-y-6">
-        <x-panel x-data="{ periodOpen: false }">
+        <x-panel class="overflow-visible" x-data="{
+            periodOpen: false,
+            selectedStart: '{{ $period['start']->format('Y-m-d') }}',
+            selectedEnd: '{{ $period['end']->format('Y-m-d') }}',
+            currentMonth: new Date('{{ $period['start']->format('Y-m') }}-01T00:00:00'),
+            monthNames: ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'],
+            label() {
+                return `${this.formatDate(this.selectedStart)} - ${this.formatDate(this.selectedEnd || this.selectedStart)}`;
+            },
+            monthLabel() {
+                return `${this.monthNames[this.currentMonth.getMonth()]} ${this.currentMonth.getFullYear()}`;
+            },
+            previousMonth() {
+                this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+            },
+            nextMonth() {
+                this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+            },
+            dateKey(date) {
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+
+                return `${year}-${month}-${day}`;
+            },
+            formatDate(value) {
+                if (! value) {
+                    return '';
+                }
+
+                const [year, month, day] = value.split('-');
+
+                return `${day}/${month}/${year}`;
+            },
+            days() {
+                const first = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+                const start = new Date(first);
+                start.setDate(first.getDate() - first.getDay());
+                const items = [];
+
+                for (let index = 0; index < 42; index++) {
+                    const date = new Date(start);
+                    date.setDate(start.getDate() + index);
+                    const key = this.dateKey(date);
+                    const startKey = this.selectedStart;
+                    const endKey = this.selectedEnd || this.selectedStart;
+                    const min = startKey && endKey && startKey <= endKey ? startKey : endKey;
+                    const max = startKey && endKey && startKey <= endKey ? endKey : startKey;
+
+                    items.push({
+                        key,
+                        label: date.getDate(),
+                        current: date.getMonth() === this.currentMonth.getMonth(),
+                        isStart: key === startKey,
+                        isEnd: key === endKey,
+                        inRange: min && max && key >= min && key <= max,
+                    });
+                }
+
+                return items;
+            },
+            selectDate(day) {
+                if (! this.selectedStart || this.selectedEnd) {
+                    this.selectedStart = day.key;
+                    this.selectedEnd = '';
+
+                    return;
+                }
+
+                if (day.key < this.selectedStart) {
+                    this.selectedEnd = this.selectedStart;
+                    this.selectedStart = day.key;
+
+                    return;
+                }
+
+                this.selectedEnd = day.key;
+            },
+        }">
             <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-5 dark:border-gray-800 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                     <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Dashboard de vendas</h2>
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ $company->trade_name }} · {{ $periodLabel }}</p>
                 </div>
 
-                <div class="flex flex-wrap gap-3">
-                    <div class="relative">
-                        <button type="button" x-on:click="periodOpen = ! periodOpen" class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="inline-flex rounded-lg bg-gray-100 p-1 dark:bg-gray-800">
+                        @foreach ($periodShortcuts as $shortcut => $label)
+                            <a href="{{ route('dashboard', array_merge($query, ['preset' => $shortcut, 'start_date' => null, 'end_date' => null])) }}" class="rounded-md px-4 py-2 text-sm font-medium {{ $preset === $shortcut ? 'bg-white text-gray-800 shadow-theme-xs dark:bg-gray-900 dark:text-white/90' : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200' }}">
+                                {{ $label }}
+                            </a>
+                        @endforeach
+                    </div>
+
+                    <form method="GET" action="{{ route('dashboard') }}" class="flex flex-wrap items-center gap-3">
+                        <input type="hidden" name="preset" value="custom">
+                        <input type="hidden" name="start_date" x-model="selectedStart">
+                        <input type="hidden" name="end_date" x-model="selectedEnd">
+                        <input type="hidden" name="group_by" value="{{ $groupBy }}">
+
+                        <div class="relative">
+                            <button type="button" x-on:click="periodOpen = ! periodOpen" class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]" :class="periodOpen ? 'border-brand-500 ring-3 ring-brand-500/10' : ''">
                             <svg class="size-5 text-gray-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M7 3v4M17 3v4M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
-                            {{ $periodLabel }}
+                            <span x-text="label()">{{ $periodLabel }}</span>
                         </button>
 
-                        <div x-show="periodOpen" x-cloak x-on:click.outside="periodOpen = false" class="absolute right-0 z-30 mt-3 w-[340px] rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
-                            <div class="grid grid-cols-2 gap-2">
-                                @foreach ($periodShortcuts as $shortcut => $label)
-                                    <a href="{{ route('dashboard', array_merge($query, ['preset' => $shortcut, 'start_date' => null, 'end_date' => null])) }}" class="rounded-lg border px-3 py-2 text-center text-sm font-medium {{ $preset === $shortcut ? 'border-brand-500 bg-brand-50 text-brand-600 dark:bg-brand-500/15 dark:text-brand-400' : 'border-gray-200 text-gray-700 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-300 dark:hover:bg-white/[0.03]' }}">
-                                        {{ $label }}
-                                    </a>
-                                @endforeach
-                            </div>
+                            <div x-show="periodOpen" x-cloak x-on:click.outside="periodOpen = false" class="absolute right-0 z-50 mt-3 w-[348px] rounded-2xl border border-gray-200 bg-white p-4 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                <div class="mb-4 flex items-center justify-between">
+                                    <button type="button" x-on:click="previousMonth()" class="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05]">
+                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m15 18-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                    </button>
+                                    <p class="text-base font-semibold capitalize text-gray-800 dark:text-white/90" x-text="monthLabel()"></p>
+                                    <button type="button" x-on:click="nextMonth()" class="inline-flex size-8 items-center justify-center rounded-lg text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/[0.05]">
+                                        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round" /></svg>
+                                    </button>
+                                </div>
 
-                            <form method="GET" action="{{ route('dashboard') }}" class="mt-4 space-y-3">
-                                <input type="hidden" name="preset" value="custom">
-                                <input type="hidden" name="group_by" value="{{ $groupBy }}">
-                                <div class="grid grid-cols-2 gap-3">
+                                <div class="grid grid-cols-7 gap-y-1 text-center">
+                                    @foreach (['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'] as $weekday)
+                                        <div class="py-2 text-xs font-medium text-gray-500 dark:text-gray-400">{{ $weekday }}</div>
+                                    @endforeach
+
+                                    <template x-for="day in days()" :key="day.key">
+                                        <button type="button" x-on:click="selectDate(day)" class="relative h-10 text-sm font-medium transition" :class="{
+                                            'text-gray-400 dark:text-gray-600': ! day.current,
+                                            'text-gray-800 dark:text-gray-200': day.current,
+                                            'bg-brand-50 dark:bg-brand-500/10': day.inRange && ! day.isStart && ! day.isEnd,
+                                            'rounded-l-full': day.isStart && selectedEnd,
+                                            'rounded-r-full': day.isEnd && selectedStart !== selectedEnd,
+                                        }">
+                                            <span class="mx-auto flex size-10 items-center justify-center" :class="(day.isStart || day.isEnd) ? 'rounded-full bg-brand-500 text-white' : ''" x-text="day.label"></span>
+                                        </button>
+                                    </template>
+                                </div>
+
+                                <div class="mt-4 grid grid-cols-2 gap-3">
                                     <div>
                                         <x-input-label for="start_date" value="Data inicial" />
-                                        <input id="start_date" type="date" name="start_date" value="{{ $period['start']->format('Y-m-d') }}" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                        <div class="mt-1 h-11 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90" x-text="formatDate(selectedStart)"></div>
                                     </div>
                                     <div>
                                         <x-input-label for="end_date" value="Data final" />
-                                        <input id="end_date" type="date" name="end_date" value="{{ $period['end']->format('Y-m-d') }}" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
+                                        <div class="mt-1 h-11 rounded-lg border border-gray-300 bg-gray-50 px-3 py-2.5 text-sm text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-white/90" x-text="formatDate(selectedEnd || selectedStart)"></div>
                                     </div>
                                 </div>
-                                <button type="submit" class="inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
-                                    Aplicar período
-                                </button>
-                            </form>
-                        </div>
-                    </div>
 
-                    <form method="GET" action="{{ route('dashboard') }}" class="inline-flex">
-                        <input type="hidden" name="preset" value="custom">
-                        <input type="hidden" name="start_date" value="{{ $period['start']->format('Y-m-d') }}">
-                        <input type="hidden" name="end_date" value="{{ $period['end']->format('Y-m-d') }}">
-                        <input type="hidden" name="group_by" value="{{ $groupBy }}">
-                        <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                                <button type="button" x-on:click="periodOpen = false" class="mt-4 inline-flex h-11 w-full items-center justify-center rounded-lg bg-brand-500 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                                    Confirmar período
+                                </button>
+                            </div>
+                        </div>
+
+                        <button class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]" x-bind:disabled="! selectedStart">
                             <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
                                 <path d="M4 6h16M7 12h10M10 18h4" stroke-linecap="round" />
                             </svg>
