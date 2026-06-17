@@ -15,6 +15,7 @@
                 type="button"
                 @click="window.innerWidth >= 1280 ? sidebarCollapsed = ! sidebarCollapsed : sidebarOpen = true"
                 class="flex size-11 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]"
+                :class="sidebarCollapsed ? 'border-brand-500 ring-3 ring-brand-500/10 text-brand-500' : ''"
                 aria-label="Recolher ou abrir menu"
             >
                 <svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">

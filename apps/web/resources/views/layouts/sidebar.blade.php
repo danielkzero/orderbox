@@ -28,9 +28,17 @@
     ];
 @endphp
 
-<aside class="fixed inset-y-0 left-0 z-50 flex -translate-x-full flex-col border-r border-gray-200 bg-white transition-all duration-300 dark:border-gray-800 dark:bg-gray-900 xl:translate-x-0"
-       :class="{ 'translate-x-0': sidebarOpen, 'w-[290px] px-5': ! sidebarCollapsed, 'w-[92px] px-4': sidebarCollapsed }">
-    <div class="flex h-[76px] items-center justify-between">
+<aside
+    class="fixed inset-y-0 left-0 z-50 flex -translate-x-full flex-col border-r border-gray-200 bg-white transition-all duration-300 dark:border-gray-800 dark:bg-gray-900 xl:translate-x-0"
+    :class="{
+        'translate-x-0': sidebarOpen,
+        'w-[290px] px-5 shadow-theme-lg xl:shadow-none': ! sidebarCollapsed || sidebarExpandedOnHover,
+        'w-[92px] px-4': sidebarCollapsed && ! sidebarExpandedOnHover,
+    }"
+    @mouseenter="if (sidebarCollapsed) sidebarExpandedOnHover = true"
+    @mouseleave="sidebarExpandedOnHover = false"
+>
+    <div class="flex h-[76px] items-center" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center' : 'justify-between'">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
             <span class="flex size-9 items-center justify-center rounded-lg bg-brand-500 text-white">
                 <svg class="size-5" viewBox="0 0 24 24" fill="none">
@@ -39,16 +47,16 @@
                     <rect x="16" y="3" width="4" height="16" rx="2" fill="currentColor" opacity=".55" />
                 </svg>
             </span>
-            <strong x-show="! sidebarCollapsed" x-cloak class="text-title-sm font-semibold text-gray-900 dark:text-white">OrderBox</strong>
+            <strong x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="text-title-sm font-semibold text-gray-900 dark:text-white">OrderBox</strong>
         </a>
-        <button @click="sidebarOpen = false" class="text-gray-500 xl:hidden">x</button>
+        <button x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak @click="sidebarOpen = false" class="text-gray-500 xl:hidden">x</button>
     </div>
 
     <nav class="no-scrollbar flex-1 space-y-7 overflow-y-auto pb-6">
         @foreach ($groups as $group => $items)
             <div>
-                <p x-show="! sidebarCollapsed" x-cloak class="mb-3 px-3 text-theme-xs font-medium uppercase tracking-wide text-gray-400">{{ $group }}</p>
-                <p x-show="sidebarCollapsed" x-cloak class="mb-3 text-center text-theme-xs font-medium text-gray-400">...</p>
+                <p x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="mb-3 px-3 text-theme-xs font-medium uppercase tracking-wide text-gray-400">{{ $group }}</p>
+                <p x-show="sidebarCollapsed && ! sidebarExpandedOnHover" x-cloak class="mb-3 text-center text-theme-xs font-semibold tracking-widest text-gray-400">•••</p>
                 <ul class="space-y-1">
                     @foreach ($items as $item)
                         @continue(isset($item['roles']) && ! in_array(auth()->user()->role, $item['roles'], true))
@@ -56,11 +64,11 @@
                             $active = request()->routeIs($item['route']) || request()->routeIs(Str::before($item['route'], '.').'.*');
                         @endphp
                         <li>
-                            <a href="{{ route($item['route']) }}" class="group menu-item {{ $active ? 'menu-item-active' : 'menu-item-inactive' }}">
+                            <a href="{{ route($item['route']) }}" class="group menu-item {{ $active ? 'menu-item-active' : 'menu-item-inactive' }}" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center px-0' : 'justify-start px-3'">
                                 <span class="{{ $active ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"><x-icon :name="$item['icon']" /></span>
-                                <span x-show="! sidebarCollapsed" x-cloak class="menu-item-text">{{ $item['label'] }}</span>
+                                <span x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="menu-item-text">{{ $item['label'] }}</span>
                                 @if (in_array($item['route'], ['products.index', 'orders.index', 'api-clients.index'], true))
-                                    <span x-show="! sidebarCollapsed" x-cloak class="menu-dropdown-badge {{ $active ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive' }}">NEW</span>
+                                    <span x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="menu-dropdown-badge {{ $active ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive' }}">NEW</span>
                                 @endif
                             </a>
                         </li>

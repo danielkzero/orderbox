@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" x-data="{ dark: localStorage.theme === 'dark', sidebarOpen: false, sidebarCollapsed: false }" :class="{ 'dark': dark }">
+<html lang="pt-BR" x-data="{ dark: localStorage.theme === 'dark', sidebarOpen: false, sidebarCollapsed: false, sidebarExpandedOnHover: false }" :class="{ 'dark': dark }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
