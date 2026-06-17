@@ -440,6 +440,9 @@
 .flatpickr-calendar {
   @apply mt-2 !rounded-xl bg-black !p-5 !border !border-transparent dark:!border-white/5 !text-gray-500 dark:!bg-gray-dark dark:!text-gray-400 dark:!shadow-theme-xl 2xsm:!w-auto;
 }
+.flatpickr-calendar:not(.open) {
+  @apply !hidden;
+}
 .flatpickr-time input {
   background-color: #f9fafb !important;
 }
