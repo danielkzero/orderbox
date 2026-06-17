@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="pt-BR" x-data="{ dark: localStorage.theme === 'dark', sidebarOpen: false }" :class="{ 'dark': dark }">
+<html lang="pt-BR" x-data="{ dark: localStorage.theme === 'dark', sidebarOpen: false, sidebarCollapsed: false }" :class="{ 'dark': dark }">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,7 +17,7 @@
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-gray-900/50 xl:hidden"></div>
         @include('layouts.sidebar')
 
-        <div class="min-w-0 flex-1 xl:ml-[290px]">
+        <div class="min-w-0 flex-1 transition-all duration-300" :class="sidebarCollapsed ? 'xl:ml-[92px]' : 'xl:ml-[290px]'">
             @include('layouts.header')
 
             <main class="mx-auto max-w-screen-2xl p-4 md:p-6">
