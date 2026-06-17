@@ -827,6 +827,22 @@
                     $selectedCustomerId = (int) old('customer_id', $model->customer_id);
                     $selectedPriceTableId = (int) old('price_table_id', $model->price_table_id);
                     $selectedRepresentativeId = (int) old('sales_representative_id', $loggedRepresentative?->id ?: $model->sales_representative_id);
+                    $paymentMethods = [
+                        'boleto' => 'Boleto',
+                        'avista' => 'À vista',
+                        'cartao' => 'Cartão',
+                    ];
+                    $paymentTerms = [
+                        'avista' => 'À vista',
+                        '7' => '7 dias',
+                        '15' => '15 dias',
+                        '30' => '30 dias',
+                        '15/30' => '15/30 dias',
+                        '15/30/45' => '15/30/45 dias',
+                        '15/30/45/60' => '15/30/45/60 dias',
+                        '15/30/45/60/75' => '15/30/45/60/75 dias',
+                        '15/30/45/60/75/90' => '15/30/45/60/75/90 dias',
+                    ];
                     $customerOptions = $customers->map(function ($customer) {
                         return [
                             'id' => $customer->id,
@@ -1045,6 +1061,22 @@
                         <x-text-input id="order_date" name="order_date" data-datepicker class="mt-1 block w-full" :value="old('order_date', optional($model->order_date)->format('Y-m-d') ?: now()->format('Y-m-d'))" required />
                     </div>
                     <div>
+                        <x-input-label for="payment_method" value="Forma de pagamento" />
+                        <select id="payment_method" name="payment_method" class="{{ $inputClass }}" required>
+                            @foreach ($paymentMethods as $value => $label)
+                                <option value="{{ $value }}" @selected(old('payment_method', $model->payment_method ?: 'boleto') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <x-input-label for="payment_terms" value="Prazo" />
+                        <select id="payment_terms" name="payment_terms" class="{{ $inputClass }}" required>
+                            @foreach ($paymentTerms as $value => $label)
+                                <option value="{{ $value }}" @selected(old('payment_terms', $model->payment_terms ?: 'avista') === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
                         <x-input-label value="Origem" />
                         <input class="{{ $inputClass }}" value="Web" readonly>
                     </div>
@@ -1075,83 +1107,97 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-100 text-sm dark:divide-gray-800">
-                                <thead class="bg-gray-50 text-left text-theme-xs font-medium text-gray-500 dark:bg-white/[0.02]">
-                                    <tr>
-                                        <th class="px-5 py-4">S. No.</th>
-                                        <th class="px-5 py-4">Produto</th>
-                                        <th class="px-5 py-4">Imagem</th>
-                                        <th class="px-5 py-4">Quantidade</th>
-                                        <th class="px-5 py-4">Preço unitário</th>
-                                        <th class="px-5 py-4">Descontos/Acréscimos</th>
-                                        <th class="px-5 py-4">Total</th>
-                                        <th class="px-5 py-4"></th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
-                                    <template x-for="(item, index) in items" :key="index">
-                                        <tr>
-                                            <td class="px-5 py-4" x-text="index + 1"></td>
-                                            <td class="min-w-[280px] px-5 py-4">
-                                                <input type="hidden" :name="`items[${index}][product_id]`" x-model="item.product_id">
-                                                <div class="relative">
-                                                    <input x-model="item.product_search" class="{{ $inputClass }}" placeholder="Buscar SKU, nome ou código de barras..." required>
-                                                    <div x-show="productMatches(item.product_search).length > 0" x-cloak class="absolute z-20 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
-                                                        <template x-for="product in productMatches(item.product_search)" :key="product.id">
-                                                            <button type="button" @click="selectProduct(index, product)" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
-                                                                <span class="flex size-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                                                    <img x-show="product.image" :src="product.image" class="size-full object-cover" alt="">
-                                                                    <span x-show="! product.image" class="text-xs text-gray-400">Sem imagem</span>
-                                                                </span>
-                                                                <span><strong class="block text-gray-800 dark:text-white/90" x-text="product.name"></strong><span class="text-gray-500" x-text="product.sku"></span></span>
-                                                            </button>
-                                                        </template>
-                                                    </div>
+                        <div class="space-y-4 p-5">
+                            <template x-for="(item, index) in items" :key="index">
+                                <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
+                                    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                        <div>
+                                            <h4 class="font-medium text-gray-800 dark:text-white/90">Item <span x-text="index + 1"></span></h4>
+                                            <p class="text-sm text-gray-500 dark:text-gray-400">Produto, quantidade, preço e condições comerciais.</p>
+                                        </div>
+                                        <button type="button" @click="removeItem(index)" class="text-sm font-medium text-error-600">Remover item</button>
+                                    </div>
+
+                                    <div class="grid gap-4 xl:grid-cols-[minmax(320px,1fr)_120px_150px_160px]">
+                                        <div class="relative">
+                                            <x-input-label value="Produto" />
+                                            <input type="hidden" :name="`items[${index}][product_id]`" x-model="item.product_id">
+                                            <input x-model="item.product_search" class="{{ $inputClass }}" placeholder="Buscar SKU, nome ou código de barras..." required>
+                                            <div x-show="productMatches(item.product_search).length > 0" x-cloak class="absolute z-[9999] mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                                <template x-for="product in productMatches(item.product_search)" :key="product.id">
+                                                    <button type="button" @click="selectProduct(index, product)" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                                        <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                            <img x-show="product.image" :src="product.image" class="size-full object-cover" alt="">
+                                                            <span x-show="! product.image" class="px-1 text-center text-xs text-gray-400">Sem imagem</span>
+                                                        </span>
+                                                        <span>
+                                                            <strong class="block text-gray-800 dark:text-white/90" x-text="product.name"></strong>
+                                                            <span class="text-gray-500" x-text="product.sku"></span>
+                                                        </span>
+                                                    </button>
+                                                </template>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Imagem" />
+                                            <div class="flex h-11 w-16 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                <template x-if="selectedProduct(item)?.image">
+                                                    <img :src="selectedProduct(item).image" class="size-full object-cover" alt="">
+                                                </template>
+                                                <span x-show="! selectedProduct(item)?.image" class="px-1 text-center text-xs text-gray-400">Sem imagem</span>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Quantidade" />
+                                            <input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }}" required>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Preço da tabela" />
+                                            <input type="hidden" :name="`items[${index}][unit_price]`" x-model="item.unit_price">
+                                            <div class="flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm font-medium text-gray-800 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white/90" x-text="money(item.unit_price)"></div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
+                                        <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                            <h5 class="text-sm font-medium text-gray-800 dark:text-white/90">Descontos e acréscimos</h5>
+                                            <div class="flex flex-wrap gap-2">
+                                                <button type="button" @click="addAdjustment(item, 'discount')" class="text-sm font-medium text-brand-600">+ Desconto</button>
+                                                <button type="button" @click="addAdjustment(item, 'surcharge')" class="text-sm font-medium text-brand-600">+ Acréscimo</button>
+                                            </div>
+                                        </div>
+
+                                        <div class="space-y-2">
+                                            <template x-for="(adjustment, adjustmentIndex) in item.adjustments" :key="adjustmentIndex">
+                                                <div class="grid gap-2 lg:grid-cols-[minmax(180px,1fr)_140px_100px_120px_auto]">
+                                                    <input :name="`items[${index}][adjustments][${adjustmentIndex}][name]`" x-model="adjustment.name" class="{{ $inputClass }}" placeholder="Nome">
+                                                    <select :name="`items[${index}][adjustments][${adjustmentIndex}][type]`" x-model="adjustment.type" class="{{ $inputClass }}">
+                                                        <option value="discount">Desconto</option>
+                                                        <option value="surcharge">Acréscimo</option>
+                                                    </select>
+                                                    <select :name="`items[${index}][adjustments][${adjustmentIndex}][mode]`" x-model="adjustment.mode" class="{{ $inputClass }}">
+                                                        <option value="percentage">%</option>
+                                                        <option value="fixed">R$</option>
+                                                    </select>
+                                                    <input type="number" min="0" step="0.01" :name="`items[${index}][adjustments][${adjustmentIndex}][value]`" x-model="adjustment.value" class="{{ $inputClass }}" placeholder="Valor">
+                                                    <button type="button" @click="removeAdjustment(item, adjustmentIndex)" class="text-sm font-medium text-error-600">Remover</button>
                                                 </div>
-                                            </td>
-                                            <td class="px-5 py-4">
-                                                <div class="flex size-14 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                                    <template x-if="selectedProduct(item)?.image">
-                                                        <img :src="selectedProduct(item).image" class="size-full object-cover" alt="">
-                                                    </template>
-                                                    <span x-show="! selectedProduct(item)?.image" class="text-xs text-gray-400">Sem imagem</span>
-                                                </div>
-                                            </td>
-                                            <td class="px-5 py-4"><input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }} min-w-28" required></td>
-                                            <td class="px-5 py-4">
-                                                <input type="hidden" :name="`items[${index}][unit_price]`" x-model="item.unit_price">
-                                                <span class="font-medium text-gray-800 dark:text-white/90" x-text="money(item.unit_price)"></span>
-                                            </td>
-                                            <td class="min-w-[360px] px-5 py-4">
-                                                <div class="space-y-2">
-                                                    <template x-for="(adjustment, adjustmentIndex) in item.adjustments" :key="adjustmentIndex">
-                                                        <div class="grid gap-2 sm:grid-cols-[1fr_120px_90px_100px_auto]">
-                                                            <input :name="`items[${index}][adjustments][${adjustmentIndex}][name]`" x-model="adjustment.name" class="{{ $inputClass }}" placeholder="Nome">
-                                                            <select :name="`items[${index}][adjustments][${adjustmentIndex}][type]`" x-model="adjustment.type" class="{{ $inputClass }}">
-                                                                <option value="discount">Desconto</option>
-                                                                <option value="surcharge">Acréscimo</option>
-                                                            </select>
-                                                            <select :name="`items[${index}][adjustments][${adjustmentIndex}][mode]`" x-model="adjustment.mode" class="{{ $inputClass }}">
-                                                                <option value="percentage">%</option>
-                                                                <option value="fixed">R$</option>
-                                                            </select>
-                                                            <input type="number" min="0" step="0.01" :name="`items[${index}][adjustments][${adjustmentIndex}][value]`" x-model="adjustment.value" class="{{ $inputClass }}" placeholder="Valor">
-                                                            <button type="button" @click="removeAdjustment(item, adjustmentIndex)" class="text-error-600">Remover</button>
-                                                        </div>
-                                                    </template>
-                                                    <div class="flex flex-wrap gap-2">
-                                                        <button type="button" @click="addAdjustment(item, 'discount')" class="text-sm font-medium text-brand-600">+ Desconto</button>
-                                                        <button type="button" @click="addAdjustment(item, 'surcharge')" class="text-sm font-medium text-brand-600">+ Acréscimo</button>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td class="px-5 py-4 font-medium text-gray-800 dark:text-white/90" x-text="money(lineTotal(item))"></td>
-                                            <td class="px-5 py-4 text-right"><button type="button" @click="removeItem(index)" class="font-medium text-error-600">Remover</button></td>
-                                        </tr>
-                                    </template>
-                                </tbody>
-                            </table>
+                                            </template>
+                                            <p x-show="item.adjustments.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Nenhum desconto ou acréscimo aplicado neste item.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="mt-4 flex justify-end">
+                                        <div class="rounded-xl bg-brand-50 px-4 py-3 text-right dark:bg-brand-500/10">
+                                            <p class="text-xs text-gray-500 dark:text-gray-400">Total do item</p>
+                                            <p class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="money(lineTotal(item))"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                     </div>
                     <div class="rounded-2xl border border-gray-200 bg-gray-50 p-5 dark:border-gray-800 dark:bg-white/[0.02]">

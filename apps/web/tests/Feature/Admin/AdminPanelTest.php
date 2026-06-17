@@ -349,6 +349,8 @@ class AdminPanelTest extends TestCase
             'status' => 'Sent',
             'order_date' => now()->format('Y-m-d H:i:s'),
             'source' => 'Admin',
+            'payment_method' => 'boleto',
+            'payment_terms' => '15/30/45',
             'items' => [
                 ['product_id' => $firstProduct->id, 'quantity' => '2', 'unit_price' => '999.99', 'discount' => '0'],
                 ['product_id' => $secondProduct->id, 'quantity' => '1', 'unit_price' => '999.99', 'discount' => '10'],
@@ -361,6 +363,8 @@ class AdminPanelTest extends TestCase
         $this->assertSame('41.00', $order->subtotal);
         $this->assertSame('40.00', $order->total_amount);
         $this->assertSame('Web', $order->source);
+        $this->assertSame('boleto', $order->payment_method);
+        $this->assertSame('15/30/45', $order->payment_terms);
         $this->assertSame(2, $order->items()->count());
         $this->assertSame('10.00', $order->items()->where('product_id', $secondProduct->id)->firstOrFail()->unit_price);
 

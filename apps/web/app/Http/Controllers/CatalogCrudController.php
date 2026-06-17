@@ -290,6 +290,8 @@ class CatalogCrudController extends Controller
                 'status' => ['required', 'in:Draft,Sent,Approved,Cancelled'],
                 'order_date' => ['required', 'date'],
                 'source' => ['nullable', 'in:Web,App,Admin,Mobile'],
+                'payment_method' => ['required', 'in:boleto,avista,cartao'],
+                'payment_terms' => ['required', 'string', 'max:50'],
                 'notes' => ['nullable', 'string'],
                 'items' => ['required', 'array', 'min:1'],
                 'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('company_id', $companyId)->where('active', true)],
