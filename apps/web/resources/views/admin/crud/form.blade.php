@@ -865,6 +865,9 @@
                         'label' => $product->sku.' - '.$product->name,
                         'name' => $product->name,
                         'sku' => $product->sku,
+                        'barcode' => $product->barcode,
+                        'unit' => $product->unit?->code,
+                        'stock' => $product->available_stock,
                         'image' => $product->imageSrc(),
                         'default_price' => $product->displayPrice(),
                         'prices' => $product->prices
@@ -903,6 +906,10 @@
                     loggedRepresentativeId: @js($loggedRepresentative?->id),
                     customerSearch: '',
                     tableModalOpen: false,
+                    bulkModalOpen: false,
+                    adjustmentModalOpen: false,
+                    activeItemIndex: null,
+                    itemMenuIndex: null,
                     productSearch: '',
                     bulkAdjustment: { name: 'Desconto em massa', type: 'discount', mode: 'percentage', value: '' },
                     items: @js($orderRows->values()),
@@ -977,9 +984,27 @@
                         });
                     },
                     addAdjustment(item, type = 'discount') {
+                        if (! item) return;
                         item.adjustments.push({ name: type === 'surcharge' ? 'Acréscimo comercial' : 'Desconto comercial', type, mode: 'percentage', value: '' });
                     },
                     removeAdjustment(item, index) { item.adjustments.splice(index, 1); },
+                    openAdjustmentModal(index, type = null) {
+                        this.activeItemIndex = index;
+                        this.itemMenuIndex = null;
+                        if (type) this.addAdjustment(this.items[index], type);
+                        this.adjustmentModalOpen = true;
+                    },
+                    activeItem() {
+                        return this.activeItemIndex === null ? null : this.items[this.activeItemIndex];
+                    },
+                    adjustmentSummary(item) {
+                        if (! item.adjustments || item.adjustments.length === 0) return 'Sem descontos ou acréscimos';
+                        return item.adjustments.map((adjustment) => {
+                            const prefix = adjustment.type === 'surcharge' ? 'Acréscimo' : 'Desconto';
+                            const value = adjustment.mode === 'percentage' ? `${Number(adjustment.value || 0).toLocaleString('pt-BR')}%` : this.money(Number(adjustment.value || 0));
+                            return `${prefix}: ${value}`;
+                        }).join(' · ');
+                    },
                     applyBulkAdjustment() {
                         const value = Number(this.bulkAdjustment.value || 0);
                         if (value <= 0) return;
@@ -987,6 +1012,7 @@
                             item.adjustments.push({ ...this.bulkAdjustment, value });
                         });
                         this.bulkAdjustment.value = '';
+                        this.bulkModalOpen = false;
                     },
                     applyAdjustments(amount, adjustments) {
                         return (adjustments || []).reduce((total, adjustment) => {
@@ -1091,111 +1117,95 @@
                                 <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos do pedido</h3>
                                 <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Busque produtos, confira imagem e preço da tabela selecionada.</p>
                             </div>
-                            <div class="grid gap-2 sm:grid-cols-[150px_150px_130px_auto]">
-                                <input x-model="bulkAdjustment.name" class="{{ $inputClass }}" placeholder="Nome">
-                                <select x-model="bulkAdjustment.type" class="{{ $inputClass }}">
-                                    <option value="discount">Desconto</option>
-                                    <option value="surcharge">Acréscimo</option>
-                                </select>
-                                <select x-model="bulkAdjustment.mode" class="{{ $inputClass }}">
-                                    <option value="percentage">%</option>
-                                    <option value="fixed">R$</option>
-                                </select>
-                                <div class="flex gap-2">
-                                    <input type="number" min="0" step="0.01" x-model="bulkAdjustment.value" class="{{ $inputClass }} w-28" placeholder="Valor">
-                                    <button type="button" @click="applyBulkAdjustment()" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Aplicar</button>
-                                </div>
-                            </div>
+                            <button type="button" @click="bulkModalOpen = true" class="inline-flex items-center justify-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
+                                Desconto em massa
+                            </button>
                         </div>
                         <div class="space-y-4 p-5">
                             <template x-for="(item, index) in items" :key="index">
                                 <div class="rounded-2xl border border-gray-200 bg-white p-4 dark:border-gray-800 dark:bg-gray-900">
-                                    <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <template x-for="(adjustment, adjustmentIndex) in item.adjustments" :key="`hidden-adjustment-${index}-${adjustmentIndex}`">
                                         <div>
-                                            <h4 class="font-medium text-gray-800 dark:text-white/90">Item <span x-text="index + 1"></span></h4>
-                                            <p class="text-sm text-gray-500 dark:text-gray-400">Produto, quantidade, preço e condições comerciais.</p>
+                                            <input type="hidden" :name="`items[${index}][adjustments][${adjustmentIndex}][name]`" x-model="adjustment.name">
+                                            <input type="hidden" :name="`items[${index}][adjustments][${adjustmentIndex}][type]`" x-model="adjustment.type">
+                                            <input type="hidden" :name="`items[${index}][adjustments][${adjustmentIndex}][mode]`" x-model="adjustment.mode">
+                                            <input type="hidden" :name="`items[${index}][adjustments][${adjustmentIndex}][value]`" x-model="adjustment.value">
                                         </div>
-                                        <button type="button" @click="removeItem(index)" class="text-sm font-medium text-error-600">Remover item</button>
-                                    </div>
+                                    </template>
 
-                                    <div class="grid gap-4 xl:grid-cols-[minmax(320px,1fr)_120px_150px_160px]">
+                                    <div class="grid gap-4 xl:grid-cols-[minmax(380px,1fr)_120px_120px_150px_160px_44px] xl:items-start">
                                         <div class="relative">
-                                            <x-input-label value="Produto" />
-                                            <input type="hidden" :name="`items[${index}][product_id]`" x-model="item.product_id">
-                                            <input x-model="item.product_search" class="{{ $inputClass }}" placeholder="Buscar SKU, nome ou código de barras..." required>
-                                            <div x-show="productMatches(item.product_search).length > 0" x-cloak class="absolute z-[9999] mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
-                                                <template x-for="product in productMatches(item.product_search)" :key="product.id">
-                                                    <button type="button" @click="selectProduct(index, product)" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
-                                                        <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                                            <img x-show="product.image" :src="product.image" class="size-full object-cover" alt="">
-                                                            <span x-show="! product.image" class="px-1 text-center text-xs text-gray-400">Sem imagem</span>
-                                                        </span>
-                                                        <span>
-                                                            <strong class="block text-gray-800 dark:text-white/90" x-text="product.name"></strong>
-                                                            <span class="text-gray-500" x-text="product.sku"></span>
-                                                        </span>
-                                                    </button>
-                                                </template>
+                                            <div class="flex items-center gap-3">
+                                                <div class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                    <template x-if="selectedProduct(item)?.image">
+                                                        <img :src="selectedProduct(item).image" class="size-full object-cover" alt="">
+                                                    </template>
+                                                    <span x-show="! selectedProduct(item)?.image" class="px-1 text-center text-[11px] text-gray-400">Sem imagem</span>
+                                                </div>
+                                                <div class="min-w-0 flex-1">
+                                                    <input type="hidden" :name="`items[${index}][product_id]`" x-model="item.product_id">
+                                                    <input x-model="item.product_search" class="{{ $inputClass }}" placeholder="Buscar SKU, nome ou código de barras..." required>
+                                                    <div x-show="productMatches(item.product_search).length > 0" x-cloak class="absolute z-[9999] mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                                        <template x-for="product in productMatches(item.product_search)" :key="product.id">
+                                                            <button type="button" @click="selectProduct(index, product)" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                                                <span class="flex size-12 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
+                                                                    <img x-show="product.image" :src="product.image" class="size-full object-cover" alt="">
+                                                                    <span x-show="! product.image" class="px-1 text-center text-xs text-gray-400">Sem imagem</span>
+                                                                </span>
+                                                                <span>
+                                                                    <strong class="block text-gray-800 dark:text-white/90" x-text="product.name"></strong>
+                                                                    <span class="text-gray-500" x-text="`${product.sku}${product.unit ? ' · ' + product.unit : ''}${product.barcode ? ' · ' + product.barcode : ''}`"></span>
+                                                                </span>
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="mt-2 grid gap-1 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-4">
+                                                <span>Item <strong x-text="index + 1"></strong></span>
+                                                <span>Unidade: <strong x-text="selectedProduct(item)?.unit || '-'"></strong></span>
+                                                <span>Código: <strong x-text="selectedProduct(item)?.barcode || selectedProduct(item)?.sku || '-'"></strong></span>
+                                                <span>Estoque: <strong x-text="selectedProduct(item)?.stock ?? '-'"></strong></span>
                                             </div>
                                         </div>
 
                                         <div>
-                                            <x-input-label value="Imagem" />
-                                            <div class="flex h-11 w-16 items-center justify-center overflow-hidden rounded-xl border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900">
-                                                <template x-if="selectedProduct(item)?.image">
-                                                    <img :src="selectedProduct(item).image" class="size-full object-cover" alt="">
-                                                </template>
-                                                <span x-show="! selectedProduct(item)?.image" class="px-1 text-center text-xs text-gray-400">Sem imagem</span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <x-input-label value="Quantidade" />
+                                            <x-input-label value="Qtd." />
                                             <input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }}" required>
                                         </div>
 
                                         <div>
-                                            <x-input-label value="Preço da tabela" />
+                                            <x-input-label value="Preço" />
                                             <input type="hidden" :name="`items[${index}][unit_price]`" x-model="item.unit_price">
-                                            <div class="flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm font-medium text-gray-800 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white/90" x-text="money(item.unit_price)"></div>
+                                            <div class="flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-800 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white/90" x-text="money(item.unit_price)"></div>
                                         </div>
-                                    </div>
 
-                                    <div class="mt-4 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-gray-800 dark:bg-white/[0.02]">
-                                        <div class="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                            <h5 class="text-sm font-medium text-gray-800 dark:text-white/90">Descontos e acréscimos</h5>
-                                            <div class="flex flex-wrap gap-2">
-                                                <button type="button" @click="addAdjustment(item, 'discount')" class="text-sm font-medium text-brand-600">+ Desconto</button>
-                                                <button type="button" @click="addAdjustment(item, 'surcharge')" class="text-sm font-medium text-brand-600">+ Acréscimo</button>
+                                        <div>
+                                            <x-input-label value="Subtotal" />
+                                            <div class="flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-3 text-sm font-medium text-gray-800 dark:border-gray-800 dark:bg-white/[0.03] dark:text-white/90" x-text="money(Number(item.quantity || 0) * Number(item.unit_price || 0))"></div>
+                                        </div>
+
+                                        <div>
+                                            <x-input-label value="Total" />
+                                            <div class="flex h-11 items-center rounded-lg bg-brand-50 px-3 text-sm font-semibold text-gray-800 dark:bg-brand-500/10 dark:text-white/90" x-text="money(lineTotal(item))"></div>
+                                        </div>
+
+                                        <div class="relative flex justify-end pt-6">
+                                            <button type="button" @click="itemMenuIndex = itemMenuIndex === index ? null : index" class="flex size-10 items-center justify-center rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03]" aria-label="Ações do item">
+                                                ⋮
+                                            </button>
+                                            <div x-show="itemMenuIndex === index" x-cloak @click.outside="itemMenuIndex = null" class="absolute right-0 top-12 z-30 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                                <button type="button" @click="openAdjustmentModal(index, 'discount')" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]">Adicionar desconto</button>
+                                                <button type="button" @click="openAdjustmentModal(index, 'surcharge')" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]">Adicionar acréscimo</button>
+                                                <button type="button" @click="openAdjustmentModal(index)" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-white/[0.03]">Editar descontos</button>
+                                                <button type="button" @click="removeItem(index); itemMenuIndex = null" class="block w-full rounded-lg px-3 py-2 text-left text-sm text-error-600 hover:bg-error-50 dark:hover:bg-error-500/10">Remover item</button>
                                             </div>
                                         </div>
-
-                                        <div class="space-y-2">
-                                            <template x-for="(adjustment, adjustmentIndex) in item.adjustments" :key="adjustmentIndex">
-                                                <div class="grid gap-2 lg:grid-cols-[minmax(180px,1fr)_140px_100px_120px_auto]">
-                                                    <input :name="`items[${index}][adjustments][${adjustmentIndex}][name]`" x-model="adjustment.name" class="{{ $inputClass }}" placeholder="Nome">
-                                                    <select :name="`items[${index}][adjustments][${adjustmentIndex}][type]`" x-model="adjustment.type" class="{{ $inputClass }}">
-                                                        <option value="discount">Desconto</option>
-                                                        <option value="surcharge">Acréscimo</option>
-                                                    </select>
-                                                    <select :name="`items[${index}][adjustments][${adjustmentIndex}][mode]`" x-model="adjustment.mode" class="{{ $inputClass }}">
-                                                        <option value="percentage">%</option>
-                                                        <option value="fixed">R$</option>
-                                                    </select>
-                                                    <input type="number" min="0" step="0.01" :name="`items[${index}][adjustments][${adjustmentIndex}][value]`" x-model="adjustment.value" class="{{ $inputClass }}" placeholder="Valor">
-                                                    <button type="button" @click="removeAdjustment(item, adjustmentIndex)" class="text-sm font-medium text-error-600">Remover</button>
-                                                </div>
-                                            </template>
-                                            <p x-show="item.adjustments.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Nenhum desconto ou acréscimo aplicado neste item.</p>
-                                        </div>
                                     </div>
 
-                                    <div class="mt-4 flex justify-end">
-                                        <div class="rounded-xl bg-brand-50 px-4 py-3 text-right dark:bg-brand-500/10">
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Total do item</p>
-                                            <p class="text-lg font-semibold text-gray-800 dark:text-white/90" x-text="money(lineTotal(item))"></p>
-                                        </div>
-                                    </div>
+                                    <button type="button" @click="openAdjustmentModal(index)" class="mt-3 block max-w-full truncate text-left text-xs text-gray-500 hover:text-brand-600 dark:text-gray-400">
+                                        <span x-text="adjustmentSummary(item)"></span>
+                                    </button>
                                 </div>
                             </template>
                         </div>
@@ -1210,6 +1220,83 @@
                                 <div class="flex justify-between"><span>Sub Total</span><strong x-text="money(subtotal())"></strong></div>
                                 <div class="flex justify-between text-gray-500"><span>Descontos</span><span x-text="money(subtotal() - total())"></span></div>
                                 <div class="flex justify-between text-lg font-semibold text-gray-800 dark:text-white/90"><span>Total</span><span x-text="money(total())"></span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="bulkModalOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-gray-900/40 p-4">
+                        <div class="w-full max-w-xl rounded-2xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 dark:text-white/90">Desconto em massa</h3>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Aplique um desconto ou acréscimo a todos os itens do pedido.</p>
+                                </div>
+                                <button type="button" @click="bulkModalOpen = false" class="text-gray-500">Fechar</button>
+                            </div>
+                            <div class="grid gap-4 p-5 sm:grid-cols-2">
+                                <div class="sm:col-span-2">
+                                    <x-input-label value="Descrição" />
+                                    <input x-model="bulkAdjustment.name" class="{{ $inputClass }}" placeholder="Desconto em massa">
+                                </div>
+                                <div>
+                                    <x-input-label value="Tipo" />
+                                    <select x-model="bulkAdjustment.type" class="{{ $inputClass }}">
+                                        <option value="discount">Desconto</option>
+                                        <option value="surcharge">Acréscimo</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <x-input-label value="Formato" />
+                                    <select x-model="bulkAdjustment.mode" class="{{ $inputClass }}">
+                                        <option value="percentage">Percentual</option>
+                                        <option value="fixed">Valor fixo</option>
+                                    </select>
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <x-input-label value="Valor" />
+                                    <input type="number" min="0" step="0.01" x-model="bulkAdjustment.value" class="{{ $inputClass }}" placeholder="Informe o valor">
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-3 border-t border-gray-100 px-5 py-4 dark:border-gray-800">
+                                <button type="button" @click="bulkModalOpen = false" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Cancelar</button>
+                                <button type="button" @click="applyBulkAdjustment()" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Aplicar</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div x-show="adjustmentModalOpen" x-cloak class="fixed inset-0 z-[99999] flex items-center justify-center bg-gray-900/40 p-4">
+                        <div class="w-full max-w-3xl rounded-2xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                            <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                                <div>
+                                    <h3 class="font-semibold text-gray-800 dark:text-white/90">Descontos e acréscimos do item</h3>
+                                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400" x-text="activeItem()?.product_search || 'Selecione um produto'"></p>
+                                </div>
+                                <button type="button" @click="adjustmentModalOpen = false; activeItemIndex = null" class="text-gray-500">Fechar</button>
+                            </div>
+                            <div class="space-y-3 p-5" x-show="activeItem()">
+                                <template x-for="(adjustment, adjustmentIndex) in activeItem().adjustments" :key="adjustmentIndex">
+                                    <div class="grid gap-2 rounded-xl border border-gray-100 p-3 dark:border-gray-800 lg:grid-cols-[minmax(180px,1fr)_140px_130px_120px_auto]">
+                                        <input x-model="adjustment.name" class="{{ $inputClass }}" placeholder="Descrição">
+                                        <select x-model="adjustment.type" class="{{ $inputClass }}">
+                                            <option value="discount">Desconto</option>
+                                            <option value="surcharge">Acréscimo</option>
+                                        </select>
+                                        <select x-model="adjustment.mode" class="{{ $inputClass }}">
+                                            <option value="percentage">Percentual</option>
+                                            <option value="fixed">Valor fixo</option>
+                                        </select>
+                                        <input type="number" min="0" step="0.01" x-model="adjustment.value" class="{{ $inputClass }}" placeholder="Valor">
+                                        <button type="button" @click="removeAdjustment(activeItem(), adjustmentIndex)" class="text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                </template>
+                                <p x-show="activeItem().adjustments.length === 0" class="rounded-xl border border-dashed border-gray-300 p-4 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                    Nenhum desconto ou acréscimo aplicado neste item.
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap justify-between gap-3 border-t border-gray-100 px-5 py-4 dark:border-gray-800">
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" @click="addAdjustment(activeItem(), 'discount')" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Adicionar desconto</button>
+                                    <button type="button" @click="addAdjustment(activeItem(), 'surcharge')" class="rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300">Adicionar acréscimo</button>
+                                </div>
+                                <button type="button" @click="adjustmentModalOpen = false; activeItemIndex = null" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">Concluir</button>
                             </div>
                         </div>
                     </div>
