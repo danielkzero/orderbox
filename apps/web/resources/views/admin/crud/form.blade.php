@@ -53,10 +53,26 @@
                     ])->values()->all() : []))->values();
                     $linkedRepresentatives = collect(old('representative_ids', $model->exists ? $model->representatives->pluck('sales_representative_id')->all() : []))->map(fn ($id) => (int) $id);
                     $primaryRepresentative = (int) old('primary_representative_id', $model->exists ? $model->representatives->firstWhere('is_primary', true)?->sales_representative_id : null);
+                    $linkedPriceTables = collect(old('price_table_ids', $model->exists ? $model->priceTables->pluck('id')->all() : []))->map(fn ($id) => (int) $id);
+                    $representativeOptions = $representatives->map(fn ($representative) => [
+                        'id' => $representative->id,
+                        'label' => $representative->code.' - '.$representative->user->name,
+                        'search' => strtolower($representative->code.' '.$representative->user->name.' '.$representative->user->email),
+                    ])->values();
+                    $priceTableOptions = $priceTables->map(fn ($priceTable) => [
+                        'id' => $priceTable->id,
+                        'label' => $priceTable->name.($priceTable->region ? ' · '.$priceTable->region->name : ' · Todas as regiões'),
+                    ])->values();
                 @endphp
                 <div class="space-y-6" x-data="{
                     addresses: @js($addressRows),
                     contacts: @js($contactRows),
+                    representatives: @js($representativeOptions),
+                    selectedRepresentativeIds: @js($linkedRepresentatives->values()),
+                    representativeSearch: '',
+                    priceTables: @js($priceTableOptions),
+                    selectedPriceTableIds: @js($linkedPriceTables->values()),
+                    priceTableSearch: '',
                     addAddress() {
                         this.addresses.push({ type: 'Entrega', zip_code: '', street: '', number: '', complement: '', district: '', city: '', state: '', country: 'Brasil', default_address: this.addresses.length === 0 });
                     },
@@ -83,6 +99,34 @@
                         row.city = data.localidade || row.city;
                         row.state = data.uf || row.state;
                         row.country = 'Brasil';
+                    },
+                    representativeMatches() {
+                        const term = this.representativeSearch.toLowerCase();
+                        return this.representatives.filter((representative) => ! this.selectedRepresentativeIds.includes(representative.id) && representative.search.includes(term)).slice(0, 8);
+                    },
+                    selectedRepresentatives() {
+                        return this.representatives.filter((representative) => this.selectedRepresentativeIds.includes(representative.id));
+                    },
+                    addRepresentative(id) {
+                        if (! this.selectedRepresentativeIds.includes(id)) this.selectedRepresentativeIds.push(id);
+                        this.representativeSearch = '';
+                    },
+                    removeRepresentative(id) {
+                        this.selectedRepresentativeIds = this.selectedRepresentativeIds.filter((selectedId) => selectedId !== id);
+                    },
+                    priceTableMatches() {
+                        const term = this.priceTableSearch.toLowerCase();
+                        return this.priceTables.filter((table) => ! this.selectedPriceTableIds.includes(table.id) && table.label.toLowerCase().includes(term)).slice(0, 8);
+                    },
+                    selectedPriceTables() {
+                        return this.priceTables.filter((table) => this.selectedPriceTableIds.includes(table.id));
+                    },
+                    addPriceTable(id) {
+                        if (! this.selectedPriceTableIds.includes(id)) this.selectedPriceTableIds.push(id);
+                        this.priceTableSearch = '';
+                    },
+                    removePriceTable(id) {
+                        this.selectedPriceTableIds = this.selectedPriceTableIds.filter((selectedId) => selectedId !== id);
                     }
                 }">
                     <datalist id="customer-address-types">
@@ -113,15 +157,6 @@
                             <div>
                                 <x-input-label for="trade_name" value="Nome fantasia" />
                                 <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
-                            </div>
-                            <div>
-                                <x-input-label for="region_id" value="Região" />
-                                <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                                    <option value="">Sem região</option>
-                                    @foreach ($regions as $region)
-                                        <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
-                                    @endforeach
-                                </select>
                             </div>
                             <div>
                                 <x-input-label for="document" value="Documento" />
@@ -282,25 +317,81 @@
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <h3 class="font-semibold text-gray-800 dark:text-white/90">Representantes</h3>
-                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Vincule um ou mais representantes da mesma empresa e escolha o principal.</p>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Busque e adicione somente os representantes necessários para este cliente.</p>
                         </div>
                         <div class="space-y-5 p-5">
-                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                @foreach ($representatives as $representative)
-                                    <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
-                                        <input type="checkbox" name="representative_ids[]" value="{{ $representative->id }}" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked($linkedRepresentatives->contains($representative->id))>
-                                        <span>{{ $representative->code }} - {{ $representative->user->name }}</span>
-                                    </label>
-                                @endforeach
+                            <template x-for="id in selectedRepresentativeIds" :key="`representative-${id}`">
+                                <input type="hidden" name="representative_ids[]" :value="id">
+                            </template>
+
+                            <div class="relative">
+                                <x-input-label value="Buscar representante" />
+                                <input x-model="representativeSearch" class="{{ $inputClass }}" placeholder="Digite código, nome ou e-mail do representante...">
+                                <div x-show="representativeSearch.length > 0" x-cloak class="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                    <template x-for="representative in representativeMatches()" :key="representative.id">
+                                        <button type="button" @click="addRepresentative(representative.id)" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                            <span class="font-medium text-gray-700 dark:text-gray-300" x-text="representative.label"></span>
+                                            <span class="text-brand-500">Adicionar</span>
+                                        </button>
+                                    </template>
+                                    <div x-show="representativeMatches().length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Nenhum representante encontrado.</div>
+                                </div>
                             </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="representative in selectedRepresentatives()" :key="`selected-representative-${representative.id}`">
+                                    <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+                                        <span x-text="representative.label"></span>
+                                        <button type="button" @click="removeRepresentative(representative.id)" class="text-brand-500 hover:text-brand-700">x</button>
+                                    </span>
+                                </template>
+                                <span x-show="selectedRepresentativeIds.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Nenhum representante vinculado.</span>
+                            </div>
+
                             <div>
                                 <x-input-label for="primary_representative_id" value="Representante principal" />
                                 <select id="primary_representative_id" name="primary_representative_id" class="{{ $inputClass }}">
                                     <option value="">Selecione</option>
-                                    @foreach ($representatives as $representative)
-                                        <option value="{{ $representative->id }}" @selected($primaryRepresentative === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
-                                    @endforeach
+                                    <template x-for="representative in selectedRepresentatives()" :key="`primary-representative-${representative.id}`">
+                                        <option :value="representative.id" x-text="representative.label" :selected="representative.id === {{ $primaryRepresentative ?: 'null' }}"></option>
+                                    </template>
                                 </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Tabelas habilitadas ao cliente</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Estas tabelas têm prioridade maior que as tabelas habilitadas pela região do endereço padrão.</p>
+                        </div>
+                        <div class="space-y-5 p-5">
+                            <template x-for="id in selectedPriceTableIds" :key="`price-table-${id}`">
+                                <input type="hidden" name="price_table_ids[]" :value="id">
+                            </template>
+
+                            <div class="relative">
+                                <x-input-label value="Buscar tabela de preço" />
+                                <input x-model="priceTableSearch" class="{{ $inputClass }}" placeholder="Digite o nome da tabela de preço...">
+                                <div x-show="priceTableSearch.length > 0" x-cloak class="absolute z-20 mt-2 max-h-64 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                    <template x-for="table in priceTableMatches()" :key="table.id">
+                                        <button type="button" @click="addPriceTable(table.id)" class="flex w-full items-center justify-between px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                            <span class="font-medium text-gray-700 dark:text-gray-300" x-text="table.label"></span>
+                                            <span class="text-brand-500">Adicionar</span>
+                                        </button>
+                                    </template>
+                                    <div x-show="priceTableMatches().length === 0" class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Nenhuma tabela encontrada.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex flex-wrap gap-2">
+                                <template x-for="table in selectedPriceTables()" :key="`selected-price-table-${table.id}`">
+                                    <span class="inline-flex items-center gap-2 rounded-full bg-brand-50 px-3 py-1.5 text-sm font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">
+                                        <span x-text="table.label"></span>
+                                        <button type="button" @click="removePriceTable(table.id)" class="text-brand-500 hover:text-brand-700">x</button>
+                                    </span>
+                                </template>
+                                <span x-show="selectedPriceTableIds.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Nenhuma tabela direta habilitada.</span>
                             </div>
                         </div>
                     </div>

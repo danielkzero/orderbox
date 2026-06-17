@@ -22,7 +22,9 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CatalogCrudController extends Controller
@@ -127,7 +129,7 @@ class CatalogCrudController extends Controller
         $companyId = $request->user()->company_id;
 
         if ($resource === 'customers' && $model->exists) {
-            $model->loadMissing(['addresses', 'contacts', 'representatives']);
+            $model->loadMissing(['addresses', 'contacts', 'representatives', 'priceTables']);
         }
 
         return view('admin.crud.form', [
@@ -173,7 +175,6 @@ class CatalogCrudController extends Controller
         return match ($resource) {
             'customers' => $request->validate([
                 'corporate_name' => ['required', 'string', 'max:255'],
-                'region_id' => ['nullable', Rule::exists('regions', 'id')->where('company_id', $companyId)],
                 'trade_name' => ['nullable', 'string', 'max:255'],
                 'document' => ['required', 'string', 'max:20', Rule::unique('customers')->where('company_id', $companyId)->ignore($model)],
                 'email' => ['nullable', 'email', 'max:255'],
@@ -203,6 +204,8 @@ class CatalogCrudController extends Controller
                 'representative_ids' => ['nullable', 'array'],
                 'representative_ids.*' => [Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
                 'primary_representative_id' => ['nullable', Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
+                'price_table_ids' => ['nullable', 'array'],
+                'price_table_ids.*' => [Rule::exists('price_tables', 'id')->where('company_id', $companyId)],
                 'active' => ['sometimes', 'boolean'],
             ]),
             'products' => $request->validate([
@@ -401,13 +404,16 @@ class CatalogCrudController extends Controller
                 ->filter(fn (array $row): bool => filled($row['name'] ?? null))
                 ->values();
             $representativeIds = collect($data['representative_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique()->values();
+            $priceTableIds = collect($data['price_table_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique()->values();
             $primaryId = isset($data['primary_representative_id']) && $data['primary_representative_id']
                 ? (int) $data['primary_representative_id']
                 : $representativeIds->first();
             if ($primaryId && ! $representativeIds->contains($primaryId)) {
                 $representativeIds->prepend($primaryId);
             }
-            unset($data['addresses'], $data['contacts'], $data['representative_ids'], $data['primary_representative_id']);
+            unset($data['addresses'], $data['contacts'], $data['representative_ids'], $data['primary_representative_id'], $data['price_table_ids']);
+
+            $data['region_id'] = $this->resolveCustomerRegionId($addresses, $request->user()->company_id);
 
             /** @var Customer $customer */
             $customer = $model instanceof Customer
@@ -453,8 +459,46 @@ class CatalogCrudController extends Controller
                 ]);
             }
 
-            return $customer->load(['addresses', 'contacts', 'representatives']);
+            $customer->priceTables()->sync($priceTableIds);
+
+            return $customer->load(['addresses', 'contacts', 'representatives', 'priceTables']);
         });
+    }
+
+    private function resolveCustomerRegionId($addresses, int $companyId): ?int
+    {
+        $defaultAddress = $addresses->firstWhere('default_address', '1')
+            ?? $addresses->firstWhere('default_address', true)
+            ?? $addresses->first();
+
+        if (! $defaultAddress || ! filled($defaultAddress['state'] ?? null)) {
+            return null;
+        }
+
+        $state = strtoupper($defaultAddress['state']);
+        $city = $defaultAddress['city'] ?? null;
+
+        if (filled($city)) {
+            $normalizedCity = Str::lower(Str::ascii($city));
+            $cityRegion = Region::query()
+                ->where('company_id', $companyId)
+                ->where('active', true)
+                ->where('state', $state)
+                ->whereNotNull('city')
+                ->get()
+                ->first(fn (Region $region): bool => Str::lower(Str::ascii($region->city)) === $normalizedCity);
+
+            if ($cityRegion) {
+                return $cityRegion->id;
+            }
+        }
+
+        return Region::query()
+            ->where('company_id', $companyId)
+            ->where('active', true)
+            ->where('state', $state)
+            ->whereNull('city')
+            ->value('id');
     }
 
     private function savePriceTable(Request $request, array $data, ?Model $model = null): PriceTable
@@ -486,6 +530,17 @@ class CatalogCrudController extends Controller
 
     private function saveOrder(Request $request, array $data, ?Model $model = null): Order
     {
+        $customer = Customer::query()
+            ->with(['addresses', 'priceTables'])
+            ->where('company_id', $request->user()->company_id)
+            ->findOrFail($data['customer_id']);
+
+        if (! $customer->applicablePriceTables()->pluck('id')->contains((int) $data['price_table_id'])) {
+            throw ValidationException::withMessages([
+                'price_table_id' => 'A tabela de preço não está habilitada para o endereço padrão ou para o cliente selecionado.',
+            ]);
+        }
+
         return DB::transaction(function () use ($request, $data, $model): Order {
             abort_if($model instanceof Order && $model->status !== 'Draft', 422, 'Somente pedidos Draft podem ser alterados.');
 

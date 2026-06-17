@@ -126,8 +126,14 @@ class AdminPanelTest extends TestCase
             'name' => 'Categoria Revisada',
         ]);
 
+        $customerRegion = Region::query()
+            ->where('company_id', $this->admin->company_id)
+            ->where('name', 'Grande Sao Paulo')
+            ->firstOrFail();
+        $customerPriceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $customerRepresentative = SalesRepresentative::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
         $this->actingAs($this->admin)->post('/crud/customers', [
-            'region_id' => Region::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id,
             'corporate_name' => 'Cliente Teste Ltda',
             'trade_name' => 'Cliente Teste',
             'document' => '99999999000199',
@@ -160,13 +166,19 @@ class AdminPanelTest extends TestCase
                     'active' => '1',
                 ],
             ],
-            'representative_ids' => [SalesRepresentative::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id],
+            'representative_ids' => [$customerRepresentative->id],
+            'price_table_ids' => [$customerPriceTable->id],
         ])->assertRedirect(route('customers.index'));
 
         $customer = Customer::query()->where('document', '99999999000199')->firstOrFail();
+        $this->assertSame($customerRegion->id, $customer->region_id);
         $this->assertSame(1, CustomerAddress::query()->where('customer_id', $customer->id)->count());
         $this->assertSame(1, CustomerContact::query()->where('customer_id', $customer->id)->count());
         $this->assertSame(1, CustomerRepresentative::query()->where('customer_id', $customer->id)->count());
+        $this->assertDatabaseHas('customer_price_table', [
+            'customer_id' => $customer->id,
+            'price_table_id' => $customerPriceTable->id,
+        ]);
         $this->actingAs($this->admin)->post("/crud/customers/{$customer->id}/deactivate")
             ->assertRedirect();
 
@@ -316,7 +328,7 @@ class AdminPanelTest extends TestCase
 
         $representative = SalesRepresentative::query()->where('code', 'REP-999')->firstOrFail();
         $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();
-        $priceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $priceTable = $customer->applicablePriceTables()->first();
         $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
 
         $this->actingAs($this->admin)->post('/crud/orders', [
