@@ -1161,8 +1161,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="mt-2 grid gap-1 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-4">
-                                                <span>Item <strong x-text="index + 1"></strong></span>
+                                            <div class="mt-2 grid gap-1 text-xs text-gray-500 dark:text-gray-400 sm:grid-cols-3">
                                                 <span>Unidade: <strong x-text="selectedProduct(item)?.unit || '-'"></strong></span>
                                                 <span>Código: <strong x-text="selectedProduct(item)?.barcode || selectedProduct(item)?.sku || '-'"></strong></span>
                                                 <span>Estoque: <strong x-text="selectedProduct(item)?.stock ?? '-'"></strong></span>
