@@ -63,6 +63,34 @@ class AdminPanelTest extends TestCase
             ->assertSee('X-OrderBox-Client-Key');
     }
 
+    public function test_dashboard_filters_period_and_exports_orders(): void
+    {
+        $startDate = now()->subDays(6)->format('Y-m-d');
+        $endDate = now()->format('Y-m-d');
+
+        $this->actingAs($this->admin)->get(route('dashboard', [
+            'preset' => 'custom',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+            'group_by' => 'weekly',
+        ]))
+            ->assertOk()
+            ->assertSee('Dashboard de vendas')
+            ->assertSee('Exportar')
+            ->assertSee('Ver todos')
+            ->assertSee('Semanal');
+
+        $response = $this->actingAs($this->admin)->get(route('dashboard.export', [
+            'preset' => 'custom',
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]));
+
+        $response->assertOk()
+            ->assertHeader('content-type', 'text/csv; charset=UTF-8');
+        $this->assertStringContainsString('Pedido;Cliente;Representante;Status;Origem;Data;Subtotal;Total', $response->streamedContent());
+    }
+
     public function test_admin_can_create_api_client_and_receive_plain_secret_once(): void
     {
         $this->actingAs($this->admin)->post('/api-clients', [

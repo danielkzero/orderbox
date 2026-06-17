@@ -17,6 +17,9 @@ Route::get('/', function () {
 Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'active.session', 'company.context', 'verified'])
     ->name('dashboard');
+Route::get('/dashboard/export', [DashboardController::class, 'export'])
+    ->middleware(['auth', 'active.session', 'company.context', 'verified'])
+    ->name('dashboard.export');
 
 Route::middleware(['auth', 'active.session', 'company.context'])->group(function () {
     Route::get('/customers', [AdminModuleController::class, 'customers'])->name('customers.index');
