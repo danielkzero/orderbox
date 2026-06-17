@@ -27,63 +27,282 @@
             @endif
 
             @if ($resource === 'customers')
-                <div class="grid gap-5 md:grid-cols-2">
-                    <div>
-                        <x-input-label for="corporate_name" value="Razão social" />
-                        <x-text-input id="corporate_name" name="corporate_name" class="mt-1 block w-full" :value="old('corporate_name', $model->corporate_name)" required />
-                    </div>
-                    <div>
-                        <x-input-label for="trade_name" value="Nome fantasia" />
-                        <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
-                    </div>
-                    <div>
-                        <x-input-label for="region_id" value="Região" />
-                        <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                            <option value="">Sem região</option>
-                            @foreach ($regions as $region)
-                                <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <x-input-label for="document" value="Documento" />
-                        <x-text-input id="document" name="document" class="mt-1 block w-full" :value="old('document', $model->document)" required />
-                    </div>
-                    <div>
-                        <x-input-label for="email" value="E-mail" />
-                        <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $model->email)" />
-                    </div>
-                    <div>
-                        <x-input-label for="phone" value="Telefone" />
-                        <x-text-input id="phone" name="phone" class="mt-1 block w-full" :value="old('phone', $model->phone)" />
-                    </div>
-                    <div>
-                        <x-input-label for="credit_limit" value="Limite de crédito" />
-                        <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
-                    </div>
-                    <div class="md:col-span-2">
-                        <x-input-label value="Representantes vinculados" />
-                        <div class="grid gap-3 rounded-2xl border border-gray-200 p-4 dark:border-gray-800 sm:grid-cols-2 lg:grid-cols-3">
-                            @php
-                                $linkedRepresentatives = collect(old('representative_ids', $model->exists ? $model->representatives->pluck('sales_representative_id')->all() : []))->map(fn ($id) => (int) $id);
-                                $primaryRepresentative = (int) old('primary_representative_id', $model->exists ? $model->representatives->firstWhere('is_primary', true)?->sales_representative_id : null);
-                            @endphp
-                            @foreach ($representatives as $representative)
-                                <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
-                                    <input type="checkbox" name="representative_ids[]" value="{{ $representative->id }}" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked($linkedRepresentatives->contains($representative->id))>
-                                    <span>{{ $representative->code }} - {{ $representative->user->name }}</span>
-                                </label>
-                            @endforeach
+                @php
+                    $addressRows = collect(old('addresses', $model->exists ? $model->addresses->map(fn ($address) => [
+                        'type' => $address->type,
+                        'zip_code' => $address->zip_code,
+                        'street' => $address->street,
+                        'number' => $address->number,
+                        'complement' => $address->complement,
+                        'district' => $address->district,
+                        'city' => $address->city,
+                        'state' => $address->state,
+                        'country' => $address->country,
+                        'default_address' => (bool) $address->default_address,
+                    ])->values()->all() : []))->values();
+                    $contactRows = collect(old('contacts', $model->exists ? $model->contacts->map(fn ($contact) => [
+                        'name' => $contact->name,
+                        'position' => $contact->position,
+                        'department' => $contact->department,
+                        'email' => $contact->email,
+                        'phone' => $contact->phone,
+                        'mobile' => $contact->mobile,
+                        'whatsapp' => $contact->whatsapp,
+                        'primary_contact' => (bool) $contact->primary_contact,
+                        'active' => (bool) $contact->active,
+                    ])->values()->all() : []))->values();
+                    $linkedRepresentatives = collect(old('representative_ids', $model->exists ? $model->representatives->pluck('sales_representative_id')->all() : []))->map(fn ($id) => (int) $id);
+                    $primaryRepresentative = (int) old('primary_representative_id', $model->exists ? $model->representatives->firstWhere('is_primary', true)?->sales_representative_id : null);
+                @endphp
+                <div class="space-y-6" x-data="{
+                    addresses: @js($addressRows),
+                    contacts: @js($contactRows),
+                    addAddress() {
+                        this.addresses.push({ type: 'Entrega', zip_code: '', street: '', number: '', complement: '', district: '', city: '', state: '', country: 'Brasil', default_address: this.addresses.length === 0 });
+                    },
+                    removeAddress(index) {
+                        this.addresses.splice(index, 1);
+                    },
+                    addContact() {
+                        this.contacts.push({ name: '', position: '', department: '', email: '', phone: '', mobile: '', whatsapp: '', primary_contact: this.contacts.length === 0, active: true });
+                    },
+                    removeContact(index) {
+                        this.contacts.splice(index, 1);
+                    },
+                    async fetchZip(row) {
+                        const zip = String(row.zip_code || '').replace(/\D/g, '');
+                        if (zip.length !== 8) return;
+
+                        const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
+                        const data = await response.json();
+                        if (data.erro) return;
+
+                        row.zip_code = data.cep || row.zip_code;
+                        row.street = data.logradouro || row.street;
+                        row.district = data.bairro || row.district;
+                        row.city = data.localidade || row.city;
+                        row.state = data.uf || row.state;
+                        row.country = 'Brasil';
+                    }
+                }">
+                    <datalist id="customer-address-types">
+                        @foreach ($addressTypes as $type)
+                            <option value="{{ $type }}"></option>
+                        @endforeach
+                    </datalist>
+                    <datalist id="customer-contact-positions">
+                        @foreach ($contactPositions as $position)
+                            <option value="{{ $position }}"></option>
+                        @endforeach
+                    </datalist>
+                    <datalist id="customer-contact-departments">
+                        @foreach ($contactDepartments as $department)
+                            <option value="{{ $department }}"></option>
+                        @endforeach
+                    </datalist>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Dados principais</h3>
+                        </div>
+                        <div class="grid gap-5 p-5 md:grid-cols-2">
+                            <div>
+                                <x-input-label for="corporate_name" value="Razão social" />
+                                <x-text-input id="corporate_name" name="corporate_name" class="mt-1 block w-full" :value="old('corporate_name', $model->corporate_name)" required />
+                            </div>
+                            <div>
+                                <x-input-label for="trade_name" value="Nome fantasia" />
+                                <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
+                            </div>
+                            <div>
+                                <x-input-label for="region_id" value="Região" />
+                                <select id="region_id" name="region_id" class="{{ $inputClass }}">
+                                    <option value="">Sem região</option>
+                                    @foreach ($regions as $region)
+                                        <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div>
+                                <x-input-label for="document" value="Documento" />
+                                <x-text-input id="document" name="document" class="mt-1 block w-full" :value="old('document', $model->document)" required />
+                            </div>
+                            <div>
+                                <x-input-label for="email" value="E-mail" />
+                                <x-text-input id="email" name="email" type="email" class="mt-1 block w-full" :value="old('email', $model->email)" />
+                            </div>
+                            <div>
+                                <x-input-label for="phone" value="Telefone" />
+                                <x-text-input id="phone" name="phone" class="mt-1 block w-full" :value="old('phone', $model->phone)" />
+                            </div>
+                            <div>
+                                <x-input-label for="credit_limit" value="Limite de crédito" />
+                                <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
+                            </div>
                         </div>
                     </div>
-                    <div class="md:col-span-2">
-                        <x-input-label for="primary_representative_id" value="Representante principal" />
-                        <select id="primary_representative_id" name="primary_representative_id" class="{{ $inputClass }}">
-                            <option value="">Selecione</option>
-                            @foreach ($representatives as $representative)
-                                <option value="{{ $representative->id }}" @selected($primaryRepresentative === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
-                            @endforeach
-                        </select>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Endereços</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Use o CEP para preencher rua, bairro, cidade e UF. Número e complemento ficam manuais.</p>
+                            </div>
+                            <button type="button" @click="addAddress()" class="inline-flex items-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                                + Endereço
+                            </button>
+                        </div>
+
+                        <div class="space-y-4 p-5">
+                            <template x-for="(address, index) in addresses" :key="index">
+                                <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+                                    <div class="mb-4 flex items-center justify-between">
+                                        <h4 class="font-medium text-gray-800 dark:text-white/90">Endereço <span x-text="index + 1"></span></h4>
+                                        <button type="button" @click="removeAddress(index)" class="text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                    <div class="grid gap-4 md:grid-cols-4">
+                                        <div>
+                                            <x-input-label value="Tipo" />
+                                            <input list="customer-address-types" :name="`addresses[${index}][type]`" x-model="address.type" class="{{ $inputClass }}" placeholder="Entrega, cobrança..." required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="CEP" />
+                                            <input :name="`addresses[${index}][zip_code]`" x-model="address.zip_code" @blur="fetchZip(address)" class="{{ $inputClass }}" placeholder="00000-000" required>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <x-input-label value="Rua" />
+                                            <input :name="`addresses[${index}][street]`" x-model="address.street" class="{{ $inputClass }}" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Número" />
+                                            <input :name="`addresses[${index}][number]`" x-model="address.number" class="{{ $inputClass }}" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Complemento" />
+                                            <input :name="`addresses[${index}][complement]`" x-model="address.complement" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Bairro" />
+                                            <input :name="`addresses[${index}][district]`" x-model="address.district" class="{{ $inputClass }}" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Cidade" />
+                                            <input :name="`addresses[${index}][city]`" x-model="address.city" class="{{ $inputClass }}" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="UF" />
+                                            <input :name="`addresses[${index}][state]`" x-model="address.state" maxlength="2" class="{{ $inputClass }} uppercase" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="País" />
+                                            <input :name="`addresses[${index}][country]`" x-model="address.country" class="{{ $inputClass }}">
+                                        </div>
+                                        <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300 md:col-span-2">
+                                            <input type="hidden" :name="`addresses[${index}][default_address]`" value="0">
+                                            <input type="checkbox" :name="`addresses[${index}][default_address]`" value="1" x-model="address.default_address" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                                            Endereço padrão
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div x-show="addresses.length === 0" class="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                Nenhum endereço adicionado.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <div>
+                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Contatos</h3>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Cargos e departamentos sugerem valores já usados nos clientes da empresa.</p>
+                            </div>
+                            <button type="button" @click="addContact()" class="inline-flex items-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                                + Contato
+                            </button>
+                        </div>
+
+                        <div class="space-y-4 p-5">
+                            <template x-for="(contact, index) in contacts" :key="index">
+                                <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+                                    <div class="mb-4 flex items-center justify-between">
+                                        <h4 class="font-medium text-gray-800 dark:text-white/90">Contato <span x-text="index + 1"></span></h4>
+                                        <button type="button" @click="removeContact(index)" class="text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                    <div class="grid gap-4 md:grid-cols-3">
+                                        <div>
+                                            <x-input-label value="Nome" />
+                                            <input :name="`contacts[${index}][name]`" x-model="contact.name" class="{{ $inputClass }}" required>
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Cargo" />
+                                            <input list="customer-contact-positions" :name="`contacts[${index}][position]`" x-model="contact.position" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Departamento" />
+                                            <input list="customer-contact-departments" :name="`contacts[${index}][department]`" x-model="contact.department" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="E-mail" />
+                                            <input type="email" :name="`contacts[${index}][email]`" x-model="contact.email" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Telefone" />
+                                            <input :name="`contacts[${index}][phone]`" x-model="contact.phone" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="Celular" />
+                                            <input :name="`contacts[${index}][mobile]`" x-model="contact.mobile" class="{{ $inputClass }}">
+                                        </div>
+                                        <div>
+                                            <x-input-label value="WhatsApp" />
+                                            <input :name="`contacts[${index}][whatsapp]`" x-model="contact.whatsapp" class="{{ $inputClass }}">
+                                        </div>
+                                        <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
+                                            <input type="hidden" :name="`contacts[${index}][primary_contact]`" value="0">
+                                            <input type="checkbox" :name="`contacts[${index}][primary_contact]`" value="1" x-model="contact.primary_contact" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                                            Contato principal
+                                        </label>
+                                        <label class="flex items-center gap-3 rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
+                                            <input type="hidden" :name="`contacts[${index}][active]`" value="0">
+                                            <input type="checkbox" :name="`contacts[${index}][active]`" value="1" x-model="contact.active" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                                            Contato ativo
+                                        </label>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <div x-show="contacts.length === 0" class="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                                Nenhum contato adicionado.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Representantes</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Vincule um ou mais representantes da mesma empresa e escolha o principal.</p>
+                        </div>
+                        <div class="space-y-5 p-5">
+                            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                                @foreach ($representatives as $representative)
+                                    <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
+                                        <input type="checkbox" name="representative_ids[]" value="{{ $representative->id }}" class="rounded border-gray-300 text-brand-500 focus:ring-brand-500" @checked($linkedRepresentatives->contains($representative->id))>
+                                        <span>{{ $representative->code }} - {{ $representative->user->name }}</span>
+                                    </label>
+                                @endforeach
+                            </div>
+                            <div>
+                                <x-input-label for="primary_representative_id" value="Representante principal" />
+                                <select id="primary_representative_id" name="primary_representative_id" class="{{ $inputClass }}">
+                                    <option value="">Selecione</option>
+                                    @foreach ($representatives as $representative)
+                                        <option value="{{ $representative->id }}" @selected($primaryRepresentative === $representative->id)>{{ $representative->code }} - {{ $representative->user->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @elseif ($resource === 'products')

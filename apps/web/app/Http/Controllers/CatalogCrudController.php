@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
+use App\Models\CustomerContact;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PriceTable;
@@ -124,6 +126,10 @@ class CatalogCrudController extends Controller
     {
         $companyId = $request->user()->company_id;
 
+        if ($resource === 'customers' && $model->exists) {
+            $model->loadMissing(['addresses', 'contacts', 'representatives']);
+        }
+
         return view('admin.crud.form', [
             'resource' => $resource,
             'model' => $model,
@@ -137,6 +143,26 @@ class CatalogCrudController extends Controller
             'representatives' => SalesRepresentative::query()->with('user')->where('company_id', $companyId)->where('active', true)->get()->sortBy('user.name'),
             'priceTables' => PriceTable::query()->with('region')->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'products' => Product::query()->with(['unit', 'prices'])->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
+            'addressTypes' => CustomerAddress::query()
+                ->whereHas('customer', fn ($query) => $query->where('company_id', $companyId))
+                ->select('type')
+                ->distinct()
+                ->orderBy('type')
+                ->pluck('type'),
+            'contactPositions' => CustomerContact::query()
+                ->whereHas('customer', fn ($query) => $query->where('company_id', $companyId))
+                ->whereNotNull('position')
+                ->select('position')
+                ->distinct()
+                ->orderBy('position')
+                ->pluck('position'),
+            'contactDepartments' => CustomerContact::query()
+                ->whereHas('customer', fn ($query) => $query->where('company_id', $companyId))
+                ->whereNotNull('department')
+                ->select('department')
+                ->distinct()
+                ->orderBy('department')
+                ->pluck('department'),
         ]);
     }
 
@@ -153,6 +179,27 @@ class CatalogCrudController extends Controller
                 'email' => ['nullable', 'email', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:20'],
                 'credit_limit' => ['nullable', 'numeric', 'min:0'],
+                'addresses' => ['nullable', 'array'],
+                'addresses.*.type' => ['required_with:addresses', 'string', 'max:50'],
+                'addresses.*.zip_code' => ['required_with:addresses', 'string', 'max:10'],
+                'addresses.*.street' => ['required_with:addresses', 'string', 'max:255'],
+                'addresses.*.number' => ['required_with:addresses', 'string', 'max:20'],
+                'addresses.*.complement' => ['nullable', 'string', 'max:255'],
+                'addresses.*.district' => ['required_with:addresses', 'string', 'max:255'],
+                'addresses.*.city' => ['required_with:addresses', 'string', 'max:255'],
+                'addresses.*.state' => ['required_with:addresses', 'string', 'size:2'],
+                'addresses.*.country' => ['nullable', 'string', 'max:100'],
+                'addresses.*.default_address' => ['nullable', 'boolean'],
+                'contacts' => ['nullable', 'array'],
+                'contacts.*.name' => ['required_with:contacts', 'string', 'max:255'],
+                'contacts.*.position' => ['nullable', 'string', 'max:255'],
+                'contacts.*.department' => ['nullable', 'string', 'max:255'],
+                'contacts.*.email' => ['nullable', 'email', 'max:255'],
+                'contacts.*.phone' => ['nullable', 'string', 'max:20'],
+                'contacts.*.mobile' => ['nullable', 'string', 'max:20'],
+                'contacts.*.whatsapp' => ['nullable', 'string', 'max:20'],
+                'contacts.*.primary_contact' => ['nullable', 'boolean'],
+                'contacts.*.active' => ['nullable', 'boolean'],
                 'representative_ids' => ['nullable', 'array'],
                 'representative_ids.*' => [Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
                 'primary_representative_id' => ['nullable', Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
@@ -347,6 +394,12 @@ class CatalogCrudController extends Controller
     private function saveCustomer(Request $request, array $data, ?Model $model = null): Customer
     {
         return DB::transaction(function () use ($request, $data, $model): Customer {
+            $addresses = collect($data['addresses'] ?? [])
+                ->filter(fn (array $row): bool => filled($row['type'] ?? null) && filled($row['zip_code'] ?? null))
+                ->values();
+            $contacts = collect($data['contacts'] ?? [])
+                ->filter(fn (array $row): bool => filled($row['name'] ?? null))
+                ->values();
             $representativeIds = collect($data['representative_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique()->values();
             $primaryId = isset($data['primary_representative_id']) && $data['primary_representative_id']
                 ? (int) $data['primary_representative_id']
@@ -354,12 +407,43 @@ class CatalogCrudController extends Controller
             if ($primaryId && ! $representativeIds->contains($primaryId)) {
                 $representativeIds->prepend($primaryId);
             }
-            unset($data['representative_ids'], $data['primary_representative_id']);
+            unset($data['addresses'], $data['contacts'], $data['representative_ids'], $data['primary_representative_id']);
 
             /** @var Customer $customer */
             $customer = $model instanceof Customer
                 ? tap($model)->update($data)
                 : Customer::query()->create($data + ['company_id' => $request->user()->company_id]);
+
+            $customer->addresses()->delete();
+            foreach ($addresses as $index => $address) {
+                $customer->addresses()->create([
+                    'type' => $address['type'],
+                    'zip_code' => $address['zip_code'],
+                    'street' => $address['street'],
+                    'number' => $address['number'],
+                    'complement' => $address['complement'] ?? null,
+                    'district' => $address['district'],
+                    'city' => $address['city'],
+                    'state' => strtoupper($address['state']),
+                    'country' => $address['country'] ?? 'Brasil',
+                    'default_address' => (bool) ($address['default_address'] ?? $index === 0),
+                ]);
+            }
+
+            $customer->contacts()->delete();
+            foreach ($contacts as $index => $contact) {
+                $customer->contacts()->create([
+                    'name' => $contact['name'],
+                    'position' => $contact['position'] ?? null,
+                    'department' => $contact['department'] ?? null,
+                    'email' => $contact['email'] ?? null,
+                    'phone' => $contact['phone'] ?? null,
+                    'mobile' => $contact['mobile'] ?? null,
+                    'whatsapp' => $contact['whatsapp'] ?? null,
+                    'primary_contact' => (bool) ($contact['primary_contact'] ?? $index === 0),
+                    'active' => (bool) ($contact['active'] ?? true),
+                ]);
+            }
 
             $customer->representatives()->delete();
             foreach ($representativeIds as $representativeId) {
@@ -369,7 +453,7 @@ class CatalogCrudController extends Controller
                 ]);
             }
 
-            return $customer->load('representatives');
+            return $customer->load(['addresses', 'contacts', 'representatives']);
         });
     }
 

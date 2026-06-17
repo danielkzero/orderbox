@@ -9,6 +9,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
 use App\Models\Customer;
+use App\Models\CustomerAddress;
+use App\Models\CustomerContact;
 use App\Models\CustomerRepresentative;
 use App\Models\Order;
 use App\Models\PriceTable;
@@ -131,10 +133,39 @@ class AdminPanelTest extends TestCase
             'document' => '99999999000199',
             'email' => 'cliente.teste@example.test',
             'credit_limit' => '1500',
+            'addresses' => [
+                [
+                    'type' => 'Entrega',
+                    'zip_code' => '01001-000',
+                    'street' => 'Praça da Sé',
+                    'number' => '100',
+                    'complement' => 'Sala 10',
+                    'district' => 'Sé',
+                    'city' => 'São Paulo',
+                    'state' => 'SP',
+                    'country' => 'Brasil',
+                    'default_address' => '1',
+                ],
+            ],
+            'contacts' => [
+                [
+                    'name' => 'Contato Cliente',
+                    'position' => 'Comprador',
+                    'department' => 'Compras',
+                    'email' => 'contato.cliente@example.test',
+                    'phone' => '(11) 3000-1000',
+                    'mobile' => '(11) 99000-1000',
+                    'whatsapp' => '(11) 99000-1000',
+                    'primary_contact' => '1',
+                    'active' => '1',
+                ],
+            ],
             'representative_ids' => [SalesRepresentative::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id],
         ])->assertRedirect(route('customers.index'));
 
         $customer = Customer::query()->where('document', '99999999000199')->firstOrFail();
+        $this->assertSame(1, CustomerAddress::query()->where('customer_id', $customer->id)->count());
+        $this->assertSame(1, CustomerContact::query()->where('customer_id', $customer->id)->count());
         $this->assertSame(1, CustomerRepresentative::query()->where('customer_id', $customer->id)->count());
         $this->actingAs($this->admin)->post("/crud/customers/{$customer->id}/deactivate")
             ->assertRedirect();
