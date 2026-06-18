@@ -6,6 +6,7 @@ use App\Http\Controllers\CatalogCrudController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\ProductPriceTableController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\UserManagementController;
@@ -28,7 +29,12 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/locations/zip-codes/{zipCode}', [LocationController::class, 'zipCode'])->middleware('throttle:60,1')->name('locations.zip-codes');
     Route::get('/customers', [AdminModuleController::class, 'customers'])->name('customers.index');
     Route::get('/products', [AdminModuleController::class, 'products'])->name('products.index');
-    Route::get('/price-tables', [AdminModuleController::class, 'priceTables'])->name('price-tables.index');
+    Route::post('/products/price-tables', [ProductPriceTableController::class, 'store'])
+        ->middleware('throttle:sensitive-write')
+        ->name('products.price-tables.store');
+    Route::patch('/products/price-tables/{priceTable}', [ProductPriceTableController::class, 'update'])
+        ->middleware('throttle:sensitive-write')
+        ->name('products.price-tables.update');
     Route::get('/representatives', [AdminModuleController::class, 'representatives'])->name('representatives.index');
     Route::get('/orders', [AdminModuleController::class, 'orders'])->name('orders.index');
     Route::get('/categories', [AdminModuleController::class, 'categories'])->name('categories.index');

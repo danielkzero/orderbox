@@ -4,7 +4,6 @@
             ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid'],
             ['route' => 'customers.index', 'label' => 'Clientes', 'icon' => 'users'],
             ['route' => 'products.index', 'label' => 'Produtos', 'icon' => 'box'],
-            ['route' => 'price-tables.index', 'label' => 'Tabelas de preço', 'icon' => 'tag'],
             ['route' => 'representatives.index', 'label' => 'Representantes', 'icon' => 'briefcase', 'roles' => ['Admin', 'Manager']],
             ['route' => 'orders.index', 'label' => 'Pedidos', 'icon' => 'cart'],
         ],

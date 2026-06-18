@@ -9,16 +9,16 @@ comercial.
 
 ### Tabelas de Preço
 
-O módulo Tabelas de Preço gerencia:
+As tabelas de preço são gerenciadas dentro da listagem de Produtos:
 
-- nome;
-- descrição;
-- status;
-- produtos;
-- faixas de quantidade;
-- preços.
+- o botão `+` no cabeçalho Preço cria uma tabela ativa para a empresa;
+- cada tabela ativa é exibida como uma coluna após Preço;
+- o nome pode ser editado diretamente no cabeçalho da coluna;
+- nomes são únicos dentro da empresa;
+- somente Admin e Manager podem criar ou renomear;
+- representantes possuem acesso somente de leitura.
 
-O módulo não define região.
+A listagem de Produtos não define região.
 
 ### Regiões
 
@@ -32,8 +32,8 @@ Regiões é a única origem de manutenção do vínculo entre região e tabela.
 
 ### Produtos
 
-O produto pode receber preços nas tabelas existentes, mas não cria, renomeia
-ou vincula tabelas a regiões.
+O produto recebe preços nas tabelas existentes. A própria listagem de Produtos
+cria e renomeia tabelas, mas não as vincula a regiões.
 
 ## Cardinalidade
 
@@ -56,4 +56,3 @@ Para o endereço padrão do cliente:
 5. priorizar tabelas vinculadas diretamente ao cliente.
 
 Somente tabelas ativas podem ser utilizadas em novos pedidos.
-

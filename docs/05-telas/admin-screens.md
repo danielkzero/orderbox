@@ -18,7 +18,6 @@ O painel administrativo será utilizado por:
 - Dashboard
 - Clientes
 - Produtos
-- Tabelas de Preço
 - Representantes
 - Pedidos
 - Usuários
@@ -114,6 +113,12 @@ Gerenciar catálogo de produtos.
 - Criar produto
 - Editar produto
 - Inativar produto
+- criar tabela de preço pelo botão `+` no cabeçalho Preço;
+- renomear uma tabela diretamente no cabeçalho da respectiva coluna.
+
+Cada tabela de preço ativa é exibida como uma coluna após a coluna Preço. A
+criação e a renomeação são permitidas somente para Admin e Manager. O
+representante visualiza os preços, sem controles de manutenção.
 
 ---
 
@@ -131,25 +136,19 @@ Gerenciar catálogo de produtos.
 
 ---
 
-## Tela: Tabelas de Preço
+## Tabelas de Preço em Produtos
 
-### Objetivo
+Não existe módulo ou item de menu independente para Tabelas de Preço.
 
-Gerenciar tabelas de preço da empresa.
+O cabeçalho da listagem de Produtos concentra:
 
-### Informações
+- criação de tabela pelo botão `+` ao lado de Preço;
+- exibição de cada tabela ativa como coluna;
+- renomeação inline no cabeçalho da coluna;
+- consulta dos preços cadastrados para cada produto.
 
-- Nome
-- Status
-- Quantidade de produtos
-
-### Ações
-
-- Criar tabela
-- Editar tabela
-- Vincular produtos
-
-O vínculo com região não é configurado nesta tela.
+Os valores são mantidos no formulário do produto. O vínculo com região
+continua sendo configurado exclusivamente em Regiões.
 
 ### Regras Comerciais Futuras
 

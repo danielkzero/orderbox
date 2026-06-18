@@ -528,7 +528,7 @@
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <div>
                                 <h3 class="font-semibold text-gray-800 dark:text-white/90">Preços de tabela</h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edite os preços do produto nas tabelas existentes. Novas tabelas devem ser criadas no módulo Tabelas de Preço.</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edite os preços do produto nas tabelas existentes. Novas tabelas e renomeações são gerenciadas no cabeçalho da lista de Produtos.</p>
                             </div>
                         </div>
 
@@ -570,7 +570,7 @@
                                 </div>
                             @else
                                 <div class="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                                    Nenhuma tabela de preço cadastrada. Cadastre uma tabela antes de definir preços para este produto.
+                                    Nenhuma tabela de preço cadastrada. Use o botão + ao lado de Preço na lista de Produtos.
                                 </div>
                             @endif
                         </div>
@@ -643,62 +643,6 @@
                     </div>
 
                     <input type="hidden" name="active" value="0">
-                </div>
-            @elseif ($resource === 'price-tables')
-                @php
-                    $priceRows = collect(old('product_prices', $model->exists ? $model->prices->map(fn ($price) => [
-                        'product_id' => $price->product_id,
-                        'minimum_quantity' => $price->minimum_quantity,
-                        'price' => $price->price,
-                    ])->values()->all() : []));
-                    if ($priceRows->isEmpty()) {
-                        $priceRows = collect([['product_id' => '', 'minimum_quantity' => 1, 'price' => '']]);
-                    }
-                @endphp
-                <div class="space-y-5" x-data="{ rows: @js($priceRows->values()) }">
-                    <div>
-                        <x-input-label for="name" value="Nome" />
-                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
-                    </div>
-                    <div>
-                        <x-input-label for="description" value="Descrição" />
-                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
-                    </div>
-                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
-                        <div class="flex items-center justify-between border-b border-gray-200 px-5 py-4 dark:border-gray-800">
-                            <div>
-                                <h3 class="font-semibold text-gray-800 dark:text-white/90">Produtos e preços</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Cadastre uma ou mais faixas por produto.</p>
-                            </div>
-                            <button type="button" @click="rows.push({ product_id: '', minimum_quantity: 1, price: '' })" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Adicionar preço</button>
-                        </div>
-                        <div class="divide-y divide-gray-100 dark:divide-gray-800">
-                            <template x-for="(row, index) in rows" :key="index">
-                                <div class="grid gap-4 p-5 md:grid-cols-[1fr_160px_180px_80px]">
-                                    <div>
-                                        <x-input-label value="Produto" />
-                                        <select :name="`product_prices[${index}][product_id]`" x-model="row.product_id" class="{{ $inputClass }}">
-                                            <option value="">Selecione</option>
-                                            @foreach ($products as $product)
-                                                <option value="{{ $product->id }}">{{ $product->sku }} - {{ $product->name }}</option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <x-input-label value="Qtd. mínima" />
-                                        <input type="number" step="0.001" min="0.001" :name="`product_prices[${index}][minimum_quantity]`" x-model="row.minimum_quantity" class="{{ $inputClass }}">
-                                    </div>
-                                    <div>
-                                        <x-input-label value="Preço" />
-                                        <input type="number" step="0.01" min="0" :name="`product_prices[${index}][price]`" x-model="row.price" class="{{ $inputClass }}">
-                                    </div>
-                                    <div class="flex items-end">
-                                        <button type="button" @click="rows.splice(index, 1)" class="rounded-lg border border-error-200 px-3 py-2.5 text-sm font-medium text-error-600">Remover</button>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
                 </div>
             @elseif ($resource === 'categories')
                 <div class="grid gap-5 md:grid-cols-2">

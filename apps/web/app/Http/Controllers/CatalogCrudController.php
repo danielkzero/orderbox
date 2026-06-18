@@ -286,15 +286,6 @@ class CatalogCrudController extends Controller
                 'table_prices.*.price' => ['nullable', 'numeric', 'min:0.01'],
                 'active' => ['sometimes', 'boolean'],
             ]),
-            'price-tables' => $request->validate([
-                'name' => ['required', 'string', 'max:255', Rule::unique('price_tables')->where('company_id', $companyId)->ignore($model)],
-                'description' => ['nullable', 'string'],
-                'product_prices' => ['nullable', 'array'],
-                'product_prices.*.product_id' => ['required_with:product_prices', Rule::exists('products', 'id')->where('company_id', $companyId)],
-                'product_prices.*.minimum_quantity' => ['nullable', 'numeric', 'min:0.001'],
-                'product_prices.*.price' => ['required_with:product_prices', 'numeric', 'min:0.01'],
-                'active' => ['sometimes', 'boolean'],
-            ]),
             'categories' => $request->validate([
                 'name' => ['required', 'string', 'max:255', Rule::unique('categories')->where(fn ($query) => $query
                     ->where('company_id', $companyId)
@@ -366,7 +357,6 @@ class CatalogCrudController extends Controller
         return match ($resource) {
             'customers' => $this->saveCustomer($request, $data, $model),
             'products' => $this->saveProduct($request, $data, $model),
-            'price-tables' => $this->savePriceTable($request, $data, $model),
             'regions' => $this->saveRegion($request, $data, $model),
             'categories' => $this->saveCategory($request, $data, $model),
             'orders' => $this->saveOrder($request, $data, $model),
@@ -650,33 +640,6 @@ class CatalogCrudController extends Controller
         });
     }
 
-    private function savePriceTable(Request $request, array $data, ?Model $model = null): PriceTable
-    {
-        return DB::transaction(function () use ($request, $data, $model): PriceTable {
-            $prices = collect($data['product_prices'] ?? [])
-                ->filter(fn (array $row): bool => filled($row['product_id'] ?? null) && filled($row['price'] ?? null))
-                ->values();
-            unset($data['product_prices']);
-
-            /** @var PriceTable $priceTable */
-            $priceTable = $model instanceof PriceTable
-                ? tap($model)->update($data)
-                : PriceTable::query()->create($data + ['company_id' => $request->user()->company_id]);
-
-            $priceTable->prices()->delete();
-            foreach ($prices as $row) {
-                ProductPrice::query()->create([
-                    'price_table_id' => $priceTable->id,
-                    'product_id' => (int) $row['product_id'],
-                    'minimum_quantity' => $row['minimum_quantity'] ?: 1,
-                    'price' => $row['price'],
-                ]);
-            }
-
-            return $priceTable->load('prices');
-        });
-    }
-
     private function saveOrder(Request $request, array $data, ?Model $model = null): Order
     {
         if ($model instanceof Order) {
@@ -838,7 +801,6 @@ class CatalogCrudController extends Controller
         return match ($resource) {
             'customers' => ['model' => Customer::class, 'label' => 'Cliente', 'index' => 'customers.index'],
             'products' => ['model' => Product::class, 'label' => 'Produto', 'index' => 'products.index'],
-            'price-tables' => ['model' => PriceTable::class, 'label' => 'Tabela de preço', 'index' => 'price-tables.index'],
             'categories' => ['model' => Category::class, 'label' => 'Categoria', 'index' => 'categories.index'],
             'brands' => ['model' => Brand::class, 'label' => 'Marca', 'index' => 'brands.index'],
             'units' => ['model' => Unit::class, 'label' => 'Unidade', 'index' => 'units.index'],

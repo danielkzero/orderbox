@@ -17,7 +17,7 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [x] Tornar Regiões a origem única do vínculo.
 - [x] Remover configuração regional de Tabelas e Produtos.
 - [x] Criar serviço de resolução de tabelas aplicáveis.
-- [x] Remover criação e renomeação de tabelas pelo módulo Produtos.
+- [x] Consolidar criação e renomeação de tabelas no cabeçalho de Produtos.
 - [x] Preservar IDs de endereços e contatos.
 - [x] Implementar concorrência otimista para clientes e pedidos.
 - [x] Reforçar validações multiempresa na aplicação e nos testes.

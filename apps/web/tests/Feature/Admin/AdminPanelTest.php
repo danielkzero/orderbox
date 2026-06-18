@@ -51,9 +51,11 @@ class AdminPanelTest extends TestCase
 
     public function test_operational_modules_are_rendered_for_the_authenticated_company(): void
     {
-        foreach (['customers', 'products', 'price-tables', 'representatives', 'orders', 'categories', 'brands', 'units', 'regions'] as $path) {
+        foreach (['customers', 'products', 'representatives', 'orders', 'categories', 'brands', 'units', 'regions'] as $path) {
             $this->actingAs($this->admin)->get('/'.$path)->assertOk();
         }
+
+        $this->actingAs($this->admin)->get('/price-tables')->assertNotFound();
     }
 
     public function test_documentation_pages_are_rendered(): void
@@ -243,50 +245,44 @@ class AdminPanelTest extends TestCase
         ]);
     }
 
-    public function test_admin_can_manage_price_tables_from_price_table_module(): void
+    public function test_admin_can_create_and_rename_price_tables_from_product_header(): void
     {
-        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
-
-        $this->actingAs($this->admin)->post('/crud/price-tables', [
+        $this->actingAs($this->admin)->post(route('products.price-tables.store'), [
             'name' => 'Tabela Datatable',
-            'description' => 'Tabela criada no módulo responsável.',
-            'product_prices' => [
-                ['product_id' => $product->id, 'minimum_quantity' => '3', 'price' => '77.70'],
-            ],
-        ])->assertRedirect();
+        ])->assertRedirect(route('products.index'));
 
         $priceTable = PriceTable::query()->where('name', 'Tabela Datatable')->firstOrFail();
 
         $this->actingAs($this->admin)->get(route('products.index'))
             ->assertOk()
             ->assertSee('Tabela Datatable')
-            ->assertSee('R$ 77,70');
+            ->assertSee('Adicionar tabela de preço');
 
-        $this->actingAs($this->admin)->put("/crud/price-tables/{$priceTable->id}", [
+        $this->actingAs($this->admin)->patch(route('products.price-tables.update', $priceTable), [
             'name' => 'Tabela Datatable Editada',
-            'description' => 'Tabela atualizada.',
-            'product_prices' => [
-                ['product_id' => $product->id, 'minimum_quantity' => '3', 'price' => '77.70'],
-            ],
-        ])->assertRedirect();
+        ])->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('price_tables', [
             'id' => $priceTable->id,
             'name' => 'Tabela Datatable Editada',
         ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'Create',
+            'entity_type' => 'PriceTable',
+            'entity_id' => $priceTable->id,
+        ]);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'Update',
+            'entity_type' => 'PriceTable',
+            'entity_id' => $priceTable->id,
+        ]);
     }
 
-    public function test_admin_can_create_region_and_price_table_products(): void
+    public function test_admin_can_link_a_price_table_created_in_products_to_a_region(): void
     {
-        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
-        $this->actingAs($this->admin)->post('/crud/price-tables', [
+        $this->actingAs($this->admin)->post(route('products.price-tables.store'), [
             'name' => 'Especial Vale',
-            'description' => 'Tabela com produto vinculado.',
-            'product_prices' => [
-                ['product_id' => $product->id, 'minimum_quantity' => '1', 'price' => '99.90'],
-                ['product_id' => $product->id, 'minimum_quantity' => '10', 'price' => '89.90'],
-            ],
-        ])->assertRedirect(route('price-tables.index'));
+        ])->assertRedirect(route('products.index'));
         $table = PriceTable::query()->where('name', 'Especial Vale')->firstOrFail();
 
         $this->actingAs($this->admin)->post('/crud/regions', [
@@ -313,7 +309,7 @@ class AdminPanelTest extends TestCase
             'region_id' => $region->id,
             'ibge_code' => '3549904',
         ]);
-        $this->assertSame(2, ProductPrice::query()->where('price_table_id', $table->id)->count());
+        $this->assertSame(0, ProductPrice::query()->where('price_table_id', $table->id)->count());
     }
 
     public function test_commercial_region_uses_ibge_city_before_state_remainder(): void
@@ -440,7 +436,10 @@ class AdminPanelTest extends TestCase
         $representative = $representativeUser->salesRepresentative;
 
         $this->actingAs($representativeUser)->get('/products')->assertOk();
-        $this->actingAs($representativeUser)->get('/price-tables')->assertOk();
+        $this->actingAs($representativeUser)->get('/price-tables')->assertNotFound();
+        $this->actingAs($representativeUser)
+            ->post(route('products.price-tables.store'), ['name' => 'Não permitida'])
+            ->assertForbidden();
         $this->actingAs($representativeUser)->get('/categories')->assertForbidden();
         $this->actingAs($representativeUser)->get('/regions')->assertForbidden();
         $this->actingAs($representativeUser)->get('/crud/products/create')->assertForbidden();
@@ -479,6 +478,11 @@ class AdminPanelTest extends TestCase
             'name' => 'Categoria externa',
             'active' => true,
         ]);
+        $otherPriceTable = PriceTable::query()->create([
+            'company_id' => $otherCompany->id,
+            'name' => 'Tabela externa',
+            'active' => true,
+        ]);
 
         $this->actingAs($this->admin)
             ->get("/crud/categories/{$otherCategory->id}/edit")
@@ -486,6 +490,10 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)
             ->put("/crud/categories/{$otherCategory->id}", ['name' => 'Tentativa'])
+            ->assertNotFound();
+
+        $this->actingAs($this->admin)
+            ->patch(route('products.price-tables.update', $otherPriceTable), ['name' => 'Tentativa'])
             ->assertNotFound();
     }
 

@@ -88,19 +88,6 @@ class AdminModuleController extends Controller
         ]);
     }
 
-    public function priceTables(Request $request): View
-    {
-        $this->access->authorize($request->user(), 'price-tables', 'view');
-
-        return $this->module($request, PriceTable::query()->withCount('prices'), 'Tabelas de preço', 'price_tables', [
-            'Nome' => 'name',
-            'Descrição' => 'description',
-            'Faixas de preço' => 'prices_count',
-            'Status' => fn (PriceTable $item) => view('components.status-badge', ['active' => $item->active]),
-            'Ações' => fn (PriceTable $item) => view('admin.modules.actions', ['resource' => 'price-tables', 'item' => $item]),
-        ]);
-    }
-
     public function representatives(Request $request): View
     {
         $this->access->authorize($request->user(), 'representatives', 'view');
@@ -249,7 +236,6 @@ class AdminModuleController extends Controller
             'resource' => [
                 'customers' => 'customers',
                 'products' => 'products',
-                'price_tables' => 'price-tables',
                 'sales_representatives' => 'representatives',
                 'orders' => 'orders',
                 'regions' => 'regions',

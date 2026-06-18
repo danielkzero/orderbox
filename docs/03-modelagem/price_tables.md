@@ -68,9 +68,16 @@ Não pode existir duas tabelas com o mesmo nome dentro da mesma empresa.
 ### Vínculo Regional
 
 O campo `region_id` é um detalhe de persistência da cardinalidade atual. Ele
-não pode ser alterado no módulo Tabelas de Preço nem no módulo Produtos.
+não pode ser alterado na manutenção de tabelas disponível em Produtos.
 
 O vínculo é mantido exclusivamente pelo módulo Regiões.
+
+### Manutenção no Admin
+
+A entidade não possui módulo administrativo independente. A criação e a
+renomeação são realizadas no cabeçalho da listagem de Produtos, sempre com
+filtro por `company_id`. A criação define a tabela como ativa e não altera
+preços ou vínculos regionais existentes.
 
 ### Exclusão
 

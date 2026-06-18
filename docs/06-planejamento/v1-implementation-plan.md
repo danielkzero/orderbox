@@ -94,7 +94,8 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 
 - Categories, Brands e Units;
 - Products, PriceTables e ProductPrices;
-- gerenciamento pelo Admin;
+- gerenciamento de tabelas no cabeçalho da listagem de Produtos;
+- criação pelo botão `+` e renomeação inline das colunas de preço;
 - consulta pelo Mobile;
 - preço escalonado por quantidade;
 - estoque disponível apenas como informação recebida do ERP.

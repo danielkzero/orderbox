@@ -27,7 +27,7 @@
             <x-panel id="cadastros">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">2. Cadastros operacionais</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Use os menus Clientes, Produtos, Tabelas de Preço, Categorias, Marcas e Unidades para manter a base comercial.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Use os menus Clientes, Produtos, Categorias, Marcas e Unidades para manter a base comercial. As tabelas de preço são criadas e renomeadas diretamente no cabeçalho da lista de Produtos.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Clique em "Novo registro" na listagem.</li>
                         <li>Preencha os campos obrigatórios.</li>

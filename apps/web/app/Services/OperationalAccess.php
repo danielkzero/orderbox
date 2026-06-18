@@ -23,7 +23,7 @@ class OperationalAccess
         abort_unless($user->role === 'SalesRepresentative', 403);
 
         $allowed = match ($resource) {
-            'products', 'price-tables' => $ability === 'view',
+            'products' => $ability === 'view',
             'customers' => in_array($ability, ['view', 'create', 'update'], true),
             'orders' => in_array($ability, ['view', 'create', 'update', 'delete'], true),
             default => false,

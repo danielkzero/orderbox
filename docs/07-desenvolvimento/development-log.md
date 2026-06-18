@@ -3,6 +3,41 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Tabelas de preço integradas a Produtos
+
+### Funcionalidade
+
+Consolidação da manutenção básica das tabelas de preço na listagem de Produtos.
+
+### Motivo
+
+Eliminar o módulo administrativo independente e reduzir o fluxo de criação e
+renomeação ao contexto em que as tabelas são exibidas como colunas de preço.
+
+### Arquivos alterados
+
+- controller e rotas de manutenção de tabelas em `apps/web`;
+- listagem e formulário de Produtos;
+- menu lateral e manual do Admin;
+- testes administrativos;
+- regras de negócio, modelagem, telas, planejamento, roadmap e desenvolvimento.
+
+### Impactos
+
+- remove o menu e a rota de listagem independente de Tabelas de Preço;
+- adiciona o botão `+` ao cabeçalho Preço;
+- cria cada nova tabela como coluna ativa após Preço;
+- permite renomeação inline no cabeçalho da coluna;
+- restringe criação e renomeação a Admin e Manager;
+- preserva isolamento por `company_id`, auditoria e vínculo regional em Regiões;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- testes administrativos de criação, renomeação, autorização e multiempresa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Remediação arquitetural e funcional
 
 ### Funcionalidade
