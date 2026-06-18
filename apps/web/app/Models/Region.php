@@ -12,7 +12,7 @@ class Region extends Model
 
     protected function casts(): array
     {
-        return ['active' => 'boolean'];
+        return ['active' => 'boolean', 'level' => 'integer'];
     }
 
     public function company(): BelongsTo
@@ -33,5 +33,10 @@ class Region extends Model
     public function priceTables(): HasMany
     {
         return $this->hasMany(PriceTable::class);
+    }
+
+    public function municipalities(): HasMany
+    {
+        return $this->hasMany(RegionMunicipality::class);
     }
 }

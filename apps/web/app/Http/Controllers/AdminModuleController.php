@@ -161,10 +161,13 @@ class AdminModuleController extends Controller
 
     public function regions(Request $request): View
     {
-        return $this->module($request, Region::query()->withCount(['customers', 'representatives', 'priceTables']), 'Regiões', 'regions', [
+        return $this->module($request, Region::query()->withCount(['municipalities', 'customers', 'representatives', 'priceTables']), 'Regiões', 'regions', [
             'Nome' => 'name',
+            'Nível' => 'level',
             'UF' => fn (Region $item) => $item->state ?? '-',
-            'Cidade' => fn (Region $item) => $item->city ?? '-',
+            'Abrangência' => fn (Region $item) => $item->coverage_type === 'state_remainder'
+                ? 'Demais municípios da UF'
+                : $item->municipalities_count.' município(s)',
             'Clientes' => 'customers_count',
             'Representantes' => 'representatives_count',
             'Tabelas' => 'price_tables_count',

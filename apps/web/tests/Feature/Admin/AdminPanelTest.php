@@ -20,6 +20,7 @@ use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
+use App\Services\CommercialRegionResolver;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -128,7 +129,7 @@ class AdminPanelTest extends TestCase
 
         $customerRegion = Region::query()
             ->where('company_id', $this->admin->company_id)
-            ->where('name', 'Grande Sao Paulo')
+            ->where('name', 'São Paulo Capital')
             ->firstOrFail();
         $customerPriceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $customerRepresentative = SalesRepresentative::query()->where('company_id', $this->admin->company_id)->firstOrFail();
@@ -149,6 +150,7 @@ class AdminPanelTest extends TestCase
                     'district' => 'Sé',
                     'city' => 'São Paulo',
                     'state' => 'SP',
+                    'municipality_ibge_code' => '3550308',
                     'country' => 'Brasil',
                     'default_address' => '1',
                 ],
@@ -290,8 +292,18 @@ class AdminPanelTest extends TestCase
     {
         $this->actingAs($this->admin)->post('/crud/regions', [
             'name' => 'Vale do Paraiba',
+            'level' => 1,
             'state' => 'SP',
-            'city' => 'Sao Jose dos Campos',
+            'coverage_type' => 'municipalities',
+            'municipalities' => [
+                [
+                    'ibge_code' => '3549904',
+                    'name' => 'São José dos Campos',
+                    'state' => 'SP',
+                    'microregion_name' => 'São José dos Campos',
+                    'mesoregion_name' => 'Vale do Paraíba Paulista',
+                ],
+            ],
             'description' => 'Regiao criada pelo teste.',
         ])->assertRedirect(route('regions.index'));
 
@@ -310,7 +322,21 @@ class AdminPanelTest extends TestCase
 
         $table = PriceTable::query()->where('name', 'Especial Vale')->firstOrFail();
         $this->assertSame($region->id, $table->region_id);
+        $this->assertDatabaseHas('region_municipalities', [
+            'region_id' => $region->id,
+            'ibge_code' => '3549904',
+        ]);
         $this->assertSame(2, ProductPrice::query()->where('price_table_id', $table->id)->count());
+    }
+
+    public function test_commercial_region_uses_ibge_city_before_state_remainder(): void
+    {
+        $resolver = app(CommercialRegionResolver::class);
+        $capital = Region::query()->where('company_id', $this->admin->company_id)->where('name', 'São Paulo Capital')->firstOrFail();
+        $interior = Region::query()->where('company_id', $this->admin->company_id)->where('name', 'São Paulo Interior')->firstOrFail();
+
+        $this->assertSame($capital->id, $resolver->resolve($this->admin->company_id, 'SP', 'São Paulo', '3550308')?->id);
+        $this->assertSame($interior->id, $resolver->resolve($this->admin->company_id, 'SP', 'Campinas', '3509502')?->id);
     }
 
     public function test_admin_can_create_representative_and_order(): void

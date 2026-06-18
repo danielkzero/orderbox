@@ -22,6 +22,7 @@ Um cliente pode possuir múltiplos endereços para diferentes finalidades, como 
 | district | varchar(255) | Sim | Bairro |
 | city | varchar(255) | Sim | Cidade |
 | state | varchar(2) | Sim | UF |
+| municipality_ibge_code | varchar(7) | Não | Código oficial do município no IBGE |
 | country | varchar(100) | Sim | País |
 | default_address | boolean | Sim | Endereço padrão |
 | created_at | timestamp | Sim | Data de criação |

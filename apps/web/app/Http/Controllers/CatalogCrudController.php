@@ -18,13 +18,13 @@ use App\Models\Unit;
 use App\Models\User;
 use App\Rules\ValidBrazilianDocument;
 use App\Services\AuditService;
+use App\Services\CommercialRegionResolver;
 use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -138,6 +138,10 @@ class CatalogCrudController extends Controller
             $model->loadMissing(['items.product']);
         }
 
+        if ($resource === 'regions' && $model->exists) {
+            $model->loadMissing('municipalities');
+        }
+
         return view('admin.crud.form', [
             'resource' => $resource,
             'model' => $model,
@@ -199,6 +203,7 @@ class CatalogCrudController extends Controller
                 'addresses.*.district' => ['required_with:addresses', 'string', 'max:255'],
                 'addresses.*.city' => ['required_with:addresses', 'string', 'max:255'],
                 'addresses.*.state' => ['required_with:addresses', 'string', 'size:2'],
+                'addresses.*.municipality_ibge_code' => ['nullable', 'string', 'size:7', 'regex:/^[0-9]{7}$/'],
                 'addresses.*.country' => ['nullable', 'string', 'max:100'],
                 'addresses.*.default_address' => ['nullable', 'boolean'],
                 'contacts' => ['nullable', 'array'],
@@ -277,8 +282,15 @@ class CatalogCrudController extends Controller
             ]),
             'regions' => $request->validate([
                 'name' => ['required', 'string', 'max:255', Rule::unique('regions')->where('company_id', $companyId)->ignore($model)],
-                'state' => ['nullable', 'string', 'size:2'],
-                'city' => ['nullable', 'string', 'max:255'],
+                'level' => ['required', 'integer', 'min:1', 'max:99'],
+                'state' => ['required', 'string', 'size:2'],
+                'coverage_type' => ['required', 'in:municipalities,state_remainder'],
+                'municipalities' => ['required_if:coverage_type,municipalities', 'array', 'min:1'],
+                'municipalities.*.ibge_code' => ['required_with:municipalities', 'string', 'size:7', 'regex:/^[0-9]{7}$/'],
+                'municipalities.*.name' => ['required_with:municipalities', 'string', 'max:255'],
+                'municipalities.*.state' => ['required_with:municipalities', 'string', 'size:2'],
+                'municipalities.*.microregion_name' => ['nullable', 'string', 'max:255'],
+                'municipalities.*.mesoregion_name' => ['nullable', 'string', 'max:255'],
                 'description' => ['nullable', 'string'],
                 'active' => ['sometimes', 'boolean'],
             ]),
@@ -320,6 +332,7 @@ class CatalogCrudController extends Controller
             'customers' => $this->saveCustomer($request, $data, $model),
             'products' => $this->saveProduct($request, $data, $model),
             'price-tables' => $this->savePriceTable($request, $data, $model),
+            'regions' => $this->saveRegion($request, $data, $model),
             'orders' => $this->saveOrder($request, $data, $model),
             default => $model
                 ? tap($model)->update($data)
@@ -448,6 +461,7 @@ class CatalogCrudController extends Controller
                     'district' => $address['district'],
                     'city' => $address['city'],
                     'state' => strtoupper($address['state']),
+                    'municipality_ibge_code' => $address['municipality_ibge_code'] ?? null,
                     'country' => $address['country'] ?? 'Brasil',
                     'default_address' => (bool) ($address['default_address'] ?? $index === 0),
                 ]);
@@ -492,30 +506,90 @@ class CatalogCrudController extends Controller
             return null;
         }
 
-        $state = strtoupper($defaultAddress['state']);
-        $city = $defaultAddress['city'] ?? null;
+        return app(CommercialRegionResolver::class)->resolve(
+            $companyId,
+            $defaultAddress['state'],
+            $defaultAddress['city'] ?? null,
+            $defaultAddress['municipality_ibge_code'] ?? null,
+        )?->id;
+    }
 
-        if (filled($city)) {
-            $normalizedCity = Str::lower(Str::ascii($city));
-            $cityRegion = Region::query()
-                ->where('company_id', $companyId)
-                ->where('active', true)
-                ->where('state', $state)
-                ->whereNotNull('city')
-                ->get()
-                ->first(fn (Region $region): bool => Str::lower(Str::ascii($region->city)) === $normalizedCity);
+    private function saveRegion(Request $request, array $data, ?Model $model = null): Region
+    {
+        return DB::transaction(function () use ($request, $data, $model): Region {
+            $municipalities = collect($data['municipalities'] ?? [])->unique('ibge_code')->values();
+            unset($data['municipalities']);
 
-            if ($cityRegion) {
-                return $cityRegion->id;
+            if ($data['coverage_type'] === 'state_remainder') {
+                $municipalities = collect();
             }
-        }
 
-        return Region::query()
+            $data['state'] = strtoupper($data['state']);
+            $data['city'] = null;
+
+            if ($municipalities->contains(fn (array $municipality): bool => strtoupper($municipality['state']) !== $data['state'])) {
+                throw ValidationException::withMessages([
+                    'municipalities' => 'Todos os municípios devem pertencer à UF selecionada.',
+                ]);
+            }
+
+            if ($data['coverage_type'] === 'state_remainder' && Region::query()
+                ->where('company_id', $request->user()->company_id)
+                ->where('state', $data['state'])
+                ->where('coverage_type', 'state_remainder')
+                ->when($model instanceof Region, fn ($query) => $query->whereKeyNot($model->id))
+                ->exists()) {
+                throw ValidationException::withMessages([
+                    'coverage_type' => 'Já existe uma região configurada para os demais municípios desta UF.',
+                ]);
+            }
+
+            /** @var Region $region */
+            $region = $model instanceof Region
+                ? tap($model)->update($data)
+                : Region::query()->create($data + ['company_id' => $request->user()->company_id]);
+
+            $duplicateCode = $municipalities->pluck('ibge_code')->first(fn ($code) => Region::query()
+                ->where('company_id', $request->user()->company_id)
+                ->whereKeyNot($region->id)
+                ->whereHas('municipalities', fn ($query) => $query->where('ibge_code', $code))
+                ->exists());
+
+            if ($duplicateCode) {
+                throw ValidationException::withMessages([
+                    'municipalities' => "O município IBGE {$duplicateCode} já pertence a outra região comercial.",
+                ]);
+            }
+
+            $region->municipalities()->delete();
+            $region->municipalities()->createMany($municipalities->all());
+            $this->refreshCustomerRegions($request->user()->company_id);
+
+            return $region->load('municipalities');
+        });
+    }
+
+    private function refreshCustomerRegions(int $companyId): void
+    {
+        Customer::query()
+            ->with('addresses')
             ->where('company_id', $companyId)
-            ->where('active', true)
-            ->where('state', $state)
-            ->whereNull('city')
-            ->value('id');
+            ->eachById(function (Customer $customer) use ($companyId): void {
+                $defaultAddress = $customer->addresses->firstWhere('default_address', true) ?? $customer->addresses->first();
+
+                $regionId = $defaultAddress
+                    ? app(CommercialRegionResolver::class)->resolve(
+                        $companyId,
+                        $defaultAddress->state,
+                        $defaultAddress->city,
+                        $defaultAddress->municipality_ibge_code,
+                    )?->id
+                    : null;
+
+                if ($customer->region_id !== $regionId) {
+                    $customer->update(['region_id' => $regionId]);
+                }
+            });
     }
 
     private function savePriceTable(Request $request, array $data, ?Model $model = null): PriceTable

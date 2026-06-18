@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Services\CommercialRegionResolver;
 use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Str;
 
 class Customer extends Model
 {
@@ -58,42 +58,25 @@ class Customer extends Model
     {
         $directTableIds = $this->priceTables()->pluck('price_tables.id');
         $defaultAddress = $this->defaultAddressRecord();
-        $stateRegionId = null;
-        $cityRegionId = null;
+        $resolvedRegionId = null;
 
         if ($defaultAddress && filled($defaultAddress->state)) {
-            $state = strtoupper($defaultAddress->state);
-
-            $stateRegionId = Region::query()
-                ->where('company_id', $this->company_id)
-                ->where('active', true)
-                ->where('state', $state)
-                ->whereNull('city')
-                ->value('id');
-
-            if (filled($defaultAddress->city)) {
-                $normalizedCity = Str::lower(Str::ascii($defaultAddress->city));
-                $cityRegionId = Region::query()
-                    ->where('company_id', $this->company_id)
-                    ->where('active', true)
-                    ->where('state', $state)
-                    ->whereNotNull('city')
-                    ->get()
-                    ->first(fn (Region $region): bool => Str::lower(Str::ascii($region->city)) === $normalizedCity)
-                    ?->id;
-            }
+            $resolvedRegionId = app(CommercialRegionResolver::class)->resolve(
+                $this->company_id,
+                $defaultAddress->state,
+                $defaultAddress->city,
+                $defaultAddress->municipality_ibge_code,
+            )?->id;
         }
-
-        $regionIds = collect([$stateRegionId, $cityRegionId])->filter()->values();
 
         return PriceTable::query()
             ->where('company_id', $this->company_id)
             ->where('active', true)
-            ->where(function ($query) use ($directTableIds, $regionIds): void {
+            ->where(function ($query) use ($directTableIds, $resolvedRegionId): void {
                 $query->whereNull('region_id');
 
-                if ($regionIds->isNotEmpty()) {
-                    $query->orWhereIn('region_id', $regionIds);
+                if ($resolvedRegionId) {
+                    $query->orWhere('region_id', $resolvedRegionId);
                 }
 
                 if ($directTableIds->isNotEmpty()) {
@@ -101,16 +84,12 @@ class Customer extends Model
                 }
             })
             ->get()
-            ->sortByDesc(function (PriceTable $priceTable) use ($directTableIds, $cityRegionId, $stateRegionId): int {
+            ->sortByDesc(function (PriceTable $priceTable) use ($directTableIds, $resolvedRegionId): int {
                 if ($directTableIds->contains($priceTable->id)) {
-                    return 3;
-                }
-
-                if ($cityRegionId && $priceTable->region_id === $cityRegionId) {
                     return 2;
                 }
 
-                if ($stateRegionId && $priceTable->region_id === $stateRegionId) {
+                if ($resolvedRegionId && $priceTable->region_id === $resolvedRegionId) {
                     return 1;
                 }
 

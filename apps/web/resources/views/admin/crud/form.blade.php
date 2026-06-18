@@ -37,6 +37,7 @@
                         'district' => $address->district,
                         'city' => $address->city,
                         'state' => $address->state,
+                        'municipality_ibge_code' => $address->municipality_ibge_code,
                         'country' => $address->country,
                         'default_address' => (bool) $address->default_address,
                     ])->values()->all() : []))->values();
@@ -74,7 +75,7 @@
                     selectedPriceTableIds: @js($linkedPriceTables->values()),
                     priceTableSearch: '',
                     addAddress() {
-                        this.addresses.push({ type: 'Entrega', zip_code: '', street: '', number: '', complement: '', district: '', city: '', state: '', country: 'Brasil', default_address: this.addresses.length === 0 });
+                        this.addresses.push({ type: 'Entrega', zip_code: '', street: '', number: '', complement: '', district: '', city: '', state: '', municipality_ibge_code: '', country: 'Brasil', default_address: this.addresses.length === 0 });
                     },
                     removeAddress(index) {
                         this.addresses.splice(index, 1);
@@ -98,6 +99,7 @@
                         row.district = data.bairro || row.district;
                         row.city = data.localidade || row.city;
                         row.state = data.uf || row.state;
+                        row.municipality_ibge_code = data.ibge || row.municipality_ibge_code;
                         row.country = 'Brasil';
                     },
                     representativeMatches() {
@@ -233,6 +235,7 @@
                                         <div>
                                             <x-input-label value="Cidade" />
                                             <input :name="`addresses[${index}][city]`" x-model="address.city" class="{{ $inputClass }}" required>
+                                            <input type="hidden" :name="`addresses[${index}][municipality_ibge_code]`" x-model="address.municipality_ibge_code">
                                         </div>
                                         <div>
                                             <x-input-label value="UF" />
@@ -786,22 +789,144 @@
                     </div>
                 </div>
             @elseif ($resource === 'regions')
-                <div class="grid gap-5 md:grid-cols-2">
-                    <div>
-                        <x-input-label for="name" value="Nome" />
-                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
+                @php
+                    $regionMunicipalities = collect(old('municipalities', $model->exists ? $model->municipalities->map(fn ($municipality) => [
+                        'ibge_code' => $municipality->ibge_code,
+                        'name' => $municipality->name,
+                        'state' => $municipality->state,
+                        'microregion_name' => $municipality->microregion_name,
+                        'mesoregion_name' => $municipality->mesoregion_name,
+                    ])->values()->all() : []))->values();
+                @endphp
+                <div class="space-y-6" x-data="{
+                    states: [],
+                    municipalities: [],
+                    selectedMunicipalities: @js($regionMunicipalities),
+                    selectedState: @js(old('state', $model->state)),
+                    coverageType: @js(old('coverage_type', $model->coverage_type ?: 'municipalities')),
+                    municipalitySearch: '',
+                    loadingLocations: false,
+                    async init() {
+                        await this.loadStates();
+                        if (this.selectedState) await this.loadMunicipalities();
+                    },
+                    async loadStates() {
+                        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                        this.states = await response.json();
+                    },
+                    async loadMunicipalities() {
+                        if (! this.selectedState) return;
+                        this.loadingLocations = true;
+                        this.municipalitySearch = '';
+                        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${this.selectedState}/municipios?orderBy=nome`);
+                        const data = await response.json();
+                        this.municipalities = data.map((municipality) => ({
+                            ibge_code: String(municipality.id),
+                            name: municipality.nome,
+                            state: this.selectedState,
+                            microregion_name: municipality.microrregiao?.nome || null,
+                            mesoregion_name: municipality.microrregiao?.mesorregiao?.nome || null,
+                        }));
+                        this.selectedMunicipalities = this.selectedMunicipalities.filter((municipality) => municipality.state === this.selectedState);
+                        this.loadingLocations = false;
+                    },
+                    municipalityMatches() {
+                        const term = this.municipalitySearch.toLowerCase();
+                        if (! term) return [];
+                        return this.municipalities
+                            .filter((municipality) => ! this.selectedMunicipalities.some((selected) => selected.ibge_code === municipality.ibge_code))
+                            .filter((municipality) => `${municipality.name} ${municipality.microregion_name || ''} ${municipality.mesoregion_name || ''}`.toLowerCase().includes(term))
+                            .slice(0, 12);
+                    },
+                    addMunicipality(municipality) {
+                        this.selectedMunicipalities.push(municipality);
+                        this.municipalitySearch = '';
+                    },
+                    removeMunicipality(code) {
+                        this.selectedMunicipalities = this.selectedMunicipalities.filter((municipality) => municipality.ibge_code !== code);
+                    }
+                }">
+                    <div class="grid gap-5 md:grid-cols-2">
+                        <div>
+                            <x-input-label for="name" value="Nome da região comercial" />
+                            <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" placeholder="São Paulo Capital" required />
+                        </div>
+                        <div>
+                            <x-input-label for="level" value="Nível de prioridade" />
+                            <x-text-input id="level" name="level" type="number" min="1" max="99" class="mt-1 block w-full" :value="old('level', $model->level ?: 1)" required />
+                            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Níveis menores são avaliados primeiro.</p>
+                        </div>
+                        <div>
+                            <x-input-label for="state" value="UF" />
+                            <select id="state" name="state" x-model="selectedState" @change="loadMunicipalities()" class="{{ $inputClass }}" required>
+                                <option value="">Selecione a UF</option>
+                                <template x-for="state in states" :key="state.id">
+                                    <option :value="state.sigla" x-text="`${state.nome} - ${state.sigla}`"></option>
+                                </template>
+                            </select>
+                        </div>
+                        <div>
+                            <x-input-label for="coverage_type" value="Abrangência" />
+                            <select id="coverage_type" name="coverage_type" x-model="coverageType" class="{{ $inputClass }}" required>
+                                <option value="municipalities">Municípios selecionados</option>
+                                <option value="state_remainder">Todos os municípios restantes da UF</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2">
+                            <x-input-label for="description" value="Descrição" />
+                            <textarea id="description" name="description" rows="3" class="{{ Str::replaceFirst('h-11', 'min-h-24', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="state" value="UF" />
-                        <x-text-input id="state" name="state" maxlength="2" class="mt-1 block w-full uppercase" :value="old('state', $model->state)" />
+
+                    <div x-show="coverageType === 'municipalities'" x-cloak class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Municípios da região</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Dados oficiais carregados da API de Localidades do IBGE.</p>
+                        </div>
+                        <div class="space-y-4 p-5">
+                            <template x-for="(municipality, index) in selectedMunicipalities" :key="municipality.ibge_code">
+                                <div>
+                                    <input type="hidden" :name="`municipalities[${index}][ibge_code]`" :value="municipality.ibge_code">
+                                    <input type="hidden" :name="`municipalities[${index}][name]`" :value="municipality.name">
+                                    <input type="hidden" :name="`municipalities[${index}][state]`" :value="municipality.state">
+                                    <input type="hidden" :name="`municipalities[${index}][microregion_name]`" :value="municipality.microregion_name">
+                                    <input type="hidden" :name="`municipalities[${index}][mesoregion_name]`" :value="municipality.mesoregion_name">
+                                </div>
+                            </template>
+
+                            <div class="relative">
+                                <x-input-label value="Buscar município, microrregião ou mesorregião" />
+                                <input x-model="municipalitySearch" :disabled="! selectedState || loadingLocations" class="{{ $inputClass }}" placeholder="Ex.: Embu das Artes, Sorocaba...">
+                                <div x-show="municipalityMatches().length > 0" x-cloak class="absolute z-30 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                    <template x-for="municipality in municipalityMatches()" :key="municipality.ibge_code">
+                                        <button type="button" @click="addMunicipality(municipality)" class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                            <span>
+                                                <strong class="block text-gray-800 dark:text-white/90" x-text="`${municipality.name} - ${municipality.state}`"></strong>
+                                                <span class="text-xs text-gray-500" x-text="`${municipality.microregion_name || 'Sem microrregião'} · ${municipality.mesoregion_name || 'Sem mesorregião'} · IBGE ${municipality.ibge_code}`"></span>
+                                            </span>
+                                            <span class="text-brand-500">Adicionar</span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+
+                            <div class="grid gap-3 md:grid-cols-2">
+                                <template x-for="municipality in selectedMunicipalities" :key="`selected-${municipality.ibge_code}`">
+                                    <div class="flex items-start justify-between gap-3 rounded-xl border border-gray-200 p-3 dark:border-gray-800">
+                                        <span>
+                                            <strong class="block text-sm text-gray-800 dark:text-white/90" x-text="`${municipality.name} - ${municipality.state}`"></strong>
+                                            <span class="text-xs text-gray-500" x-text="`IBGE ${municipality.ibge_code}${municipality.microregion_name ? ' · ' + municipality.microregion_name : ''}`"></span>
+                                        </span>
+                                        <button type="button" @click="removeMunicipality(municipality.ibge_code)" class="text-sm font-medium text-error-600">Remover</button>
+                                    </div>
+                                </template>
+                            </div>
+                            <p x-show="selectedMunicipalities.length === 0" class="text-sm text-gray-500 dark:text-gray-400">Nenhum município selecionado.</p>
+                        </div>
                     </div>
-                    <div>
-                        <x-input-label for="city" value="Cidade" />
-                        <x-text-input id="city" name="city" class="mt-1 block w-full" :value="old('city', $model->city)" />
-                    </div>
-                    <div class="md:col-span-2">
-                        <x-input-label for="description" value="Descrição" />
-                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}">{{ old('description', $model->description) }}</textarea>
+
+                    <div x-show="coverageType === 'state_remainder'" x-cloak class="rounded-2xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300">
+                        Esta região receberá automaticamente todos os municípios da UF que não estiverem vinculados a uma região mais específica.
                     </div>
                 </div>
             @elseif ($resource === 'representatives')

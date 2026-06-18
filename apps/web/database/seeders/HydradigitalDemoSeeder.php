@@ -64,23 +64,55 @@ class HydradigitalDemoSeeder extends Seeder
 
     private function seedRegions(Company $company)
     {
-        return collect([
-            ['name' => 'Grande Sao Paulo', 'state' => 'SP', 'city' => 'Sao Paulo'],
-            ['name' => 'Interior SP', 'state' => 'SP', 'city' => 'Campinas'],
-            ['name' => 'Litoral SP', 'state' => 'SP', 'city' => 'Santos'],
+        $regions = collect([
+            [
+                'name' => 'São Paulo Capital',
+                'level' => 1,
+                'state' => 'SP',
+                'coverage_type' => 'municipalities',
+                'municipalities' => [
+                    ['ibge_code' => '3504107', 'name' => 'Atibaia', 'state' => 'SP', 'microregion_name' => 'Bragança Paulista', 'mesoregion_name' => 'Macro Metropolitana Paulista'],
+                    ['ibge_code' => '3515004', 'name' => 'Embu das Artes', 'state' => 'SP', 'microregion_name' => 'Itapecerica da Serra', 'mesoregion_name' => 'Metropolitana de São Paulo'],
+                    ['ibge_code' => '3528502', 'name' => 'Mairiporã', 'state' => 'SP', 'microregion_name' => 'Franco da Rocha', 'mesoregion_name' => 'Metropolitana de São Paulo'],
+                    ['ibge_code' => '3550308', 'name' => 'São Paulo', 'state' => 'SP', 'microregion_name' => 'São Paulo', 'mesoregion_name' => 'Metropolitana de São Paulo'],
+                    ['ibge_code' => '3550605', 'name' => 'São Roque', 'state' => 'SP', 'microregion_name' => 'Sorocaba', 'mesoregion_name' => 'Macro Metropolitana Paulista'],
+                ],
+            ],
+            [
+                'name' => 'São Paulo Interior',
+                'level' => 2,
+                'state' => 'SP',
+                'coverage_type' => 'state_remainder',
+                'municipalities' => [],
+            ],
         ])->mapWithKeys(function (array $data) use ($company): array {
+            $municipalities = $data['municipalities'];
+            unset($data['municipalities']);
+
             $region = Region::query()->updateOrCreate(
                 ['company_id' => $company->id, 'name' => $data['name']],
                 [
+                    'level' => $data['level'],
                     'state' => $data['state'],
-                    'city' => $data['city'],
+                    'city' => null,
+                    'coverage_type' => $data['coverage_type'],
                     'description' => 'Regiao comercial demonstrativa.',
                     'active' => true,
                 ],
             );
 
+            $region->municipalities()->delete();
+            $region->municipalities()->createMany($municipalities);
+
             return [$region->name => $region];
         });
+
+        Region::query()
+            ->where('company_id', $company->id)
+            ->whereNotIn('id', $regions->pluck('id'))
+            ->update(['active' => false]);
+
+        return $regions;
     }
 
     private function seedApiClient(Company $company): void
@@ -129,7 +161,7 @@ class HydradigitalDemoSeeder extends Seeder
 
             return SalesRepresentative::query()->updateOrCreate(
                 ['company_id' => $company->id, 'code' => $data['code']],
-                ['user_id' => $user->id, 'region_id' => $regions[$data['code'] === 'REP-001' ? 'Grande Sao Paulo' : 'Interior SP']->id, 'active' => true],
+                ['user_id' => $user->id, 'region_id' => $regions[$data['code'] === 'REP-001' ? 'São Paulo Capital' : 'São Paulo Interior']->id, 'active' => true],
             );
         });
 
@@ -184,7 +216,7 @@ class HydradigitalDemoSeeder extends Seeder
         ])->mapWithKeys(function (array $data) use ($company, $regions): array {
             $table = PriceTable::query()->updateOrCreate(
                 ['company_id' => $company->id, 'name' => $data['name']],
-                ['region_id' => $data['name'] === 'Atacado' ? $regions['Interior SP']->id : null, 'description' => $data['description'], 'active' => true],
+                ['region_id' => $data['name'] === 'Atacado' ? $regions['São Paulo Interior']->id : null, 'description' => $data['description'], 'active' => true],
             );
 
             return [$table->name => $table];
@@ -257,11 +289,9 @@ class HydradigitalDemoSeeder extends Seeder
                 [
                     'document' => $data['document'],
                     'client_reference' => (string) Str::uuid(),
-                    'region_id' => match ($data['city']) {
-                        'Campinas', 'Sorocaba', 'Jundiai' => $regions['Interior SP']->id,
-                        'Santos' => $regions['Litoral SP']->id,
-                        default => $regions['Grande Sao Paulo']->id,
-                    },
+                    'region_id' => $data['city'] === 'São Paulo'
+                        ? $regions['São Paulo Capital']->id
+                        : $regions['São Paulo Interior']->id,
                     'corporate_name' => $data['corporate'],
                     'trade_name' => $data['trade'],
                     'email' => 'compras'.($index + 1).'@cliente.test',
@@ -281,6 +311,12 @@ class HydradigitalDemoSeeder extends Seeder
                     'district' => 'Centro',
                     'city' => $data['city'],
                     'state' => $data['state'],
+                    'municipality_ibge_code' => match ($data['city']) {
+                        'São Paulo' => '3550308',
+                        'Campinas' => '3509502',
+                        'Santos' => '3548500',
+                        default => null,
+                    },
                     'country' => 'Brasil',
                     'default_address' => true,
                 ],
