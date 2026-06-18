@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CompanyFactory extends Factory
@@ -11,7 +12,7 @@ class CompanyFactory extends Factory
         return [
             'corporate_name' => fake()->company(),
             'trade_name' => fake()->company(),
-            'document' => fake()->unique()->numerify('##############'),
+            'document' => BrazilianDocument::cnpjFromBase(fake()->unique()->numerify('############')),
             'email' => fake()->companyEmail(),
             'phone' => fake()->phoneNumber(),
             'active' => true,

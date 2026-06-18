@@ -136,7 +136,7 @@ class AdminPanelTest extends TestCase
         $this->actingAs($this->admin)->post('/crud/customers', [
             'corporate_name' => 'Cliente Teste Ltda',
             'trade_name' => 'Cliente Teste',
-            'document' => '99999999000199',
+            'document' => 'AB.CD1.234/0001-47',
             'email' => 'cliente.teste@example.test',
             'credit_limit' => '1500',
             'addresses' => [
@@ -170,7 +170,8 @@ class AdminPanelTest extends TestCase
             'price_table_ids' => [$customerPriceTable->id],
         ])->assertRedirect(route('customers.index'));
 
-        $customer = Customer::query()->where('document', '99999999000199')->firstOrFail();
+        $customer = Customer::query()->where('document', 'ABCD1234000147')->firstOrFail();
+        $this->assertSame('ABCD1234000147', $customer->document);
         $this->assertSame($customerRegion->id, $customer->region_id);
         $this->assertSame(1, CustomerAddress::query()->where('customer_id', $customer->id)->count());
         $this->assertSame(1, CustomerContact::query()->where('customer_id', $customer->id)->count());

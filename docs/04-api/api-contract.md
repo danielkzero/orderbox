@@ -69,6 +69,8 @@ O painel Admin utiliza Blade e sessão Web Laravel. As regras de negócio são c
 
 Recursos de outra Company devem responder como inexistentes, evitando exposição de IDs.
 
+Campos `document` aceitam CPF, CNPJ numérico e CNPJ alfanumérico. Pontuação é opcional; o servidor normaliza letras para maiúsculas, remove a pontuação e valida os dígitos verificadores.
+
 ---
 
 ## Paginação e Filtros

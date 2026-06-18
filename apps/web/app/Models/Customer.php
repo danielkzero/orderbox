@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -12,6 +13,11 @@ use Illuminate\Support\Str;
 class Customer extends Model
 {
     protected $guarded = [];
+
+    public function setDocumentAttribute(?string $value): void
+    {
+        $this->attributes['document'] = BrazilianDocument::normalize($value);
+    }
 
     protected function casts(): array
     {

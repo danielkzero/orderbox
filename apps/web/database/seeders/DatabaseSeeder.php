@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
         }
 
         $company = Company::query()->firstOrCreate(
-            ['document' => env('COMPANY_DOCUMENT', '00000000000000')],
+            ['document' => env('COMPANY_DOCUMENT', '12345678000195')],
             [
                 'corporate_name' => env('COMPANY_NAME', 'OrderBox Development'),
                 'trade_name' => env('COMPANY_NAME', 'OrderBox Development'),

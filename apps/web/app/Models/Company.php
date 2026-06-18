@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\BrazilianDocument;
 use Database\Factories\CompanyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +21,11 @@ class Company extends Model
         'phone',
         'active',
     ];
+
+    public function setDocumentAttribute(?string $value): void
+    {
+        $this->attributes['document'] = BrazilianDocument::normalize($value);
+    }
 
     protected function casts(): array
     {

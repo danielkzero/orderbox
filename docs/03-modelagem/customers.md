@@ -19,7 +19,7 @@ Todo cliente pertence obrigatoriamente a uma Company.
 | client_reference | uuid | Não | Referência gerada pelo mobile |
 | corporate_name | varchar(255) | Sim | Razão social |
 | trade_name | varchar(255) | Não | Nome fantasia |
-| document | varchar(20) | Sim | CPF ou CNPJ |
+| document | varchar(20) | Sim | CPF ou CNPJ numérico/alfanumérico, normalizado sem pontuação |
 | state_registration | varchar(50) | Não | Inscrição estadual |
 | email | varchar(255) | Não | E-mail principal |
 | phone | varchar(20) | Não | Telefone principal |
@@ -51,7 +51,7 @@ Utiliza CPF.
 
 ### Pessoa Jurídica
 
-Utiliza CNPJ.
+Utiliza CNPJ numérico ou alfanumérico. No formato alfanumérico, os 12 primeiros caracteres aceitam letras de `A` a `Z` e números; os dois dígitos verificadores permanecem numéricos.
 
 ---
 
@@ -60,6 +60,8 @@ Utiliza CNPJ.
 ### Documento Único
 
 Não pode existir dois clientes com o mesmo CPF ou CNPJ dentro da mesma empresa.
+
+O documento deve ser convertido para letras maiúsculas e armazenado sem pontuação antes da validação de unicidade. CPF e CNPJ devem possuir dígitos verificadores válidos.
 
 ### Cliente Inativo
 

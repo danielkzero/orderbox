@@ -16,7 +16,9 @@ use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
+use App\Rules\ValidBrazilianDocument;
 use App\Services\AuditService;
+use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -176,11 +178,15 @@ class CatalogCrudController extends Controller
     {
         $companyId = $request->user()->company_id;
 
+        if ($resource === 'customers' && $request->has('document')) {
+            $request->merge(['document' => BrazilianDocument::normalize($request->string('document')->toString())]);
+        }
+
         return match ($resource) {
             'customers' => $request->validate([
                 'corporate_name' => ['required', 'string', 'max:255'],
                 'trade_name' => ['nullable', 'string', 'max:255'],
-                'document' => ['required', 'string', 'max:20', Rule::unique('customers')->where('company_id', $companyId)->ignore($model)],
+                'document' => ['required', 'string', 'max:20', new ValidBrazilianDocument, Rule::unique('customers')->where('company_id', $companyId)->ignore($model)],
                 'email' => ['nullable', 'email', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:20'],
                 'credit_limit' => ['nullable', 'numeric', 'min:0'],

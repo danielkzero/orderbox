@@ -159,8 +159,18 @@
                                 <x-text-input id="trade_name" name="trade_name" class="mt-1 block w-full" :value="old('trade_name', $model->trade_name)" />
                             </div>
                             <div>
-                                <x-input-label for="document" value="Documento" />
-                                <x-text-input id="document" name="document" class="mt-1 block w-full" :value="old('document', $model->document)" required />
+                                <x-input-label for="document" value="CPF ou CNPJ" />
+                                <x-text-input
+                                    id="document"
+                                    name="document"
+                                    class="mt-1 block w-full uppercase"
+                                    :value="old('document', $model->document)"
+                                    maxlength="20"
+                                    placeholder="12.ABC.345/01DE-35"
+                                    oninput="this.value = this.value.toUpperCase()"
+                                    required
+                                />
+                                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Aceita CPF, CNPJ numérico e CNPJ alfanumérico. Pontuação é opcional.</p>
                             </div>
                             <div>
                                 <x-input-label for="email" value="E-mail" />

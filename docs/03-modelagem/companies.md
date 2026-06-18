@@ -17,7 +17,7 @@ O isolamento dos dados deve ser garantido por `company_id` nas entidades raiz e 
 | id | bigint | Sim | Identificador único |
 | corporate_name | varchar(255) | Sim | Razão social |
 | trade_name | varchar(255) | Sim | Nome fantasia |
-| document | varchar(20) | Sim | CPF ou CNPJ |
+| document | varchar(20) | Sim | CPF ou CNPJ numérico/alfanumérico, normalizado sem pontuação |
 | email | varchar(255) | Sim | E-mail principal |
 | phone | varchar(20) | Não | Telefone principal |
 | active | boolean | Sim | Empresa ativa |

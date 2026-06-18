@@ -44,7 +44,7 @@ class HydradigitalDemoSeeder extends Seeder
             $company->update([
                 'corporate_name' => 'Hydra Digital Tecnologia Ltda.',
                 'trade_name' => 'hydradigital',
-                'document' => '12345678000190',
+                'document' => '12345678000195',
                 'email' => 'contato@hydradigital.test',
                 'phone' => '(11) 4002-8922',
                 'active' => true,
@@ -243,18 +243,19 @@ class HydradigitalDemoSeeder extends Seeder
     private function seedCustomers(Company $company, $representatives, $regions)
     {
         $definitions = [
-            ['document' => '11111111000101', 'corporate' => 'Construtora Horizonte Ltda.', 'trade' => 'Horizonte Obras', 'city' => 'São Paulo', 'state' => 'SP'],
-            ['document' => '22222222000102', 'corporate' => 'Casa Nova Materiais Ltda.', 'trade' => 'Casa Nova', 'city' => 'Campinas', 'state' => 'SP'],
-            ['document' => '33333333000103', 'corporate' => 'Reformas Ideal Ltda.', 'trade' => 'Ideal Reformas', 'city' => 'Santos', 'state' => 'SP'],
-            ['document' => '44444444000104', 'corporate' => 'Engenharia Prisma Ltda.', 'trade' => 'Prisma Engenharia', 'city' => 'Sorocaba', 'state' => 'SP'],
-            ['document' => '55555555000105', 'corporate' => 'Depósito Central Ltda.', 'trade' => 'Depósito Central', 'city' => 'Jundiaí', 'state' => 'SP'],
-            ['document' => '66666666000106', 'corporate' => 'Comercial Avenida Ltda.', 'trade' => 'Comercial Avenida', 'city' => 'Guarulhos', 'state' => 'SP'],
+            ['document' => '12ABC34501DE35', 'corporate' => 'Construtora Horizonte Ltda.', 'trade' => 'Horizonte Obras', 'city' => 'São Paulo', 'state' => 'SP'],
+            ['document' => '22222222000191', 'corporate' => 'Casa Nova Materiais Ltda.', 'trade' => 'Casa Nova', 'city' => 'Campinas', 'state' => 'SP'],
+            ['document' => '33333333000191', 'corporate' => 'Reformas Ideal Ltda.', 'trade' => 'Ideal Reformas', 'city' => 'Santos', 'state' => 'SP'],
+            ['document' => '44444444000191', 'corporate' => 'Engenharia Prisma Ltda.', 'trade' => 'Prisma Engenharia', 'city' => 'Sorocaba', 'state' => 'SP'],
+            ['document' => '55555555000191', 'corporate' => 'Depósito Central Ltda.', 'trade' => 'Depósito Central', 'city' => 'Jundiaí', 'state' => 'SP'],
+            ['document' => '66666666000191', 'corporate' => 'Comercial Avenida Ltda.', 'trade' => 'Comercial Avenida', 'city' => 'Guarulhos', 'state' => 'SP'],
         ];
 
         return collect($definitions)->mapWithKeys(function (array $data, int $index) use ($company, $representatives, $regions): array {
             $customer = Customer::query()->updateOrCreate(
-                ['company_id' => $company->id, 'document' => $data['document']],
+                ['company_id' => $company->id, 'corporate_name' => $data['corporate']],
                 [
+                    'document' => $data['document'],
                     'client_reference' => (string) Str::uuid(),
                     'region_id' => match ($data['city']) {
                         'Campinas', 'Sorocaba', 'Jundiai' => $regions['Interior SP']->id,
