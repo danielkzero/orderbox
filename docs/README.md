@@ -34,6 +34,7 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 13. [Telas do Mobile](05-telas/mobile-screens.md)
 14. [Plano de implementação da V1](06-planejamento/v1-implementation-plan.md)
 15. [Ambiente de desenvolvimento](07-desenvolvimento/getting-started.md)
+16. [Registro de desenvolvimento](07-desenvolvimento/development-log.md)
 
 ## Convenções
 
