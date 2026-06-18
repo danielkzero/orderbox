@@ -35,6 +35,8 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 14. [Plano de implementação da V1](06-planejamento/v1-implementation-plan.md)
 15. [Ambiente de desenvolvimento](07-desenvolvimento/getting-started.md)
 16. [Registro de desenvolvimento](07-desenvolvimento/development-log.md)
+17. [Revisão arquitetural e funcional](07-desenvolvimento/architectural-functional-review-2026-06-18.md)
+18. [Roadmap de remediação arquitetural](06-roadmap/remediation-roadmap.md)
 
 ## Convenções
 
