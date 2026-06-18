@@ -918,7 +918,7 @@
                         '15/30/45/60/75' => '15/30/45/60/75 dias',
                         '15/30/45/60/75/90' => '15/30/45/60/75/90 dias',
                     ];
-                    $customerOptions = $customers->map(function ($customer) {
+                    $customerOptions = $customers->map(function ($customer) use ($applicablePriceTables) {
                         return [
                             'id' => $customer->id,
                             'label' => $customer->trade_name ?: $customer->corporate_name,

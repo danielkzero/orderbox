@@ -3,6 +3,38 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Correção da edição de pedidos
+
+### Funcionalidade
+
+Correção da montagem das opções de clientes e tabelas de preço no formulário de
+edição de pedidos.
+
+### Motivo
+
+A closure que transforma clientes em opções do formulário não importava a
+coleção `$applicablePriceTables`, causando erro 500 ao acessar a edição.
+
+### Arquivos alterados
+
+- formulário CRUD do Admin;
+- testes administrativos;
+- registro de desenvolvimento.
+
+### Impactos
+
+- restaura a abertura de `/crud/orders/{id}/edit`;
+- mantém a resolução em lote das tabelas aplicáveis;
+- preserva autorização e isolamento por `company_id`;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- teste de regressão da renderização da edição de pedido;
+- suíte completa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Padronização de feedback e confirmações
 
 ### Funcionalidade

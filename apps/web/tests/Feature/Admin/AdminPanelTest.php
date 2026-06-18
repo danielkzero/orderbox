@@ -453,6 +453,13 @@ class AdminPanelTest extends TestCase
         $this->assertSame(2, $order->items()->count());
         $this->assertSame('10.00', $order->items()->where('product_id', $secondProduct->id)->firstOrFail()->unit_price);
 
+        $this->actingAs($this->admin)
+            ->get(route('crud.edit', ['resource' => 'orders', 'id' => $order->id]))
+            ->assertOk()
+            ->assertSee($order->order_number)
+            ->assertSee($customer->trade_name ?: $customer->corporate_name)
+            ->assertSee($priceTable->name);
+
         $this->actingAs($this->admin)->post(route('orders.send', $order))
             ->assertRedirect();
         $this->assertSame('Sent', $order->refresh()->status);
