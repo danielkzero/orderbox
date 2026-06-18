@@ -133,6 +133,21 @@ Cada usuário mantém no máximo uma autenticação Web e uma Mobile ativas. Um 
 
 ## Endpoints da V1
 
+### Disponibilidade atual
+
+Atualmente estão implementados:
+
+- `POST /auth/login`;
+- `POST /auth/2fa/confirm`;
+- `GET /auth/me`;
+- `POST /auth/logout`;
+- `GET /health`;
+- `GET /ready`.
+
+Os endpoints funcionais descritos nas seções seguintes permanecem como
+contrato planejado e não devem ser consumidos por Mobile ou integrações até
+serem marcados como implementados e cobertos por testes de contrato.
+
 ### Users
 
 | Método | Rota | Comportamento |

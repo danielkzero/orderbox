@@ -2,7 +2,9 @@
 
 ## Objetivo
 
-Agrupar municípios em regiões comerciais utilizadas por representantes, clientes e tabelas de preço.
+Agrupar municípios em regiões comerciais utilizadas por representantes,
+clientes e tabelas de preço. Este módulo é a origem única do vínculo regional
+das tabelas.
 
 As divisões são definidas por cada Company e não precisam coincidir com as regiões administrativas do IBGE.
 
@@ -65,6 +67,14 @@ A resolução segue esta ordem:
 3. região configurada como `state_remainder` para a UF;
 4. tabela de preço sem região, como opção global;
 5. tabelas habilitadas diretamente ao cliente possuem prioridade sobre as anteriores.
+
+## Tabelas de Preço
+
+Uma região pode possuir várias tabelas. Na cardinalidade atual, cada tabela
+pode pertencer a no máximo uma região.
+
+Mover uma tabela para outra região substitui o vínculo anterior. Tabelas sem
+região permanecem globais.
 
 ## Fonte de localidades
 

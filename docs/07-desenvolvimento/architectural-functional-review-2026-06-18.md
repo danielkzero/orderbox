@@ -11,6 +11,31 @@ documentação e cobertura de testes.
 Esta revisão não altera comportamento. Ela estabelece os problemas, decisões e
 ordem de implementação recomendada.
 
+## Estado após remediação
+
+Uma implementação posterior na mesma data corrigiu os principais itens P0, P1
+e P2:
+
+- autorização por perfil, carteira e empresa;
+- transições explícitas de pedidos;
+- Regiões como origem única do vínculo com tabelas;
+- remoção da criação de tabelas pelo módulo Produtos;
+- concorrência otimista de clientes e pedidos;
+- preservação de IDs dos agregados de clientes;
+- mass assignment explícito;
+- gateway backend para IBGE e ViaCEP;
+- páginas de erro institucionais;
+- rate limiting e erros JSON padronizados;
+- remoção de controles simulados;
+- filtros e ordenação nas listagens genéricas;
+- resolução em lote das tabelas aplicáveis;
+- reclassificação regional por job pós-commit.
+
+Os itens ainda planejados estão identificados sem marcação de conclusão em
+`docs/06-roadmap/remediation-roadmap.md`, principalmente a decomposição final
+do controller CRUD e a implementação dos endpoints funcionais da API, Mobile e
+B2B.
+
 ## Escopo analisado
 
 - aplicação Laravel em `apps/web`;
@@ -647,4 +672,3 @@ feat(api): standardize error responses and rate limits
 feat(ui): replace simulated controls with operational workflows
 docs(architecture): align contracts with implemented capabilities
 ```
-

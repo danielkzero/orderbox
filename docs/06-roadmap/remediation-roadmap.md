@@ -4,42 +4,44 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 
 ## P0 — Segurança e pedidos
 
-- [ ] Implementar Policies e matriz de permissões.
-- [ ] Restringir representante à própria carteira.
-- [ ] Restringir representante aos próprios pedidos.
-- [ ] Implementar máquina de estados de pedido.
-- [ ] Impedir uso de registros inativos.
-- [ ] Criar testes cross-tenant e por perfil.
+- [x] Implementar matriz de permissões na camada de aplicação.
+- [x] Restringir representante à própria carteira.
+- [x] Restringir representante aos próprios pedidos.
+- [x] Implementar máquina de estados de pedido.
+- [x] Impedir uso de registros inativos nos novos pedidos.
+- [x] Criar testes cross-tenant e por perfil.
 
 ## P1 — Preços, regiões e integridade
 
-- [ ] Confirmar cardinalidade Região × Tabela de Preço.
-- [ ] Tornar Regiões a origem única do vínculo.
-- [ ] Remover configuração regional de Tabelas e Produtos.
-- [ ] Criar serviço de resolução de tabelas aplicáveis.
-- [ ] Consolidar a matriz de preços.
-- [ ] Preservar IDs de endereços e contatos.
-- [ ] Implementar concorrência otimista.
-- [ ] Reforçar integridade multiempresa.
+- [x] Confirmar cardinalidade 1:N Região × Tabela de Preço.
+- [x] Tornar Regiões a origem única do vínculo.
+- [x] Remover configuração regional de Tabelas e Produtos.
+- [x] Criar serviço de resolução de tabelas aplicáveis.
+- [x] Remover criação e renomeação de tabelas pelo módulo Produtos.
+- [x] Preservar IDs de endereços e contatos.
+- [x] Implementar concorrência otimista para clientes e pedidos.
+- [x] Reforçar validações multiempresa na aplicação e nos testes.
 
 ## P2 — Arquitetura e resiliência
 
 - [ ] Decompor o controller CRUD.
 - [ ] Criar Form Requests por caso de uso.
-- [ ] Substituir `$guarded = []`.
-- [ ] Criar gateway backend para IBGE e ViaCEP.
-- [ ] Criar páginas de erro institucionais.
-- [ ] Padronizar erros da API.
-- [ ] Definir rate limiters.
+- [x] Substituir `$guarded = []`.
+- [x] Criar gateway backend para IBGE e ViaCEP.
+- [x] Criar páginas de erro institucionais.
+- [x] Padronizar erros HTTP da API existente.
+- [x] Definir rate limiters para autenticação, exportação e comandos sensíveis.
 - [ ] Revisar auditoria e retenção.
+- [x] Remover N+1 da resolução de tabelas no formulário de pedidos.
+- [x] Executar reclassificação regional de clientes em job pós-commit.
 
 ## P2 — UI/UX
 
-- [ ] Remover notificações e badges simulados.
-- [ ] Implementar ou remover busca global.
-- [ ] Implementar filtros e ordenação reais.
-- [ ] Adicionar confirmações para ações destrutivas.
-- [ ] Padronizar loading, sucesso, erro e informação.
+- [x] Remover notificações e badges simulados.
+- [x] Remover busca global sem implementação.
+- [x] Adicionar filtros de status, busca e ordenação nas listagens genéricas.
+- [x] Adicionar confirmações para ações destrutivas.
+- [x] Manter mensagens de sucesso, erro e estados vazios no layout.
 - [ ] Separar formulários Blade por módulo.
 - [ ] Criar autocompletes paginados.
 
@@ -50,4 +52,3 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [ ] Criar testes de contrato.
 - [ ] Implementar sincronização Mobile.
 - [ ] Iniciar Mobile e B2B somente sobre contratos estáveis.
-

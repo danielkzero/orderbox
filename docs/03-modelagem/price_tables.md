@@ -16,6 +16,7 @@ Toda tabela de preço pertence a uma Company.
 |---------|---------|---------|---------|
 | id | bigint | Sim | Identificador único |
 | company_id | bigint | Sim | Empresa proprietária |
+| region_id | bigint | Não | Região responsável pelo vínculo; mantido exclusivamente pelo módulo Regiões |
 | name | varchar(255) | Sim | Nome da tabela |
 | description | text | Não | Descrição |
 | active | boolean | Sim | Tabela ativa |
@@ -29,6 +30,7 @@ Toda tabela de preço pertence a uma Company.
 PriceTable
 
 - N:1 Company
+- N:0..1 Region
 - 1:N ProductPrices
 
 ---
@@ -62,6 +64,13 @@ Preço utilizado no portal B2B.
 ### Nome Único
 
 Não pode existir duas tabelas com o mesmo nome dentro da mesma empresa.
+
+### Vínculo Regional
+
+O campo `region_id` é um detalhe de persistência da cardinalidade atual. Ele
+não pode ser alterado no módulo Tabelas de Preço nem no módulo Produtos.
+
+O vínculo é mantido exclusivamente pelo módulo Regiões.
 
 ### Exclusão
 

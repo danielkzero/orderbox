@@ -113,3 +113,9 @@ npm run build
 ```
 
 Os testes usam SQLite em memória. A validação final das migrations também deve ser executada no MariaDB antes de cada entrega.
+
+Páginas HTTP personalizadas estão disponíveis para 401, 403, 404, 419, 422,
+429, 500 e 503. A API V1 padroniza os erros implementados em JSON.
+
+As consultas de IBGE e ViaCEP utilizadas pelos formulários passam pelo backend,
+com cache, timeout, retry e rate limiting.

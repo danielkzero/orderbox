@@ -30,6 +30,10 @@ O painel administrativo utiliza TailAdmin Laravel como base visual, preservando 
 
 Os módulos do menu consultam exclusivamente os dados da Company autenticada. Usuários são gerenciados apenas por Admin; auditoria pode ser consultada por Admin e Manager; segurança e 2FA são gerenciados pelo próprio usuário.
 
+Representantes visualizam catálogo, clientes da própria carteira e pedidos
+próprios. Cadastros administrativos e cancelamento de pedidos enviados são
+restritos a Admin e Manager.
+
 ---
 
 ## Tela: Dashboard
@@ -145,6 +149,8 @@ Gerenciar tabelas de preço da empresa.
 - Editar tabela
 - Vincular produtos
 
+O vínculo com região não é configurado nesta tela.
+
 ### Regras Comerciais Futuras
 
 As regras comerciais descritas nesta seção não fazem parte da V1.
@@ -245,6 +251,23 @@ Gerenciar representantes comerciais.
 
 ---
 
+## Tela: Regiões
+
+### Objetivo
+
+Gerenciar abrangência comercial e tabelas aplicáveis.
+
+### Ações
+
+- selecionar UF e municípios;
+- configurar restante da UF;
+- vincular tabelas de preço;
+- mover uma tabela de outra região mediante indicação visual.
+
+Esta é a única tela responsável pelo vínculo Região × Tabela de Preço.
+
+---
+
 ## Tela: Pedidos
 
 ### Objetivo
@@ -280,7 +303,11 @@ Consultar pedidos gerados pela operação.
 ### Ações
 
 - Visualizar
+- Enviar rascunho
 - Cancelar pedido enviado
+
+Criação e edição sempre salvam o pedido como rascunho. Envio e cancelamento são
+ações explícitas e confirmadas.
 
 ---
 

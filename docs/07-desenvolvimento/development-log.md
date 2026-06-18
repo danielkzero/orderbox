@@ -3,6 +3,44 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Remediação arquitetural e funcional
+
+### Funcionalidade
+
+Correção dos riscos prioritários identificados na auditoria arquitetural.
+
+### Motivo
+
+Eliminar acesso indevido, configurações duplicadas, transições inconsistentes
+de pedidos, dependências externas frágeis e feedback HTTP genérico.
+
+### Arquivos alterados
+
+- controllers, services, models, rotas e views de `apps/web`;
+- páginas institucionais em `apps/web/resources/views/errors`;
+- testes administrativos;
+- regras de negócio, modelagem, API, telas, roadmap e desenvolvimento.
+
+### Impactos
+
+- representantes limitados à carteira e aos pedidos próprios;
+- pedidos criados como rascunho, com envio e cancelamento explícitos;
+- Regiões passa a ser a origem única do vínculo com tabelas;
+- criação de tabelas removida do módulo Produtos;
+- concorrência otimista aplicada a clientes e pedidos;
+- gateway backend para IBGE e ViaCEP;
+- resolução em lote das tabelas aplicáveis no formulário de pedidos;
+- reclassificação regional executada por job pós-commit com auditoria;
+- páginas 401, 403, 404, 419, 422, 429, 500 e 503;
+- rate limiting para autenticação, exportação e comandos sensíveis;
+- API documentada conforme disponibilidade real.
+
+### Validação
+
+- Laravel Pint aprovado;
+- 49 testes e 214 assertions aprovados;
+- build Vite aprovado.
+
 ## 2026-06-18 — Revisão arquitetural e funcional
 
 ### Funcionalidade

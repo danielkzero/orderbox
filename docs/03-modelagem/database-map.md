@@ -51,6 +51,8 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 
 - PriceTables
 - ProductPrices
+- Regions
+- RegionMunicipalities
 
 - Orders
 - OrderItems
@@ -114,6 +116,13 @@ ERP
 
 - 1:N CustomerRepresentatives
 - 1:N Orders
+
+### Region
+
+- 1:N RegionMunicipalities
+- 1:N Customers
+- 1:N SalesRepresentatives
+- 1:N PriceTables
 
 ### Product
 

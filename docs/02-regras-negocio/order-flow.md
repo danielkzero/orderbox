@@ -87,6 +87,22 @@ O cancelamento deve gerar registro em AuditLog.
 
 ## Regras Gerais
 
+### Criação
+
+Todo pedido é criado como Draft. Status, número, totais, origem e versão são
+controlados pelo servidor.
+
+### Envio
+
+O envio é um comando explícito e exige:
+
+- pedido em Draft;
+- cliente ativo;
+- representante ativo;
+- tabela de preço ativa e aplicável;
+- ao menos um item;
+- produtos ativos.
+
 ### Alterações
 
 Somente pedidos em Draft podem ser alterados.
@@ -97,7 +113,14 @@ Somente pedidos em Draft podem ser removidos.
 
 ### Cancelamento
 
-Somente pedidos em Sent podem ser cancelados.
+Somente Admin e Manager podem cancelar pedidos em Sent.
+
+Representantes não podem cancelar pedidos enviados.
+
+### Concorrência
+
+A edição de Draft exige a versão atual. Uma versão desatualizada é rejeitada
+para evitar sobrescrita concorrente.
 
 ### Auditoria
 

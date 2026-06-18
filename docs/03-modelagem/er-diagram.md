@@ -39,6 +39,14 @@ erDiagram
 
     COMPANIES ||--o{ PRICE_TABLES : possui
 
+    COMPANIES ||--o{ REGIONS : possui
+
+    REGIONS ||--o{ PRICE_TABLES : habilita
+
+    REGIONS ||--o{ CUSTOMERS : classifica
+
+    REGIONS ||--o{ SALES_REPRESENTATIVES : organiza
+
     PRICE_TABLES ||--o{ PRODUCT_PRICES : define
 
     COMPANIES ||--o{ SALES_REPRESENTATIVES : possui
