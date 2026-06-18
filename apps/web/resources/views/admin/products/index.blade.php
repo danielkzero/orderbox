@@ -1,10 +1,6 @@
 <x-app-layout>
     <x-page-header title="Produtos" description="Acompanhe o catálogo comercial e mantenha os produtos prontos para pedidos.">
         <x-slot name="actions">
-            <a href="{{ route('crud.create', 'products') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
-                <span class="text-lg leading-none">+</span>
-                Adicionar produto
-            </a>
         </x-slot>
     </x-page-header>
 
