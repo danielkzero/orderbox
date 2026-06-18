@@ -69,33 +69,36 @@
                             <div class="flex items-center gap-2">
                                 <span>Preço</span>
                                 @if (auth()->user()->isAdministrative())
-                                    <button
-                                        type="button"
-                                        @click="createPriceTableOpen = true"
-                                        class="inline-flex size-7 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 text-base font-semibold text-brand-600 hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400"
-                                        aria-label="Adicionar tabela de preço"
-                                        title="Adicionar tabela de preço"
-                                    >
-                                        +
-                                    </button>
+                                    <x-tooltip text="Adicionar tabela de preço">
+                                        <button
+                                            type="button"
+                                            @click="createPriceTableOpen = true"
+                                            class="inline-flex size-7 items-center justify-center rounded-lg border border-brand-200 bg-brand-50 text-base font-semibold text-brand-600 hover:bg-brand-100 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-400"
+                                            aria-label="Adicionar tabela de preço"
+                                        >
+                                            +
+                                        </button>
+                                    </x-tooltip>
                                 @endif
                             </div>
                         </th>
                         @foreach ($priceTables as $priceTable)
                             <th class="min-w-[180px] px-5 py-4" x-data="{ editing: false }">
                                 @if (auth()->user()->isAdministrative())
-                                    <button
-                                        type="button"
-                                        x-show="! editing"
-                                        @click="editing = true; $nextTick(() => $refs.name.focus())"
-                                        class="group flex items-center gap-2 text-left font-semibold text-gray-700 hover:text-brand-600 dark:text-gray-200 dark:hover:text-brand-400"
-                                        title="Editar nome da tabela"
-                                    >
-                                        <span>{{ $priceTable->name }}</span>
-                                        <svg class="size-4 opacity-0 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                            <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" stroke-linecap="round" stroke-linejoin="round" />
-                                        </svg>
-                                    </button>
+                                    <x-tooltip text="Editar nome da tabela">
+                                        <button
+                                            type="button"
+                                            x-show="! editing"
+                                            @click="editing = true; $nextTick(() => $refs.name.focus())"
+                                            class="group flex items-center gap-2 text-left font-semibold text-gray-700 hover:text-brand-600 dark:text-gray-200 dark:hover:text-brand-400"
+                                            aria-label="Editar nome da tabela {{ $priceTable->name }}"
+                                        >
+                                            <span>{{ $priceTable->name }}</span>
+                                            <svg class="size-4 opacity-0 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" stroke-linecap="round" stroke-linejoin="round" />
+                                            </svg>
+                                        </button>
+                                    </x-tooltip>
                                     <form
                                         x-show="editing"
                                         x-cloak

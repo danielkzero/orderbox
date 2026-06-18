@@ -3,6 +3,43 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Padronização de feedback e confirmações
+
+### Funcionalidade
+
+Criação do sistema visual de alerts, notifications, confirmações, tooltips,
+popovers, spinners, ribbons, progress bars e listas.
+
+### Motivo
+
+Eliminar mensagens nativas e comportamentos inconsistentes, mantendo feedback
+claro, acessível e alinhado ao TailAdmin.
+
+### Arquivos alterados
+
+- componentes Blade de feedback e interação;
+- comportamento global Alpine.js para notificações, confirmações e submits;
+- telas com ações críticas e mensagens persistentes;
+- testes administrativos;
+- documentação de telas, desenvolvimento e padrões de UI.
+
+### Impactos
+
+- substitui `window.confirm()` por modal padronizado;
+- exige confirmação dupla em ações destrutivas ou de perda de acesso;
+- transforma mensagens de sessão em notificações fecháveis;
+- mantém erros visíveis até ação do usuário;
+- mostra spinner e bloqueia submissões repetidas;
+- adiciona componentes reutilizáveis para tooltips, popovers, ribbons,
+  progress bars e listas;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- testes de renderização e comportamento esperado;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Simplificação da navegação administrativa
 
 ### Funcionalidade

@@ -24,6 +24,7 @@ use App\Services\CommercialRegionResolver;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use PragmaRX\Google2FA\Google2FA;
@@ -101,6 +102,46 @@ class AdminPanelTest extends TestCase
             ->assertSee('Usuários')
             ->assertSee('Integrações')
             ->assertSee('Auditoria');
+    }
+
+    public function test_feedback_and_confirmation_components_are_rendered_consistently(): void
+    {
+        $this->actingAs($this->admin)->get(route('orders.index'))
+            ->assertOk()
+            ->assertSee('data-confirm-title="', false)
+            ->assertSee('data-confirm-level="double"', false)
+            ->assertSee('confirmationDialog()', false)
+            ->assertDontSee('return confirm(', false);
+
+        $this->actingAs($this->admin)
+            ->withSession(['status' => 'Operação de teste concluída.'])
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('notificationCenter', false);
+
+        $this->actingAs($this->admin)->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('role="tooltip"', false)
+            ->assertSee('Adicionar tabela de preço');
+    }
+
+    public function test_reusable_ui_feedback_components_compile(): void
+    {
+        $html = Blade::render(<<<'BLADE'
+            <x-alert variant="info" title="Aviso">Mensagem</x-alert>
+            <x-spinner />
+            <x-tooltip text="Ajuda"><button type="button">?</button></x-tooltip>
+            <x-popover title="Detalhes" trigger="Abrir">Conteúdo</x-popover>
+            <x-progress-bar :value="45" label="Progresso" />
+            <x-ribbon>Novo</x-ribbon>
+            <x-list><x-list-item title="Item" description="Descrição" /></x-list>
+        BLADE);
+
+        $this->assertStringContainsString('role="status"', $html);
+        $this->assertStringContainsString('role="tooltip"', $html);
+        $this->assertStringContainsString('role="progressbar"', $html);
+        $this->assertStringContainsString('Novo', $html);
+        $this->assertStringContainsString('Descrição', $html);
     }
 
     public function test_dashboard_filters_period_and_exports_orders(): void

@@ -8,10 +8,10 @@
     </x-page-header>
 
     @if ($plainSecret)
-        <div class="mb-6 rounded-2xl border border-warning-200 bg-warning-50 p-5 text-sm text-warning-800 dark:border-warning-900 dark:bg-warning-950 dark:text-warning-200">
-            <p class="font-semibold">Copie o segredo agora. Ele não será exibido novamente.</p>
+        <x-alert variant="warning" title="Credencial exibida uma única vez" class="mb-6">
+            <p>Copie o segredo agora. Ele não será exibido novamente.</p>
             <code class="mt-3 block break-all rounded-lg bg-white p-3 text-gray-900 dark:bg-gray-900 dark:text-white">{{ $plainSecret }}</code>
-        </div>
+        </x-alert>
     @endif
 
     <div class="grid gap-6 xl:grid-cols-[380px_1fr]">
@@ -64,12 +64,12 @@
                                 <td class="px-5 py-4"><x-status-badge :active="$client->active" :label="$client->active ? 'Ativo' : 'Bloqueado'" /></td>
                                 <td class="px-5 py-4">
                                     <div class="flex justify-end gap-3">
-                                        <form method="POST" action="{{ route('api-clients.regenerate', $client) }}">
+                                        <form method="POST" action="{{ route('api-clients.regenerate', $client) }}" data-confirm-title="Regenerar segredo?" data-confirm-message="O segredo atual deixará de funcionar imediatamente." data-confirm-label="Regenerar" data-confirm-variant="warning">
                                             @csrf
                                             <button class="text-sm font-medium text-brand-600 dark:text-brand-400">Regenerar</button>
                                         </form>
                                         @if ($client->active)
-                                            <form method="POST" action="{{ route('api-clients.deactivate', $client) }}">
+                                            <form method="POST" action="{{ route('api-clients.deactivate', $client) }}" data-confirm-title="Bloquear integração?" data-confirm-message="O aplicativo ou integração perderá acesso à API." data-confirm-label="Continuar" data-confirm-level="double" data-confirm-variant="danger" data-confirm-final-title="Confirmar bloqueio da integração?" data-confirm-final-message="As autenticações que usam estas credenciais deixarão de funcionar." data-confirm-final-label="Sim, bloquear">
                                                 @csrf
                                                 <button class="text-sm font-medium text-error-600">Bloquear</button>
                                             </form>

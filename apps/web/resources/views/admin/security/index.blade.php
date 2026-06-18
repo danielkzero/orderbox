@@ -38,7 +38,7 @@
                         </div>
                     </div>
                 @else
-                    <form method="POST" action="{{ route('security.2fa.disable') }}" class="space-y-4">
+                    <form method="POST" action="{{ route('security.2fa.disable') }}" class="space-y-4" data-confirm-title="Desativar autenticação em dois fatores?" data-confirm-message="Sua conta ficará protegida somente pela senha." data-confirm-label="Continuar" data-confirm-level="double" data-confirm-variant="danger" data-confirm-final-title="Remover a proteção adicional?" data-confirm-final-message="Esta é a confirmação final para desativar o 2FA desta conta." data-confirm-final-label="Sim, desativar">
                         @csrf
                         @method('DELETE')
                         <div>
@@ -67,7 +67,7 @@
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">{{ $session->last_activity_at->format('d/m/Y H:i') }} - {{ $session->active_slot ? 'Ativa' : 'Revogada' }}</p>
                         </div>
                         @if ($session->active_slot)
-                            <form method="POST" action="{{ route('security.sessions.revoke', $session) }}">
+                            <form method="POST" action="{{ route('security.sessions.revoke', $session) }}" data-confirm-title="Revogar sessão?" data-confirm-message="O dispositivo precisará autenticar novamente para acessar o OrderBox." data-confirm-label="Revogar" data-confirm-variant="danger">
                                 @csrf
                                 @method('DELETE')
                                 <button class="rounded-lg border border-error-200 px-3 py-2 text-sm font-medium text-error-600 hover:bg-error-50 dark:border-error-500/30 dark:hover:bg-error-500/10">Revogar</button>

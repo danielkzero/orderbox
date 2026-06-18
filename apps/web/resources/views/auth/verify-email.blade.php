@@ -3,9 +3,9 @@
     subtitle="Antes de continuar, confirme o endereço de e-mail cadastrado para liberar o acesso."
 >
     @if (session('status') === 'verification-link-sent')
-        <div class="mb-5 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300">
+        <x-alert variant="success" title="E-mail enviado" class="mb-5">
             Um novo link de verificação foi enviado para o e-mail cadastrado.
-        </div>
+        </x-alert>
     @endif
 
     <div class="space-y-5">

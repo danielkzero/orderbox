@@ -2,7 +2,7 @@
     title="Recuperar senha"
     subtitle="Informe o e-mail vinculado a sua conta. Enviaremos um link para criar uma nova senha."
 >
-    <x-auth-session-status class="mb-5 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-500/20 dark:bg-success-500/10 dark:text-success-300" :status="session('status')" />
+    <x-auth-session-status class="mb-5" :status="session('status')" />
 
     <form method="POST" action="{{ route('password.email') }}" class="space-y-5">
         @csrf

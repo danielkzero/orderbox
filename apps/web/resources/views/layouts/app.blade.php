@@ -14,6 +14,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <x-feedback-center />
+    <x-confirmation-dialog />
+
     <div class="min-h-screen xl:flex">
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen = false" class="fixed inset-0 z-40 bg-gray-900/50 xl:hidden"></div>
         @include('layouts.sidebar')
@@ -23,18 +26,6 @@
 
             <main class="mx-auto max-w-screen-2xl p-4 md:p-6">
                 <x-context-navigation />
-
-                @if (session('status'))
-                    <div class="mb-6 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-900 dark:bg-success-950 dark:text-success-300">
-                        {{ session('status') }}
-                    </div>
-                @endif
-
-                @if ($errors->any())
-                    <div class="mb-6 rounded-xl border border-error-200 bg-error-50 px-4 py-3 text-sm text-error-700 dark:border-error-900 dark:bg-error-950 dark:text-error-300">
-                        {{ $errors->first() }}
-                    </div>
-                @endif
 
                 {{ $slot }}
             </main>

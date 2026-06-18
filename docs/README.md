@@ -38,6 +38,7 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 17. [Registro de desenvolvimento](07-desenvolvimento/development-log.md)
 18. [Revisão arquitetural e funcional](07-desenvolvimento/architectural-functional-review-2026-06-18.md)
 19. [Roadmap de remediação arquitetural](06-roadmap/remediation-roadmap.md)
+20. [Padrões de feedback e interação](07-desenvolvimento/ui-feedback-patterns.md)
 
 ## Convenções
 

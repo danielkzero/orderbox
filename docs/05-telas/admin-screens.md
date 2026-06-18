@@ -65,6 +65,22 @@ Admin. Auditoria é disponibilizada para Admin e Manager.
 A navegação contextual é horizontal, mantém indicação visual clara do item
 ativo e permite rolagem lateral em telas menores.
 
+### Feedback e Confirmações
+
+O painel utiliza componentes padronizados:
+
+- notifications para sucesso e erros globais;
+- alerts para mensagens persistentes no contexto da tela;
+- modal de confirmação simples para ações relevantes e reversíveis;
+- confirmação dupla para exclusões, cancelamentos e perda de acesso;
+- spinner automático durante submissões;
+- tooltips em controles compactos;
+- popovers para explicações complementares;
+- progress bars somente quando existir progresso mensurável;
+- ribbons somente para estados especiais com significado funcional.
+
+Não são utilizados `window.confirm()` ou alerts nativos do navegador.
+
 ### Implementação Atual
 
 O painel administrativo utiliza TailAdmin Laravel como base visual, preservando Blade, Alpine.js e Tailwind CSS.
