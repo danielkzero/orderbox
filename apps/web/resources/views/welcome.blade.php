@@ -5,15 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Orderbox | Força de vendas para distribuidores</title>
     <meta name="description" content="Orderbox organiza representantes, clientes, produtos, tabelas de preço, pedidos e API em uma plataforma comercial para web e APP.">
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-gray-50 text-gray-800 antialiased dark:bg-gray-950 dark:text-white">
     <header class="sticky top-0 z-30 border-b border-gray-200 bg-white/90 backdrop-blur dark:border-gray-800 dark:bg-gray-950/90">
         <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
             <a href="{{ url('/') }}" class="flex items-center gap-3">
-                <span class="flex size-11 items-center justify-center rounded-xl bg-brand-500 shadow-theme-xs">
-                    <x-application-logo class="size-6 fill-current text-white" />
-                </span>
+                <x-application-logo class="size-11 shrink-0 shadow-theme-xs" />
                 <span>
                     <strong class="block text-xl font-semibold text-gray-900 dark:text-white">Orderbox</strong>
                     <small class="block text-xs text-gray-500 dark:text-gray-400">Sales force platform</small>

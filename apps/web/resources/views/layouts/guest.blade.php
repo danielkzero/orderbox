@@ -11,6 +11,7 @@
         <meta name="csrf-token" content="{{ csrf_token() }}">
 
         <title>{{ config('app.name', 'Orderbox') }}</title>
+        <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
 
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
@@ -22,9 +23,7 @@
             <section class="flex min-h-screen items-center justify-center px-4 py-10 sm:px-6 lg:px-8">
                 <div class="w-full max-w-md">
                     <a href="{{ url('/') }}" class="mb-10 inline-flex items-center gap-3 text-sm font-medium text-gray-600 hover:text-brand-500 dark:text-gray-400 dark:hover:text-brand-400">
-                        <span class="flex size-10 items-center justify-center rounded-xl border border-gray-200 bg-white shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
-                            <x-application-logo class="size-6 fill-current text-brand-500" />
-                        </span>
+                        <x-application-logo class="size-10 shrink-0 shadow-theme-xs" />
                         <span>Voltar para o início</span>
                     </a>
 
@@ -51,9 +50,7 @@
 
                 <div class="relative z-10">
                     <div class="inline-flex items-center gap-3">
-                        <span class="flex size-12 items-center justify-center rounded-2xl bg-brand-500 shadow-theme-lg">
-                            <x-application-logo class="size-7 fill-current text-white" />
-                        </span>
+                        <x-application-logo class="size-12 shrink-0 shadow-theme-lg" />
                         <span class="text-2xl font-semibold">Orderbox</span>
                     </div>
 

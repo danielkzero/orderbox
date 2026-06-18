@@ -41,13 +41,7 @@
 >
     <div class="flex h-[76px] items-center" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center' : 'justify-between'">
         <a href="{{ route('dashboard') }}" class="flex items-center gap-3">
-            <span class="flex size-9 items-center justify-center rounded-lg bg-brand-500 text-white">
-                <svg class="size-5" viewBox="0 0 24 24" fill="none">
-                    <rect x="4" y="5" width="4" height="14" rx="2" fill="currentColor" />
-                    <rect x="10" y="9" width="4" height="10" rx="2" fill="currentColor" opacity=".75" />
-                    <rect x="16" y="3" width="4" height="16" rx="2" fill="currentColor" opacity=".55" />
-                </svg>
-            </span>
+            <x-application-logo class="size-9 shrink-0 shadow-theme-xs" />
             <strong x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="text-title-sm font-semibold text-gray-900 dark:text-white">OrderBox</strong>
         </a>
         <button x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak @click="sidebarOpen = false" class="text-gray-500 xl:hidden">x</button>
