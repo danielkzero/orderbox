@@ -69,7 +69,7 @@
                             <div class="flex items-center gap-2">
                                 <span>Preço</span>
                                 @if (auth()->user()->isAdministrative())
-                                    <x-tooltip text="Adicionar tabela de preço">
+                                    <x-tooltip text="Adicionar tabela de preço" position="top">
                                         <button
                                             type="button"
                                             @click="createPriceTableOpen = true"
@@ -85,7 +85,7 @@
                         @foreach ($priceTables as $priceTable)
                             <th class="min-w-[180px] px-5 py-4" x-data="{ editing: false }">
                                 @if (auth()->user()->isAdministrative())
-                                    <x-tooltip text="Editar nome da tabela">
+                                    <x-tooltip text="Editar nome da tabela" position="top">
                                         <button
                                             type="button"
                                             x-show="! editing"

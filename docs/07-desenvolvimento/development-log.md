@@ -3,6 +3,37 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Posicionamento dos tooltips de Produtos
+
+### Funcionalidade
+
+Definição explícita da posição superior para os tooltips das ações no cabeçalho
+de preços da listagem de Produtos.
+
+### Motivo
+
+Manter os textos auxiliares acima dos controles e afastados das informações de
+preço exibidas nas linhas da tabela.
+
+### Arquivos alterados
+
+- listagem de Produtos;
+- testes administrativos;
+- registro de desenvolvimento.
+
+### Impactos
+
+- tooltips de criação e renomeação de tabelas são exibidos no topo;
+- preserva o portal global que impede recorte pelo DataTable;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- teste de renderização da posição;
+- suíte administrativa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Correção de tooltips em tabelas
 
 ### Funcionalidade
