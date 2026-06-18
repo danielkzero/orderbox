@@ -69,6 +69,40 @@ class AdminPanelTest extends TestCase
             ->assertSee('X-OrderBox-Client-Key');
     }
 
+    public function test_navigation_prioritizes_daily_work_and_uses_contextual_tabs(): void
+    {
+        $this->actingAs($this->admin)->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Dashboard')
+            ->assertSee('Clientes')
+            ->assertSee('Produtos')
+            ->assertSee('Pedidos')
+            ->assertSee('Configurações')
+            ->assertSee('Ajuda')
+            ->assertDontSee('CADASTROS')
+            ->assertDontSee('ADMINISTRACAO');
+
+        $this->actingAs($this->admin)->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('Navegação do módulo')
+            ->assertSee('Categorias')
+            ->assertSee('Marcas')
+            ->assertSee('Unidades');
+
+        $this->actingAs($this->admin)->get(route('customers.index'))
+            ->assertOk()
+            ->assertSee('Representantes')
+            ->assertSee('Regiões');
+
+        $this->actingAs($this->admin)->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Meu perfil')
+            ->assertSee('Segurança')
+            ->assertSee('Usuários')
+            ->assertSee('Integrações')
+            ->assertSee('Auditoria');
+    }
+
     public function test_dashboard_filters_period_and_exports_orders(): void
     {
         $startDate = now()->subDays(6)->format('Y-m-d');
@@ -440,6 +474,12 @@ class AdminPanelTest extends TestCase
         $this->actingAs($representativeUser)
             ->post(route('products.price-tables.store'), ['name' => 'Não permitida'])
             ->assertForbidden();
+        $this->actingAs($representativeUser)->get(route('profile.edit'))
+            ->assertOk()
+            ->assertSee('Meu perfil')
+            ->assertSee('Segurança')
+            ->assertDontSee('Integrações')
+            ->assertDontSee('Auditoria');
         $this->actingAs($representativeUser)->get('/categories')->assertForbidden();
         $this->actingAs($representativeUser)->get('/regions')->assertForbidden();
         $this->actingAs($representativeUser)->get('/crud/products/create')->assertForbidden();

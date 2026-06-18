@@ -18,10 +18,52 @@ O painel administrativo será utilizado por:
 - Dashboard
 - Clientes
 - Produtos
-- Representantes
 - Pedidos
+- Configurações
+- Ajuda
+
+O menu lateral prioriza somente destinos frequentes. Cadastros auxiliares e
+funções administrativas são apresentados como navegação contextual dentro do
+módulo responsável.
+
+### Navegação Contextual
+
+#### Clientes
+
+- Clientes
+- Representantes
+- Regiões
+
+Representantes e Regiões são exibidos somente para Admin e Manager.
+
+#### Produtos
+
+- Produtos
+- Categorias
+- Marcas
+- Unidades
+
+Categorias, Marcas e Unidades são configurações do catálogo e não ocupam itens
+independentes no menu lateral.
+
+#### Configurações
+
+- Meu perfil
+- Segurança
 - Usuários
+- Integrações
 - Auditoria
+
+Meu perfil e Segurança são pessoais. Usuários e Integrações são exclusivos de
+Admin. Auditoria é disponibilizada para Admin e Manager.
+
+#### Ajuda
+
+- Manual de uso
+- Guia da API
+
+A navegação contextual é horizontal, mantém indicação visual clara do item
+ativo e permite rolagem lateral em telas menores.
 
 ### Implementação Atual
 

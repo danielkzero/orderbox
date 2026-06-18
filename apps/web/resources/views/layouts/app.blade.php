@@ -22,6 +22,8 @@
             @include('layouts.header')
 
             <main class="mx-auto max-w-screen-2xl p-4 md:p-6">
+                <x-context-navigation />
+
                 @if (session('status'))
                     <div class="mb-6 rounded-xl border border-success-200 bg-success-50 px-4 py-3 text-sm text-success-700 dark:border-success-900 dark:bg-success-950 dark:text-success-300">
                         {{ session('status') }}

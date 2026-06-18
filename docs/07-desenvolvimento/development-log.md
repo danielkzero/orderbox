@@ -3,6 +3,41 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Simplificação da navegação administrativa
+
+### Funcionalidade
+
+Reorganização do menu lateral e introdução de navegação contextual por módulo.
+
+### Motivo
+
+Priorizar os fluxos operacionais de uso frequente, reduzir carga visual e
+manter cadastros auxiliares próximos da responsabilidade funcional correta.
+
+### Arquivos alterados
+
+- layout e componentes de navegação em `apps/web/resources/views`;
+- testes administrativos;
+- documentação das telas e registro de desenvolvimento.
+
+### Impactos
+
+- menu lateral reduzido a Dashboard, Clientes, Produtos, Pedidos,
+  Configurações e Ajuda;
+- Representantes e Regiões passam a ser acessados no contexto de Clientes;
+- Categorias, Marcas e Unidades passam a ser acessadas no contexto de Produtos;
+- perfil, segurança, usuários, integrações e auditoria ficam agrupados em
+  Configurações;
+- manual e guia da API ficam agrupados em Ajuda;
+- itens respeitam as permissões atuais de cada perfil;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- testes de renderização, navegação contextual e autorização;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Tabelas de preço integradas a Produtos
 
 ### Funcionalidade

@@ -1,31 +1,23 @@
 @php
     $groups = [
-        'MENU' => [
+        'PRINCIPAL' => [
             ['route' => 'dashboard', 'label' => 'Dashboard', 'icon' => 'grid'],
             ['route' => 'customers.index', 'label' => 'Clientes', 'icon' => 'users'],
             ['route' => 'products.index', 'label' => 'Produtos', 'icon' => 'box'],
-            ['route' => 'representatives.index', 'label' => 'Representantes', 'icon' => 'briefcase', 'roles' => ['Admin', 'Manager']],
             ['route' => 'orders.index', 'label' => 'Pedidos', 'icon' => 'cart'],
         ],
-        'CADASTROS' => [
-            ['route' => 'categories.index', 'label' => 'Categorias', 'icon' => 'folder', 'roles' => ['Admin', 'Manager']],
-            ['route' => 'brands.index', 'label' => 'Marcas', 'icon' => 'badge', 'roles' => ['Admin', 'Manager']],
-            ['route' => 'units.index', 'label' => 'Unidades', 'icon' => 'ruler', 'roles' => ['Admin', 'Manager']],
-            ['route' => 'regions.index', 'label' => 'Regiões', 'icon' => 'map', 'roles' => ['Admin', 'Manager']],
-        ],
-        'ADMINISTRACAO' => [
-            ['route' => 'users.index', 'label' => 'Usuários', 'icon' => 'shield', 'roles' => ['Admin']],
-            ['route' => 'api-clients.index', 'label' => 'Liberação API', 'icon' => 'key', 'roles' => ['Admin']],
-            ['route' => 'security.index', 'label' => 'Segurança e 2FA', 'icon' => 'lock'],
-            ['route' => 'audit-logs.index', 'label' => 'Auditoria', 'icon' => 'history', 'roles' => ['Admin', 'Manager']],
-            ['route' => 'profile.edit', 'label' => 'Meu perfil', 'icon' => 'user'],
-        ],
-        'SUPPORT' => [
-            ['route' => 'manual.index', 'label' => 'Manual de uso', 'icon' => 'book'],
-            ['route' => 'api-guide.index', 'label' => 'Guia da API', 'icon' => 'code'],
+        'CONTA' => [
+            ['route' => 'profile.edit', 'label' => 'Configurações', 'icon' => 'settings'],
+            ['route' => 'manual.index', 'label' => 'Ajuda', 'icon' => 'help'],
         ],
     ];
     $crudResource = request()->routeIs('crud.*') ? request()->route('resource') : null;
+    $activeContexts = [
+        'customers.index' => ['customers', 'representatives', 'regions'],
+        'products.index' => ['products', 'categories', 'brands', 'units'],
+        'profile.edit' => ['profile', 'security', 'users', 'api-clients', 'audit-logs'],
+        'manual.index' => ['manual', 'api-guide'],
+    ];
 @endphp
 
 <aside
@@ -56,9 +48,12 @@
                         @continue(isset($item['roles']) && ! in_array(auth()->user()->role, $item['roles'], true))
                         @php
                             $routeGroup = Str::before($item['route'], '.');
-                            $active = request()->routeIs($item['route'])
-                                || request()->routeIs($routeGroup.'.*')
-                                || $crudResource === $routeGroup;
+                            $contexts = $activeContexts[$item['route']] ?? [$routeGroup];
+                            $active = collect($contexts)->contains(fn (string $context): bool =>
+                                request()->routeIs($context.'.*')
+                                || request()->routeIs($context)
+                                || $crudResource === $context
+                            );
                         @endphp
                         <li>
                             <a href="{{ route($item['route']) }}" class="group menu-item {{ $active ? 'menu-item-active' : 'menu-item-inactive' }}" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center px-0' : 'justify-start px-3'">
