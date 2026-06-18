@@ -122,6 +122,8 @@ class AdminPanelTest extends TestCase
         $this->actingAs($this->admin)->get(route('products.index'))
             ->assertOk()
             ->assertSee('role="tooltip"', false)
+            ->assertSee('x-teleport="body"', false)
+            ->assertSee('fixed z-[100002]', false)
             ->assertSee('Adicionar tabela de preço');
     }
 

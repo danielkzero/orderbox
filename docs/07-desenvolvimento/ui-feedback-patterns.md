@@ -66,6 +66,8 @@ O componente `x-spinner` atende carregamentos locais que não dependem de submit
 - `x-tooltip`: texto curto para controles compactos ou somente com ícone;
 - `x-popover`: explicação complementar acionada por um botão textual;
 - tooltip não substitui label de formulário nem informação essencial.
+- tooltips são renderizados em portal no `body`, evitando recorte por
+  `overflow` de tabelas, painéis e modais.
 
 ### Tabs
 

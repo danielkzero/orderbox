@@ -3,6 +3,38 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-18 — Correção de tooltips em tabelas
+
+### Funcionalidade
+
+Alteração do posicionamento dos tooltips para uma camada global da interface.
+
+### Motivo
+
+Tooltips renderizados dentro de DataTables eram recortados por contêineres com
+`overflow-x-auto`, independentemente do `z-index`.
+
+### Arquivos alterados
+
+- componente global de tooltip;
+- testes administrativos;
+- padrões de UI e registro de desenvolvimento.
+
+### Impactos
+
+- tooltips passam a ser renderizados diretamente no `body`;
+- posicionamento é recalculado em hover, foco, scroll e resize;
+- conteúdo permanece visível sobre tabelas, painéis e modais;
+- mantém suporte a teclado e leitores de tela;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- teste de renderização do portal;
+- suíte completa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Correção da edição de pedidos
 
 ### Funcionalidade
