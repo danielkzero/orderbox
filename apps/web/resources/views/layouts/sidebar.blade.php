@@ -5,14 +5,14 @@
             ['route' => 'customers.index', 'label' => 'Clientes', 'icon' => 'users'],
             ['route' => 'products.index', 'label' => 'Produtos', 'icon' => 'box'],
             ['route' => 'price-tables.index', 'label' => 'Tabelas de preço', 'icon' => 'tag'],
-            ['route' => 'representatives.index', 'label' => 'Representantes', 'icon' => 'briefcase'],
+            ['route' => 'representatives.index', 'label' => 'Representantes', 'icon' => 'briefcase', 'roles' => ['Admin', 'Manager']],
             ['route' => 'orders.index', 'label' => 'Pedidos', 'icon' => 'cart'],
         ],
         'CADASTROS' => [
-            ['route' => 'categories.index', 'label' => 'Categorias', 'icon' => 'folder'],
-            ['route' => 'brands.index', 'label' => 'Marcas', 'icon' => 'badge'],
-            ['route' => 'units.index', 'label' => 'Unidades', 'icon' => 'ruler'],
-            ['route' => 'regions.index', 'label' => 'Regiões', 'icon' => 'map'],
+            ['route' => 'categories.index', 'label' => 'Categorias', 'icon' => 'folder', 'roles' => ['Admin', 'Manager']],
+            ['route' => 'brands.index', 'label' => 'Marcas', 'icon' => 'badge', 'roles' => ['Admin', 'Manager']],
+            ['route' => 'units.index', 'label' => 'Unidades', 'icon' => 'ruler', 'roles' => ['Admin', 'Manager']],
+            ['route' => 'regions.index', 'label' => 'Regiões', 'icon' => 'map', 'roles' => ['Admin', 'Manager']],
         ],
         'ADMINISTRACAO' => [
             ['route' => 'users.index', 'label' => 'Usuários', 'icon' => 'shield', 'roles' => ['Admin']],
@@ -65,9 +65,6 @@
                             <a href="{{ route($item['route']) }}" class="group menu-item {{ $active ? 'menu-item-active' : 'menu-item-inactive' }}" :class="sidebarCollapsed && ! sidebarExpandedOnHover ? 'justify-center px-0' : 'justify-start px-3'">
                                 <span class="{{ $active ? 'menu-item-icon-active' : 'menu-item-icon-inactive' }}"><x-icon :name="$item['icon']" /></span>
                                 <span x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="menu-item-text">{{ $item['label'] }}</span>
-                                @if (in_array($item['route'], ['products.index', 'orders.index', 'api-clients.index'], true))
-                                    <span x-show="! sidebarCollapsed || sidebarExpandedOnHover" x-cloak class="menu-dropdown-badge {{ $active ? 'menu-dropdown-badge-active' : 'menu-dropdown-badge-inactive' }}">NEW</span>
-                                @endif
                             </a>
                         </li>
                     @endforeach

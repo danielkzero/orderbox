@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\MobileLoginRequest;
+use App\Http\Requests\Api\MobileTwoFactorRequest;
+use App\Http\Resources\AuthenticatedUserResource;
 use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationChallengeService;
 use App\Services\Authentication\AuthenticationSessionService;
@@ -15,16 +18,13 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     public function login(
-        Request $request,
+        MobileLoginRequest $request,
         CredentialAuthenticator $credentials,
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
         AuditService $audit,
     ): JsonResponse {
-        $validated = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required', 'string'],
-        ]);
+        $validated = $request->validated();
 
         $user = $credentials->attempt($validated['email'], $validated['password']);
 
@@ -58,16 +58,13 @@ class AuthController extends Controller
     }
 
     public function confirmTwoFactor(
-        Request $request,
+        MobileTwoFactorRequest $request,
         AuthenticationChallengeService $challenges,
         AuthenticationSessionService $sessions,
         TwoFactorService $twoFactor,
         AuditService $audit,
     ): JsonResponse {
-        $validated = $request->validate([
-            'challenge_id' => ['required', 'uuid'],
-            'code' => ['required', 'string', 'size:6'],
-        ]);
+        $validated = $request->validated();
 
         $challenge = $challenges->valid($validated['challenge_id'], 'Mobile');
         $apiClient = $request->attributes->get('api_client');
@@ -91,7 +88,7 @@ class AuthController extends Controller
     {
         return response()->json([
             'success' => true,
-            'data' => $request->user()->load('company'),
+            'data' => new AuthenticatedUserResource($request->user()->load('company')),
         ]);
     }
 

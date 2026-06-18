@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-use App\Services\CommercialRegionResolver;
+use App\Services\ApplicablePriceTableService;
 use App\Support\BrazilianDocument;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -12,7 +12,20 @@ use Illuminate\Support\Collection;
 
 class Customer extends Model
 {
-    protected $guarded = [];
+    protected $fillable = [
+        'company_id',
+        'region_id',
+        'client_reference',
+        'corporate_name',
+        'trade_name',
+        'document',
+        'state_registration',
+        'email',
+        'phone',
+        'credit_limit',
+        'active',
+        'version',
+    ];
 
     public function setDocumentAttribute(?string $value): void
     {
@@ -56,55 +69,7 @@ class Customer extends Model
 
     public function applicablePriceTables(): Collection
     {
-        $directTableIds = $this->priceTables()->pluck('price_tables.id');
-        $defaultAddress = $this->defaultAddressRecord();
-        $resolvedRegionId = null;
-
-        if ($defaultAddress && filled($defaultAddress->state)) {
-            $resolvedRegionId = app(CommercialRegionResolver::class)->resolve(
-                $this->company_id,
-                $defaultAddress->state,
-                $defaultAddress->city,
-                $defaultAddress->municipality_ibge_code,
-            )?->id;
-        }
-
-        return PriceTable::query()
-            ->where('company_id', $this->company_id)
-            ->where('active', true)
-            ->where(function ($query) use ($directTableIds, $resolvedRegionId): void {
-                $query->whereNull('region_id');
-
-                if ($resolvedRegionId) {
-                    $query->orWhere('region_id', $resolvedRegionId);
-                }
-
-                if ($directTableIds->isNotEmpty()) {
-                    $query->orWhereIn('id', $directTableIds);
-                }
-            })
-            ->get()
-            ->sortByDesc(function (PriceTable $priceTable) use ($directTableIds, $resolvedRegionId): int {
-                if ($directTableIds->contains($priceTable->id)) {
-                    return 2;
-                }
-
-                if ($resolvedRegionId && $priceTable->region_id === $resolvedRegionId) {
-                    return 1;
-                }
-
-                return 0;
-            })
-            ->values();
-    }
-
-    private function defaultAddressRecord(): ?CustomerAddress
-    {
-        if ($this->relationLoaded('addresses')) {
-            return $this->addresses->firstWhere('default_address', true) ?? $this->addresses->first();
-        }
-
-        return $this->addresses()->where('default_address', true)->first() ?? $this->addresses()->first();
+        return app(ApplicablePriceTableService::class)->forCustomer($this);
     }
 
     public function orders(): HasMany

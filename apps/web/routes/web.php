@@ -5,6 +5,7 @@ use App\Http\Controllers\ApiClientController;
 use App\Http\Controllers\CatalogCrudController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentationController;
+use App\Http\Controllers\LocationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SecurityController;
 use App\Http\Controllers\UserManagementController;
@@ -18,10 +19,13 @@ Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'active.session', 'company.context', 'verified'])
     ->name('dashboard');
 Route::get('/dashboard/export', [DashboardController::class, 'export'])
-    ->middleware(['auth', 'active.session', 'company.context', 'verified'])
+    ->middleware(['auth', 'active.session', 'company.context', 'verified', 'throttle:export'])
     ->name('dashboard.export');
 
 Route::middleware(['auth', 'active.session', 'company.context'])->group(function () {
+    Route::get('/locations/states', [LocationController::class, 'states'])->middleware('throttle:60,1')->name('locations.states');
+    Route::get('/locations/states/{state}/municipalities', [LocationController::class, 'municipalities'])->middleware('throttle:60,1')->name('locations.municipalities');
+    Route::get('/locations/zip-codes/{zipCode}', [LocationController::class, 'zipCode'])->middleware('throttle:60,1')->name('locations.zip-codes');
     Route::get('/customers', [AdminModuleController::class, 'customers'])->name('customers.index');
     Route::get('/products', [AdminModuleController::class, 'products'])->name('products.index');
     Route::get('/price-tables', [AdminModuleController::class, 'priceTables'])->name('price-tables.index');
@@ -34,13 +38,13 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/audit-logs', [AdminModuleController::class, 'auditLogs'])->name('audit-logs.index');
     Route::get('/manual', [DocumentationController::class, 'manual'])->name('manual.index');
     Route::get('/api-guide', [DocumentationController::class, 'apiGuide'])->name('api-guide.index');
-    Route::post('/products/price-tables', [CatalogCrudController::class, 'storeProductPriceTable'])->name('products.price-tables.store');
-    Route::patch('/products/price-tables/{priceTable}', [CatalogCrudController::class, 'updateProductPriceTable'])->name('products.price-tables.update');
     Route::get('/crud/{resource}/create', [CatalogCrudController::class, 'create'])->name('crud.create');
     Route::post('/crud/{resource}', [CatalogCrudController::class, 'store'])->name('crud.store');
     Route::get('/crud/{resource}/{id}/edit', [CatalogCrudController::class, 'edit'])->name('crud.edit');
     Route::put('/crud/{resource}/{id}', [CatalogCrudController::class, 'update'])->name('crud.update');
     Route::post('/crud/{resource}/{id}/deactivate', [CatalogCrudController::class, 'deactivate'])->name('crud.deactivate');
+    Route::post('/orders/{order}/send', [CatalogCrudController::class, 'sendOrder'])->middleware('throttle:sensitive-write')->name('orders.send');
+    Route::post('/orders/{order}/cancel', [CatalogCrudController::class, 'cancelOrder'])->middleware('throttle:sensitive-write')->name('orders.cancel');
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('api-clients.index');
     Route::post('/api-clients', [ApiClientController::class, 'store'])->name('api-clients.store');
     Route::post('/api-clients/{apiClient}/regenerate', [ApiClientController::class, 'regenerate'])->name('api-clients.regenerate');

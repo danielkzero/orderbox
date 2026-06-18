@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductPrice extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['product_id', 'price_table_id', 'price', 'minimum_quantity'];
 
     protected function casts(): array
     {

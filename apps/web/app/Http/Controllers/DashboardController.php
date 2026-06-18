@@ -6,6 +6,7 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\Product;
 use App\Models\SalesRepresentative;
+use App\Services\OperationalAccess;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -13,6 +14,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DashboardController extends Controller
 {
+    public function __construct(private readonly OperationalAccess $access) {}
+
     public function __invoke(Request $request): View
     {
         $companyId = $request->user()->company_id;
@@ -22,11 +25,11 @@ class DashboardController extends Controller
             ? $request->string('group_by')->toString()
             : 'daily';
 
-        $ordersInPeriod = Order::query()
+        $ordersInPeriod = $this->access->scopeOrders(Order::query(), $request->user())
             ->where('company_id', $companyId)
             ->whereBetween('order_date', [$period['start']->startOfDay(), $period['end']->endOfDay()]);
 
-        $previousOrders = Order::query()
+        $previousOrders = $this->access->scopeOrders(Order::query(), $request->user())
             ->where('company_id', $companyId)
             ->whereBetween('order_date', [$previousPeriod['start']->startOfDay(), $previousPeriod['end']->endOfDay()]);
 
@@ -49,13 +52,13 @@ class DashboardController extends Controller
                 'orders_change' => $this->percentageChange($ordersCount, $previousOrdersCount),
                 'average_ticket' => $ordersCount > 0 ? $totalRevenue / $ordersCount : 0,
                 'cancel_rate' => $ordersCount > 0 ? ($cancelledCount / $ordersCount) * 100 : 0,
-                'customers' => Customer::query()->where('company_id', $companyId)->where('active', true)->count(),
+                'customers' => $this->access->scopeCustomers(Customer::query(), $request->user())->where('company_id', $companyId)->where('active', true)->count(),
                 'products' => Product::query()->where('company_id', $companyId)->where('active', true)->count(),
                 'representatives' => SalesRepresentative::query()->where('company_id', $companyId)->where('active', true)->count(),
             ],
-            'channelStats' => $this->channelStats($companyId, $period['start'], $period['end']),
-            'revenueStats' => $this->revenueStats($companyId, $period['start'], $period['end'], $groupBy),
-            'recentOrders' => Order::query()
+            'channelStats' => $this->channelStats($request, $period['start'], $period['end']),
+            'revenueStats' => $this->revenueStats($request, $period['start'], $period['end'], $groupBy),
+            'recentOrders' => $this->access->scopeOrders(Order::query(), $request->user())
                 ->with(['customer', 'salesRepresentative.user'])
                 ->where('company_id', $companyId)
                 ->whereBetween('order_date', [$period['start']->startOfDay(), $period['end']->endOfDay()])
@@ -75,7 +78,8 @@ class DashboardController extends Controller
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Pedido', 'Cliente', 'Representante', 'Status', 'Origem', 'Data', 'Subtotal', 'Total'], ';');
 
-            Order::query()
+            $user = request()->user();
+            $this->access->scopeOrders(Order::query(), $user)
                 ->with(['customer', 'salesRepresentative.user'])
                 ->where('company_id', $companyId)
                 ->whereBetween('order_date', [$period['start']->startOfDay(), $period['end']->endOfDay()])
@@ -150,9 +154,10 @@ class DashboardController extends Controller
         return (($current - $previous) / $previous) * 100;
     }
 
-    private function channelStats(int $companyId, CarbonImmutable $start, CarbonImmutable $end): array
+    private function channelStats(Request $request, CarbonImmutable $start, CarbonImmutable $end): array
     {
-        $total = Order::query()
+        $companyId = $request->user()->company_id;
+        $total = $this->access->scopeOrders(Order::query(), $request->user())
             ->where('company_id', $companyId)
             ->whereBetween('order_date', [$start->startOfDay(), $end->endOfDay()])
             ->count();
@@ -162,8 +167,8 @@ class DashboardController extends Controller
             ['label' => 'APP', 'sources' => ['App', 'Mobile']],
             ['label' => 'API', 'sources' => ['API', 'Api']],
         ])
-            ->map(function (array $channel) use ($companyId, $start, $end, $total): array {
-                $count = Order::query()
+            ->map(function (array $channel) use ($request, $companyId, $start, $end, $total): array {
+                $count = $this->access->scopeOrders(Order::query(), $request->user())
                     ->where('company_id', $companyId)
                     ->whereIn('source', $channel['sources'])
                     ->whereBetween('order_date', [$start->startOfDay(), $end->endOfDay()])
@@ -179,9 +184,10 @@ class DashboardController extends Controller
             ->all();
     }
 
-    private function revenueStats(int $companyId, CarbonImmutable $start, CarbonImmutable $end, string $groupBy): array
+    private function revenueStats(Request $request, CarbonImmutable $start, CarbonImmutable $end, string $groupBy): array
     {
-        $orders = Order::query()
+        $companyId = $request->user()->company_id;
+        $orders = $this->access->scopeOrders(Order::query(), $request->user())
             ->where('company_id', $companyId)
             ->whereBetween('order_date', [$start->startOfDay(), $end->endOfDay()])
             ->orderBy('order_date')

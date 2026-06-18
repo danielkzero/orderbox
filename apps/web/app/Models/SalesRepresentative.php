@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalesRepresentative extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'region_id', 'user_id', 'code', 'active'];
 
     protected function casts(): array
     {

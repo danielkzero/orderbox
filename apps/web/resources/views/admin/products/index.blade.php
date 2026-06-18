@@ -4,7 +4,7 @@
         </x-slot>
     </x-page-header>
 
-    <x-panel x-data="{ showNewPriceTable: false, editingPriceTable: null }">
+    <x-panel>
         <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-5 dark:border-gray-800 lg:flex-row lg:items-center lg:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Lista de produtos</h2>
@@ -12,12 +12,11 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <button type="button" class="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
-                    Exportar
-                </button>
-                <a href="{{ route('crud.create', 'products') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
-                    Adicionar produto
-                </a>
+                @if (auth()->user()->isAdministrative())
+                    <a href="{{ route('crud.create', 'products') }}" class="inline-flex items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
+                        Adicionar produto
+                    </a>
+                @endif
             </div>
         </div>
 
@@ -58,33 +57,6 @@
             </button>
         </form>
 
-        <div x-show="showNewPriceTable" x-cloak class="border-b border-gray-200 bg-gray-50/60 px-5 py-4 dark:border-gray-800 dark:bg-white/[0.02]">
-            <form method="POST" action="{{ route('products.price-tables.store') }}" class="grid gap-3 lg:grid-cols-[1fr_260px_auto]">
-                @csrf
-                <div>
-                    <x-input-label for="new_price_table_name" value="Nome da nova tabela" />
-                    <input id="new_price_table_name" name="name" placeholder="Ex.: GLOBAL 12 (2000)" required class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-800 shadow-theme-xs placeholder:text-gray-400 focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                </div>
-                <div>
-                    <x-input-label for="new_price_table_region_id" value="Região" />
-                    <select id="new_price_table_region_id" name="region_id" class="mt-1 h-11 w-full rounded-lg border border-gray-300 bg-white px-4 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                        <option value="">Sem região específica</option>
-                        @foreach ($regions as $region)
-                            <option value="{{ $region->id }}">{{ $region->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div class="flex items-end gap-2">
-                    <button type="submit" class="inline-flex h-11 items-center justify-center rounded-lg bg-brand-500 px-5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
-                        Salvar tabela
-                    </button>
-                    <button type="button" x-on:click="showNewPriceTable = false" class="inline-flex h-11 items-center justify-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">
-                        Cancelar
-                    </button>
-                </div>
-            </form>
-        </div>
-
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200 text-sm dark:divide-gray-800">
                 <thead class="bg-gray-50 text-left text-theme-xs font-medium text-gray-500 dark:bg-white/[0.02] dark:text-gray-400">
@@ -93,38 +65,11 @@
                         <th class="px-5 py-4">Categoria</th>
                         <th class="px-5 py-4">Marca</th>
                         <th class="px-5 py-4">
-                            <div class="flex items-center gap-2">
-                                <span>Preço</span>
-                                <button type="button" x-on:click="showNewPriceTable = ! showNewPriceTable" class="inline-flex size-7 items-center justify-center rounded-full bg-brand-500 text-base font-semibold text-white shadow-theme-xs hover:bg-brand-600" title="Adicionar tabela de preço">
-                                    +
-                                </button>
-                            </div>
+                            Preço
                         </th>
                         @foreach ($priceTables as $priceTable)
                             <th class="min-w-[180px] px-5 py-4">
-                                <div class="space-y-2">
-                                    <div x-show="editingPriceTable !== {{ $priceTable->id }}" class="flex items-start gap-2">
-                                        <button type="button" x-on:click="editingPriceTable = {{ $priceTable->id }}" class="mt-0.5 text-brand-500 hover:text-brand-600" title="Editar nome da tabela">
-                                            <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path d="M4 20h4l10.5-10.5a2.1 2.1 0 0 0-3-3L5 17v3Z" stroke-linejoin="round" />
-                                                <path d="m13.5 8.5 2 2" stroke-linecap="round" />
-                                            </svg>
-                                        </button>
-                                        <div>
-                                            <p class="font-semibold text-gray-700 dark:text-gray-200">{{ $priceTable->name }}</p>
-                                            <p class="mt-0.5 text-xs font-normal text-gray-400">{{ $priceTable->region?->name ?? 'Todas as regiões' }}</p>
-                                        </div>
-                                    </div>
-                                    <form x-show="editingPriceTable === {{ $priceTable->id }}" x-cloak method="POST" action="{{ route('products.price-tables.update', $priceTable) }}" class="space-y-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <input name="name" value="{{ $priceTable->name }}" required class="h-10 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-800 shadow-theme-xs focus:border-brand-300 focus:outline-hidden focus:ring-3 focus:ring-brand-500/10 dark:border-gray-700 dark:bg-gray-900 dark:text-white/90">
-                                        <div class="flex gap-2">
-                                            <button type="submit" class="rounded-lg bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600">Salvar</button>
-                                            <button type="button" x-on:click="editingPriceTable = null" class="rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-white/[0.03]">Cancelar</button>
-                                        </div>
-                                    </form>
-                                </div>
+                                <p class="font-semibold text-gray-700 dark:text-gray-200">{{ $priceTable->name }}</p>
                             </th>
                         @endforeach
                         <th class="px-5 py-4">Estoque</th>

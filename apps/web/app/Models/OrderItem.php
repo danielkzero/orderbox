@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OrderItem extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['order_id', 'product_id', 'quantity', 'unit_price', 'discounts', 'total_amount'];
 
     protected function casts(): array
     {

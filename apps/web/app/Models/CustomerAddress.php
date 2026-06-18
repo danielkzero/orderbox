@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerAddress extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['type', 'zip_code', 'street', 'number', 'complement', 'district', 'city', 'state', 'municipality_ibge_code', 'country', 'default_address'];
 
     protected function casts(): array
     {

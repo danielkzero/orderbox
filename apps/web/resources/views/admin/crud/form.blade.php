@@ -29,6 +29,7 @@
             @if ($resource === 'customers')
                 @php
                     $addressRows = collect(old('addresses', $model->exists ? $model->addresses->map(fn ($address) => [
+                        'id' => $address->id,
                         'type' => $address->type,
                         'zip_code' => $address->zip_code,
                         'street' => $address->street,
@@ -42,6 +43,7 @@
                         'default_address' => (bool) $address->default_address,
                     ])->values()->all() : []))->values();
                     $contactRows = collect(old('contacts', $model->exists ? $model->contacts->map(fn ($contact) => [
+                        'id' => $contact->id,
                         'name' => $contact->name,
                         'position' => $contact->position,
                         'department' => $contact->department,
@@ -90,7 +92,8 @@
                         const zip = String(row.zip_code || '').replace(/\D/g, '');
                         if (zip.length !== 8) return;
 
-                        const response = await fetch(`https://viacep.com.br/ws/${zip}/json/`);
+                        const response = await fetch(`{{ url('/locations/zip-codes') }}/${zip}`, { headers: { Accept: 'application/json' } });
+                        if (! response.ok) return;
                         const data = await response.json();
                         if (data.erro) return;
 
@@ -131,6 +134,9 @@
                         this.selectedPriceTableIds = this.selectedPriceTableIds.filter((selectedId) => selectedId !== id);
                     }
                 }">
+                    @if ($model->exists)
+                        <input type="hidden" name="version" value="{{ $model->version }}">
+                    @endif
                     <datalist id="customer-address-types">
                         @foreach ($addressTypes as $type)
                             <option value="{{ $type }}"></option>
@@ -203,6 +209,7 @@
                         <div class="space-y-4 p-5">
                             <template x-for="(address, index) in addresses" :key="index">
                                 <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+                                    <input type="hidden" :name="`addresses[${index}][id]`" :value="address.id || ''">
                                     <div class="mb-4 flex items-center justify-between">
                                         <h4 class="font-medium text-gray-800 dark:text-white/90">Endereço <span x-text="index + 1"></span></h4>
                                         <button type="button" @click="removeAddress(index)" class="text-sm font-medium text-error-600">Remover</button>
@@ -274,6 +281,7 @@
                         <div class="space-y-4 p-5">
                             <template x-for="(contact, index) in contacts" :key="index">
                                 <div class="rounded-2xl border border-gray-200 p-4 dark:border-gray-800">
+                                    <input type="hidden" :name="`contacts[${index}][id]`" :value="contact.id || ''">
                                     <div class="mb-4 flex items-center justify-between">
                                         <h4 class="font-medium text-gray-800 dark:text-white/90">Contato <span x-text="index + 1"></span></h4>
                                         <button type="button" @click="removeContact(index)" class="text-sm font-medium text-error-600">Remover</button>
@@ -423,12 +431,10 @@
                             'price' => $price?->price,
                         ];
                     })->all()));
-                    $newPriceTableRows = collect(old('new_price_tables', []))->values();
                 @endphp
                 <div class="space-y-6" x-data="{
                     imageUrl: @js(old('image_url', str_starts_with((string) $model->image_url, 'http') ? $model->image_url : null)),
                     previewUrl: @js(old('image_url', $model->imageSrc())),
-                    newTables: @js($newPriceTableRows),
                     isDragging: false,
                     setFile(file) {
                         if (!file) return;
@@ -519,15 +525,11 @@
                     </div>
 
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
-                        <div class="flex flex-col gap-3 border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <div>
                                 <h3 class="font-semibold text-gray-800 dark:text-white/90">Preços de tabela</h3>
-                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edite os preços do produto nas tabelas existentes ou crie uma nova tabela pelo botão de adicionar.</p>
+                                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Edite os preços do produto nas tabelas existentes. Novas tabelas devem ser criadas no módulo Tabelas de Preço.</p>
                             </div>
-                            <button type="button" @click="newTables.push({ name: '', region_id: '', minimum_quantity: 1, price: '' })" class="inline-flex items-center justify-center rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white shadow-theme-xs hover:bg-brand-600">
-                                +
-                                <span class="ml-2">Nova tabela</span>
-                            </button>
                         </div>
 
                         <div class="space-y-5 p-5">
@@ -568,44 +570,9 @@
                                 </div>
                             @else
                                 <div class="rounded-2xl border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
-                                    Nenhuma tabela de preço cadastrada. Use o botão <strong>Nova tabela</strong> para criar a primeira junto com este produto.
+                                    Nenhuma tabela de preço cadastrada. Cadastre uma tabela antes de definir preços para este produto.
                                 </div>
                             @endif
-
-                            <template x-for="(table, index) in newTables" :key="index">
-                                <div class="rounded-2xl border border-brand-200 bg-brand-50/30 p-4 dark:border-brand-500/30 dark:bg-brand-500/10">
-                                    <div class="mb-4 flex items-center justify-between">
-                                        <h4 class="font-medium text-gray-800 dark:text-white/90">Nova tabela de preço</h4>
-                                        <button type="button" @click="newTables.splice(index, 1)" class="text-sm font-medium text-error-600">Remover</button>
-                                    </div>
-                                    <div class="grid gap-4 md:grid-cols-[1fr_220px_160px_180px]">
-                                        <div>
-                                            <x-input-label value="Nome da tabela" />
-                                            <input type="text" :name="`new_price_tables[${index}][name]`" x-model="table.name" class="{{ $inputClass }}" placeholder="Ex.: GLOBAL 1 (2000)">
-                                        </div>
-                                        <div>
-                                            <x-input-label value="Região" />
-                                            <select :name="`new_price_tables[${index}][region_id]`" x-model="table.region_id" class="{{ $inputClass }}">
-                                                <option value="">Todas as regiões</option>
-                                                @foreach ($regions as $region)
-                                                    <option value="{{ $region->id }}">{{ $region->name }}</option>
-                                                @endforeach
-                                            </select>
-                                        </div>
-                                        <div>
-                                            <x-input-label value="Qtd. mínima" />
-                                            <input type="number" step="0.001" min="0.001" :name="`new_price_tables[${index}][minimum_quantity]`" x-model="table.minimum_quantity" class="{{ $inputClass }}">
-                                        </div>
-                                        <div>
-                                            <x-input-label value="Preço" />
-                                            <div class="mt-1 flex">
-                                                <span class="inline-flex h-11 items-center rounded-l-lg border border-r-0 border-gray-300 bg-white px-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">R$</span>
-                                                <input type="number" step="0.01" min="0" :name="`new_price_tables[${index}][price]`" x-model="table.price" class="{{ Str::replaceFirst('rounded-lg', 'rounded-r-lg', $inputClass) }}">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </template>
                         </div>
                     </div>
 
@@ -692,15 +659,6 @@
                     <div>
                         <x-input-label for="name" value="Nome" />
                         <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" required />
-                    </div>
-                    <div>
-                        <x-input-label for="region_id" value="Região" />
-                        <select id="region_id" name="region_id" class="{{ $inputClass }}">
-                            <option value="">Sem região específica</option>
-                            @foreach ($regions as $region)
-                                <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
-                            @endforeach
-                        </select>
                     </div>
                     <div>
                         <x-input-label for="description" value="Descrição" />
@@ -797,6 +755,10 @@
                         'microregion_name' => $municipality->microregion_name,
                         'mesoregion_name' => $municipality->mesoregion_name,
                     ])->values()->all() : []))->values();
+                    $selectedRegionPriceTables = collect(old(
+                        'price_table_ids',
+                        $model->exists ? $model->priceTables->pluck('id')->all() : [],
+                    ))->map(fn ($id) => (int) $id);
                 @endphp
                 <div class="space-y-6" x-data="{
                     states: [],
@@ -811,14 +773,19 @@
                         if (this.selectedState) await this.loadMunicipalities();
                     },
                     async loadStates() {
-                        const response = await fetch('https://servicodados.ibge.gov.br/api/v1/localidades/estados?orderBy=nome');
+                        const response = await fetch('{{ route('locations.states') }}', { headers: { Accept: 'application/json' } });
+                        if (! response.ok) return;
                         this.states = await response.json();
                     },
                     async loadMunicipalities() {
                         if (! this.selectedState) return;
                         this.loadingLocations = true;
                         this.municipalitySearch = '';
-                        const response = await fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${this.selectedState}/municipios?orderBy=nome`);
+                        const response = await fetch(`{{ url('/locations/states') }}/${this.selectedState}/municipalities`, { headers: { Accept: 'application/json' } });
+                        if (! response.ok) {
+                            this.loadingLocations = false;
+                            return;
+                        }
                         const data = await response.json();
                         this.municipalities = data.map((municipality) => ({
                             ibge_code: String(municipality.id),
@@ -928,6 +895,35 @@
                     <div x-show="coverageType === 'state_remainder'" x-cloak class="rounded-2xl border border-brand-200 bg-brand-50 p-5 text-sm text-brand-700 dark:border-brand-500/30 dark:bg-brand-500/10 dark:text-brand-300">
                         Esta região receberá automaticamente todos os municípios da UF que não estiverem vinculados a uma região mais específica.
                     </div>
+
+                    <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
+                        <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
+                            <h3 class="font-semibold text-gray-800 dark:text-white/90">Tabelas de preço da região</h3>
+                            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Este é o único local de manutenção do vínculo entre região e tabela de preço.</p>
+                        </div>
+                        <div class="grid gap-3 p-5 md:grid-cols-2 xl:grid-cols-3">
+                            @forelse ($priceTables as $priceTable)
+                                <label class="flex cursor-pointer items-start gap-3 rounded-xl border border-gray-200 p-4 hover:border-brand-300 dark:border-gray-800 dark:hover:border-brand-500">
+                                    <input
+                                        type="checkbox"
+                                        name="price_table_ids[]"
+                                        value="{{ $priceTable->id }}"
+                                        class="mt-0.5 rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                                        @checked($selectedRegionPriceTables->contains($priceTable->id))
+                                    >
+                                    <span>
+                                        <strong class="block text-sm text-gray-800 dark:text-white/90">{{ $priceTable->name }}</strong>
+                                        <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{ $priceTable->description ?: 'Sem descrição' }}</span>
+                                        @if ($priceTable->region_id && $priceTable->region_id !== $model->id)
+                                            <span class="mt-1 block text-xs text-warning-600">Será movida da região atual.</span>
+                                        @endif
+                                    </span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma tabela ativa cadastrada.</p>
+                            @endforelse
+                        </div>
+                    </div>
                 </div>
             @elseif ($resource === 'representatives')
                 <div class="grid gap-5 md:grid-cols-2">
@@ -984,7 +980,7 @@
                             'label' => $customer->trade_name ?: $customer->corporate_name,
                             'document' => $customer->document,
                             'search' => strtolower(($customer->trade_name ?: $customer->corporate_name).' '.$customer->corporate_name.' '.$customer->document),
-                            'price_tables' => $customer->applicablePriceTables()->map(fn ($table) => [
+                            'price_tables' => $applicablePriceTables->get($customer->id, collect())->map(fn ($table) => [
                                 'id' => $table->id,
                                 'name' => $table->name,
                                 'region' => $table->region?->name,
@@ -1168,19 +1164,22 @@
                     <input type="hidden" name="source" value="Web">
                     <input type="hidden" name="customer_id" :value="selectedCustomerId || ''">
                     <input type="hidden" name="price_table_id" :value="selectedPriceTableId || ''">
+                    @if ($model->exists)
+                        <input type="hidden" name="version" value="{{ $model->version }}">
+                    @endif
 
                 <div class="grid gap-5 md:grid-cols-2">
                     <div>
-                        <x-input-label for="order_number" value="Número do pedido" />
-                        <x-text-input id="order_number" name="order_number" class="mt-1 block w-full" :value="old('order_number', $model->order_number ?: 'PED-'.now()->format('YmdHis'))" required />
+                        <x-input-label value="Número do pedido" />
+                        <div class="mt-1 flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-800/50 dark:text-gray-300">
+                            {{ $model->order_number ?: 'Gerado automaticamente ao salvar' }}
+                        </div>
                     </div>
                     <div>
-                        <x-input-label for="status" value="Status" />
-                        <select id="status" name="status" class="{{ $inputClass }}" required>
-                            @foreach (['Draft' => 'Rascunho', 'Sent' => 'Enviado', 'Cancelled' => 'Cancelado'] as $value => $label)
-                                <option value="{{ $value }}" @selected(old('status', $model->status ?: 'Draft') === $value)>{{ $label }}</option>
-                            @endforeach
-                        </select>
+                        <x-input-label value="Status" />
+                        <div class="mt-1 flex h-11 items-center rounded-lg border border-gray-200 bg-gray-50 px-4 text-sm text-gray-600 dark:border-gray-800 dark:bg-gray-800/50 dark:text-gray-300">
+                            {{ $model->exists ? 'Rascunho' : 'O pedido será criado como rascunho' }}
+                        </div>
                     </div>
                     <div>
                         <x-input-label value="Buscar cliente" />

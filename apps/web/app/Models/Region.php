@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Region extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'name', 'level', 'state', 'city', 'coverage_type', 'description', 'active'];
 
     protected function casts(): array
     {

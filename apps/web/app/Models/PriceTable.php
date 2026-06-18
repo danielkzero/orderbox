@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PriceTable extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'region_id', 'name', 'description', 'active'];
 
     protected function casts(): array
     {

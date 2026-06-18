@@ -30,8 +30,8 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::prefix('auth')->group(function (): void {
-        Route::post('/login', [AuthController::class, 'login'])->middleware(['api.client', 'throttle:5,1']);
-        Route::post('/2fa/confirm', [AuthController::class, 'confirmTwoFactor'])->middleware(['api.client', 'throttle:5,1']);
+        Route::post('/login', [AuthController::class, 'login'])->middleware(['throttle:api-auth', 'api.client']);
+        Route::post('/2fa/confirm', [AuthController::class, 'confirmTwoFactor'])->middleware(['throttle:api-auth', 'api.client']);
 
         Route::middleware(['auth:sanctum', 'active.session', 'company.context'])->group(function (): void {
             Route::get('/me', [AuthController::class, 'me']);

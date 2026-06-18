@@ -80,4 +80,9 @@ class User extends Authenticatable
     {
         return $this->hasMany(AuditLog::class);
     }
+
+    public function isAdministrative(): bool
+    {
+        return in_array($this->role, ['Admin', 'Manager'], true);
+    }
 }

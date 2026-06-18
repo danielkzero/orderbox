@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ApiClient extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'name', 'channel', 'client_key', 'secret_hash', 'active', 'last_used_at'];
 
     protected function casts(): array
     {

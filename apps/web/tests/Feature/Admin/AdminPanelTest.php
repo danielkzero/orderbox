@@ -24,6 +24,7 @@ use App\Services\CommercialRegionResolver;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -195,7 +196,6 @@ class AdminPanelTest extends TestCase
         $brand = Brand::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $unit = Unit::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $priceTable = PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail();
-        $region = Region::query()->where('company_id', $this->admin->company_id)->firstOrFail();
 
         $this->actingAs($this->admin)->post('/crud/products', [
             'category_id' => $category->id,
@@ -219,9 +219,6 @@ class AdminPanelTest extends TestCase
             'table_prices' => [
                 ['price_table_id' => $priceTable->id, 'minimum_quantity' => '1', 'price' => '47.90'],
             ],
-            'new_price_tables' => [
-                ['name' => 'Tabela Produto Teste', 'region_id' => $region->id, 'minimum_quantity' => '5', 'price' => '44.90'],
-            ],
         ])->assertRedirect(route('products.index'));
 
         $this->assertDatabaseHas('products', [
@@ -244,42 +241,33 @@ class AdminPanelTest extends TestCase
             'minimum_quantity' => '1.000',
             'price' => '47.90',
         ]);
-        $createdTable = PriceTable::query()->where('name', 'Tabela Produto Teste')->firstOrFail();
-        $this->assertSame($region->id, $createdTable->region_id);
-        $this->assertDatabaseHas('product_prices', [
-            'product_id' => $product->id,
-            'price_table_id' => $createdTable->id,
-            'minimum_quantity' => '5.000',
-            'price' => '44.90',
-        ]);
     }
 
-    public function test_admin_can_manage_price_tables_from_products_datatable(): void
+    public function test_admin_can_manage_price_tables_from_price_table_module(): void
     {
-        $region = Region::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
 
-        $this->actingAs($this->admin)->post(route('products.price-tables.store'), [
+        $this->actingAs($this->admin)->post('/crud/price-tables', [
             'name' => 'Tabela Datatable',
-            'region_id' => $region->id,
+            'description' => 'Tabela criada no módulo responsável.',
+            'product_prices' => [
+                ['product_id' => $product->id, 'minimum_quantity' => '3', 'price' => '77.70'],
+            ],
         ])->assertRedirect();
 
         $priceTable = PriceTable::query()->where('name', 'Tabela Datatable')->firstOrFail();
-
-        ProductPrice::query()->create([
-            'product_id' => $product->id,
-            'price_table_id' => $priceTable->id,
-            'minimum_quantity' => '3',
-            'price' => '77.70',
-        ]);
 
         $this->actingAs($this->admin)->get(route('products.index'))
             ->assertOk()
             ->assertSee('Tabela Datatable')
             ->assertSee('R$ 77,70');
 
-        $this->actingAs($this->admin)->patch(route('products.price-tables.update', $priceTable), [
+        $this->actingAs($this->admin)->put("/crud/price-tables/{$priceTable->id}", [
             'name' => 'Tabela Datatable Editada',
+            'description' => 'Tabela atualizada.',
+            'product_prices' => [
+                ['product_id' => $product->id, 'minimum_quantity' => '3', 'price' => '77.70'],
+            ],
         ])->assertRedirect();
 
         $this->assertDatabaseHas('price_tables', [
@@ -290,6 +278,17 @@ class AdminPanelTest extends TestCase
 
     public function test_admin_can_create_region_and_price_table_products(): void
     {
+        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $this->actingAs($this->admin)->post('/crud/price-tables', [
+            'name' => 'Especial Vale',
+            'description' => 'Tabela com produto vinculado.',
+            'product_prices' => [
+                ['product_id' => $product->id, 'minimum_quantity' => '1', 'price' => '99.90'],
+                ['product_id' => $product->id, 'minimum_quantity' => '10', 'price' => '89.90'],
+            ],
+        ])->assertRedirect(route('price-tables.index'));
+        $table = PriceTable::query()->where('name', 'Especial Vale')->firstOrFail();
+
         $this->actingAs($this->admin)->post('/crud/regions', [
             'name' => 'Vale do Paraiba',
             'level' => 1,
@@ -304,24 +303,12 @@ class AdminPanelTest extends TestCase
                     'mesoregion_name' => 'Vale do Paraíba Paulista',
                 ],
             ],
+            'price_table_ids' => [$table->id],
             'description' => 'Regiao criada pelo teste.',
         ])->assertRedirect(route('regions.index'));
 
         $region = Region::query()->where('name', 'Vale do Paraiba')->firstOrFail();
-        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
-
-        $this->actingAs($this->admin)->post('/crud/price-tables', [
-            'region_id' => $region->id,
-            'name' => 'Especial Vale',
-            'description' => 'Tabela com produto vinculado.',
-            'product_prices' => [
-                ['product_id' => $product->id, 'minimum_quantity' => '1', 'price' => '99.90'],
-                ['product_id' => $product->id, 'minimum_quantity' => '10', 'price' => '89.90'],
-            ],
-        ])->assertRedirect(route('price-tables.index'));
-
-        $table = PriceTable::query()->where('name', 'Especial Vale')->firstOrFail();
-        $this->assertSame($region->id, $table->region_id);
+        $this->assertSame($region->id, $table->refresh()->region_id);
         $this->assertDatabaseHas('region_municipalities', [
             'region_id' => $region->id,
             'ibge_code' => '3549904',
@@ -372,8 +359,6 @@ class AdminPanelTest extends TestCase
             'customer_id' => $customer->id,
             'sales_representative_id' => $representative->id,
             'price_table_id' => $priceTable->id,
-            'order_number' => 'PED-TEST-001',
-            'status' => 'Sent',
             'order_date' => now()->format('Y-m-d H:i:s'),
             'source' => 'Admin',
             'payment_method' => 'boleto',
@@ -383,10 +368,12 @@ class AdminPanelTest extends TestCase
                 ['product_id' => $secondProduct->id, 'quantity' => '1', 'unit_price' => '999.99', 'discount' => '10'],
             ],
             'notes' => 'Pedido criado pelo teste.',
-        ])->assertRedirect(route('orders.index'));
+        ])->assertRedirect(route('orders.index'))->assertSessionHasNoErrors();
 
-        $order = Order::query()->where('order_number', 'PED-TEST-001')->firstOrFail();
+        $order = Order::query()->where('company_id', $this->admin->company_id)->latest('id')->firstOrFail();
 
+        $this->assertSame('Draft', $order->status);
+        $this->assertStringStartsWith('PED-', $order->order_number);
         $this->assertSame('41.00', $order->subtotal);
         $this->assertSame('40.00', $order->total_amount);
         $this->assertSame('Web', $order->source);
@@ -395,9 +382,11 @@ class AdminPanelTest extends TestCase
         $this->assertSame(2, $order->items()->count());
         $this->assertSame('10.00', $order->items()->where('product_id', $secondProduct->id)->firstOrFail()->unit_price);
 
-        $this->actingAs($this->admin)->post("/crud/orders/{$order->id}/deactivate")
+        $this->actingAs($this->admin)->post(route('orders.send', $order))
             ->assertRedirect();
+        $this->assertSame('Sent', $order->refresh()->status);
 
+        $this->actingAs($this->admin)->post(route('orders.cancel', $order))->assertRedirect();
         $this->assertSame('Cancelled', $order->refresh()->status);
     }
 
@@ -443,6 +432,100 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($manager)->get('/users')->assertForbidden();
         $this->actingAs($manager)->get('/audit-logs')->assertOk();
+    }
+
+    public function test_sales_representative_is_restricted_to_operational_scope(): void
+    {
+        $representativeUser = User::query()->where('role', 'SalesRepresentative')->firstOrFail();
+        $representative = $representativeUser->salesRepresentative;
+
+        $this->actingAs($representativeUser)->get('/products')->assertOk();
+        $this->actingAs($representativeUser)->get('/price-tables')->assertOk();
+        $this->actingAs($representativeUser)->get('/categories')->assertForbidden();
+        $this->actingAs($representativeUser)->get('/regions')->assertForbidden();
+        $this->actingAs($representativeUser)->get('/crud/products/create')->assertForbidden();
+
+        $outsideCustomer = Customer::query()->create([
+            'company_id' => $representativeUser->company_id,
+            'corporate_name' => 'Cliente fora da carteira',
+            'document' => '39053344705',
+            'active' => true,
+            'version' => 1,
+        ]);
+
+        $this->actingAs($representativeUser)
+            ->get('/customers')
+            ->assertOk()
+            ->assertDontSee('Cliente fora da carteira');
+
+        $this->actingAs($representativeUser)
+            ->get("/crud/customers/{$outsideCustomer->id}/edit")
+            ->assertNotFound();
+
+        $assignedCustomer = Customer::query()
+            ->whereHas('representatives', fn ($query) => $query->where('sales_representative_id', $representative->id))
+            ->firstOrFail();
+
+        $this->actingAs($representativeUser)
+            ->get("/crud/customers/{$assignedCustomer->id}/edit")
+            ->assertOk();
+    }
+
+    public function test_cross_company_resources_are_not_exposed(): void
+    {
+        $otherCompany = Company::factory()->create();
+        $otherCategory = Category::query()->create([
+            'company_id' => $otherCompany->id,
+            'name' => 'Categoria externa',
+            'active' => true,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get("/crud/categories/{$otherCategory->id}/edit")
+            ->assertNotFound();
+
+        $this->actingAs($this->admin)
+            ->put("/crud/categories/{$otherCategory->id}", ['name' => 'Tentativa'])
+            ->assertNotFound();
+    }
+
+    public function test_branded_error_pages_are_available(): void
+    {
+        $this->get('/pagina-inexistente')
+            ->assertNotFound()
+            ->assertSee('OrderBox')
+            ->assertSee('Página não encontrada');
+
+        $representative = User::query()->where('role', 'SalesRepresentative')->firstOrFail();
+        $this->actingAs($representative)
+            ->get('/regions')
+            ->assertForbidden()
+            ->assertSee('Permissão insuficiente');
+    }
+
+    public function test_location_gateway_proxies_and_caches_external_services(): void
+    {
+        Http::fake([
+            'servicodados.ibge.gov.br/*' => Http::response([
+                ['id' => 35, 'sigla' => 'SP', 'nome' => 'São Paulo'],
+            ]),
+            'viacep.com.br/*' => Http::response([
+                'cep' => '01001-000',
+                'localidade' => 'São Paulo',
+                'uf' => 'SP',
+                'ibge' => '3550308',
+            ]),
+        ]);
+
+        $this->actingAs($this->admin)
+            ->getJson(route('locations.states'))
+            ->assertOk()
+            ->assertJsonPath('0.sigla', 'SP');
+
+        $this->actingAs($this->admin)
+            ->getJson(route('locations.zip-codes', '01001000'))
+            ->assertOk()
+            ->assertJsonPath('ibge', '3550308');
     }
 
     public function test_audit_log_page_renders_existing_actions(): void

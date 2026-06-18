@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Brand extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'name', 'description', 'logo', 'active'];
 
     protected function casts(): array
     {

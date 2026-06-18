@@ -12,15 +12,20 @@ use App\Models\Product;
 use App\Models\Region;
 use App\Models\SalesRepresentative;
 use App\Models\Unit;
+use App\Services\OperationalAccess;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class AdminModuleController extends Controller
 {
+    public function __construct(private readonly OperationalAccess $access) {}
+
     public function customers(Request $request): View
     {
-        return $this->module($request, Customer::query()->with(['addresses', 'region']), 'Clientes', 'customers', [
+        $this->access->authorize($request->user(), 'customers', 'view');
+
+        return $this->module($request, $this->access->scopeCustomers(Customer::query(), $request->user())->with(['addresses', 'region']), 'Clientes', 'customers', [
             'Nome' => fn (Customer $item) => $item->trade_name ?: $item->corporate_name,
             'Documento' => 'document',
             'Cidade' => fn (Customer $item) => $item->addresses->first()?->city ?? '-',
@@ -33,6 +38,7 @@ class AdminModuleController extends Controller
 
     public function products(Request $request): View
     {
+        $this->access->authorize($request->user(), 'products', 'view');
         $companyId = $request->user()->company_id;
         $search = trim($request->string('search')->toString());
         $categoryId = $request->integer('category_id') ?: null;
@@ -68,9 +74,7 @@ class AdminModuleController extends Controller
             'products' => $query->paginate(15)->withQueryString(),
             'categories' => Category::query()->where('company_id', $companyId)->orderBy('name')->get(),
             'brands' => Brand::query()->where('company_id', $companyId)->orderBy('name')->get(),
-            'regions' => Region::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'priceTables' => PriceTable::query()
-                ->with('region')
                 ->where('company_id', $companyId)
                 ->where('active', true)
                 ->orderBy('id')
@@ -86,9 +90,10 @@ class AdminModuleController extends Controller
 
     public function priceTables(Request $request): View
     {
-        return $this->module($request, PriceTable::query()->with('region')->withCount('prices'), 'Tabelas de preço', 'price_tables', [
+        $this->access->authorize($request->user(), 'price-tables', 'view');
+
+        return $this->module($request, PriceTable::query()->withCount('prices'), 'Tabelas de preço', 'price_tables', [
             'Nome' => 'name',
-            'Região' => fn (PriceTable $item) => $item->region?->name ?? '-',
             'Descrição' => 'description',
             'Faixas de preço' => 'prices_count',
             'Status' => fn (PriceTable $item) => view('components.status-badge', ['active' => $item->active]),
@@ -98,6 +103,8 @@ class AdminModuleController extends Controller
 
     public function representatives(Request $request): View
     {
+        $this->access->authorize($request->user(), 'representatives', 'view');
+
         return $this->module($request, SalesRepresentative::query()->with(['user', 'region'])->withCount('customers'), 'Representantes', 'sales_representatives', [
             'Código' => 'code',
             'Nome' => fn (SalesRepresentative $item) => $item->user->name,
@@ -111,7 +118,9 @@ class AdminModuleController extends Controller
 
     public function orders(Request $request): View
     {
-        return $this->module($request, Order::query()->with(['customer', 'salesRepresentative.user'])->latest('order_date'), 'Pedidos', 'orders', [
+        $this->access->authorize($request->user(), 'orders', 'view');
+
+        return $this->module($request, $this->access->scopeOrders(Order::query(), $request->user())->with(['customer', 'salesRepresentative.user'])->latest('order_date'), 'Pedidos', 'orders', [
             'Número' => 'order_number',
             'Cliente' => fn (Order $item) => $item->customer->trade_name ?: $item->customer->corporate_name,
             'Representante' => fn (Order $item) => $item->salesRepresentative->user->name,
@@ -128,6 +137,8 @@ class AdminModuleController extends Controller
 
     public function categories(Request $request): View
     {
+        $this->access->authorize($request->user(), 'categories', 'view');
+
         return $this->module($request, Category::query()->with('parent')->withCount('products'), 'Categorias', 'categories', [
             'Nome' => 'name',
             'Categoria pai' => fn (Category $item) => $item->parent?->name ?? '-',
@@ -139,6 +150,8 @@ class AdminModuleController extends Controller
 
     public function brands(Request $request): View
     {
+        $this->access->authorize($request->user(), 'brands', 'view');
+
         return $this->module($request, Brand::query()->withCount('products'), 'Marcas', 'brands', [
             'Nome' => 'name',
             'Descrição' => 'description',
@@ -150,6 +163,8 @@ class AdminModuleController extends Controller
 
     public function units(Request $request): View
     {
+        $this->access->authorize($request->user(), 'units', 'view');
+
         return $this->module($request, Unit::query()->withCount('products'), 'Unidades', 'units', [
             'Código' => 'code',
             'Nome' => 'name',
@@ -161,6 +176,8 @@ class AdminModuleController extends Controller
 
     public function regions(Request $request): View
     {
+        $this->access->authorize($request->user(), 'regions', 'view');
+
         return $this->module($request, Region::query()->withCount(['municipalities', 'customers', 'representatives', 'priceTables']), 'Regiões', 'regions', [
             'Nome' => 'name',
             'Nível' => 'level',
@@ -194,6 +211,9 @@ class AdminModuleController extends Controller
     {
         $companyId = $request->user()->company_id;
         $search = trim($request->string('search')->toString());
+        $status = $request->string('status')->toString();
+        $sort = $request->string('sort')->toString();
+        $direction = $request->string('direction')->toString() === 'asc' ? 'asc' : 'desc';
 
         $query->where($table.'.company_id', $companyId);
 
@@ -205,6 +225,20 @@ class AdminModuleController extends Controller
                     }
                 }
             });
+        }
+
+        if ($status !== '') {
+            if (\Schema::hasColumn($table, 'active') && in_array($status, ['active', 'inactive'], true)) {
+                $query->where($table.'.active', $status === 'active');
+            } elseif ($table === 'orders' && in_array($status, ['Draft', 'Sent', 'Cancelled'], true)) {
+                $query->where($table.'.status', $status);
+            }
+        }
+
+        $sortable = collect(['name', 'trade_name', 'corporate_name', 'code', 'order_number', 'created_at', 'updated_at', 'order_date'])
+            ->first(fn (string $column): bool => $column === $sort && \Schema::hasColumn($table, $column));
+        if ($sortable) {
+            $query->reorder($table.'.'.$sortable, $direction)->orderBy($table.'.id');
         }
 
         return view('admin.modules.index', [
@@ -224,6 +258,13 @@ class AdminModuleController extends Controller
                 'units' => 'units',
             ][$table] ?? null,
             'search' => $search,
+            'filters' => [
+                'status' => $status,
+                'sort' => $sort,
+                'direction' => $direction,
+                'has_active' => \Schema::hasColumn($table, 'active'),
+                'is_orders' => $table === 'orders',
+            ],
         ]);
     }
 }

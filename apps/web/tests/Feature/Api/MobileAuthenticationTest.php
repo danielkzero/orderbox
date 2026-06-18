@@ -25,6 +25,28 @@ class MobileAuthenticationTest extends TestCase
             ->assertJsonPath('error.code', 'api_client_not_allowed');
     }
 
+    public function test_mobile_login_is_rate_limited_by_api_client(): void
+    {
+        for ($attempt = 1; $attempt <= 5; $attempt++) {
+            $this->withHeaders([
+                'X-OrderBox-Client-Key' => 'blocked-client',
+                'X-OrderBox-Client-Secret' => 'invalid-secret',
+            ])->postJson('/api/v1/auth/login', [
+                'email' => 'missing@example.test',
+                'password' => 'invalid',
+            ])->assertForbidden();
+        }
+
+        $this->withHeaders([
+            'X-OrderBox-Client-Key' => 'blocked-client',
+            'X-OrderBox-Client-Secret' => 'invalid-secret',
+        ])->postJson('/api/v1/auth/login', [
+            'email' => 'missing@example.test',
+            'password' => 'invalid',
+        ])->assertTooManyRequests()
+            ->assertJsonPath('error.code', 'too_many_requests');
+    }
+
     public function test_new_mobile_login_revokes_previous_mobile_token(): void
     {
         $user = User::factory()->create();

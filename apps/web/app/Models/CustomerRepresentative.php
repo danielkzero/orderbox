@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CustomerRepresentative extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['sales_representative_id', 'is_primary'];
 
     protected function casts(): array
     {

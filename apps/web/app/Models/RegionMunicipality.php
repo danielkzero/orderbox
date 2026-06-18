@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class RegionMunicipality extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['ibge_code', 'name', 'state', 'microregion_name', 'mesoregion_name'];
 
     public function region(): BelongsTo
     {

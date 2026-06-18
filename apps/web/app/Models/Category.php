@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    protected $guarded = [];
+    protected $fillable = ['company_id', 'parent_id', 'name', 'description', 'active'];
 
     protected function casts(): array
     {

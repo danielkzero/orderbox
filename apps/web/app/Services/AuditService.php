@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\AuditLog;
 use App\Models\User;
+use Illuminate\Support\Arr;
 
 class AuditService
 {
@@ -15,10 +16,24 @@ class AuditService
             'action' => $action,
             'entity_type' => class_basename($entity),
             'entity_id' => $entity->getKey(),
-            'old_values' => $oldValues,
-            'new_values' => $newValues,
+            'old_values' => $this->sanitize($oldValues),
+            'new_values' => $this->sanitize($newValues),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
+        ]);
+    }
+
+    private function sanitize(?array $values): ?array
+    {
+        if ($values === null) {
+            return null;
+        }
+
+        return Arr::except($values, [
+            'password',
+            'remember_token',
+            'two_factor_secret',
+            'secret_hash',
         ]);
     }
 }
