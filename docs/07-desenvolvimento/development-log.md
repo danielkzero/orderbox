@@ -3,6 +3,12 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Tarja de status no documento do pedido
+
+O documento, PDF, impressão e anexo de e-mail agora exibem uma tarja obrigatória
+para identificar pedidos em rascunho, enviados ou cancelados. Cancelamentos
+usam destaque vermelho, rascunhos âmbar e enviados verde.
+
 ## 2026-06-19 — PDF retrato e configuração unificada
 
 ### Correção

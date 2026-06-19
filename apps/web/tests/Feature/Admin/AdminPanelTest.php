@@ -555,6 +555,7 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee($order->order_number)
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
+            ->assertSee('PEDIDO EM RASCUNHO')
             ->assertSee('Download Excel')
             ->assertSee('Configurar pedido')
             ->assertDontSee('button-primary" type="button"', false)
@@ -637,6 +638,10 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)->post(route('orders.cancel', $duplicate))->assertRedirect();
         $this->assertSame('Cancelled', $duplicate->refresh()->status);
+        $this->actingAs($this->admin)->get(route('orders.show', $duplicate))
+            ->assertOk()
+            ->assertSee('PEDIDO CANCELADO')
+            ->assertSee('status-cancelled', false);
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'CancelOrder',
             'entity_type' => 'Order',
@@ -646,6 +651,10 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)->post(route('orders.send', $order))->assertRedirect();
         $this->assertSame('Sent', $order->refresh()->status);
+        $this->actingAs($this->admin)->get(route('orders.show', $order))
+            ->assertOk()
+            ->assertSee('PEDIDO ENVIADO')
+            ->assertSee('status-sent', false);
         $this->actingAs($this->admin)->post(route('orders.cancel', $order))->assertUnprocessable();
 
         $this->actingAs($this->admin)

@@ -414,6 +414,10 @@ Na lista de pedidos:
 - `Outros` reúne histórico de envios, duplicação e cancelamento;
 - cancelamento aparece somente enquanto o pedido ainda não foi enviado.
 
+O documento apresenta uma tarja de status no topo. Pedidos cancelados recebem
+destaque vermelho; rascunhos, âmbar; e enviados, verde. A identificação também
+é mantida no PDF, impressão e anexo de e-mail.
+
 No cadastro de cliente por SalesRepresentative, limite de crédito,
 representantes e tabelas diretas não são exibidos. O usuário autenticado é
 vinculado automaticamente como representante principal.

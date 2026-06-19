@@ -7,6 +7,11 @@
         'narrow' => '8mm',
         default => '15mm',
     };
+    $status = match ($order->status) {
+        'Cancelled' => ['label' => 'PEDIDO CANCELADO', 'class' => 'status-cancelled'],
+        'Sent' => ['label' => 'PEDIDO ENVIADO', 'class' => 'status-sent'],
+        default => ['label' => 'PEDIDO EM RASCUNHO', 'class' => 'status-draft'],
+    };
 @endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
@@ -37,6 +42,10 @@
         .totals { width: 280px; margin: 20px 0 0 auto; }
         .totals td { border: 0; padding: 5px; }
         .grand-total { font-size: 16px; font-weight: 700; color: #465fff; }
+        .status-ribbon { margin: 0 0 18px; padding: 9px 14px; border: 1px solid; text-align: center; font-size: 12px; font-weight: 700; letter-spacing: .08em; }
+        .status-cancelled { border-color: #f04438; background: #fef3f2; color: #b42318; }
+        .status-sent { border-color: #12b76a; background: #ecfdf3; color: #027a48; }
+        .status-draft { border-color: #f79009; background: #fffaeb; color: #b54708; }
         .product-image { display: block; object-fit: contain; }
         .product-image-small { width: 34px; height: 34px; }
         .product-image-medium { width: 54px; height: 54px; }
@@ -98,6 +107,7 @@
         </div>
     @endunless
     <main class="page print-image-{{ $settings->print_image_size ?: $settings->image_size }}">
+        <div class="status-ribbon {{ $status['class'] }}">{{ $status['label'] }}</div>
         <header class="header">
             <div>
                 <div class="brand">OrderBox</div>

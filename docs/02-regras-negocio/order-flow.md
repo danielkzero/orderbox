@@ -110,6 +110,14 @@ Pedidos não podem ser excluídos fisicamente pela interface.
 - o Excel é gerado em formato `.xlsx`;
 - representantes podem baixar e imprimir, mas não alterar o modelo.
 
+O documento sempre identifica seu estado:
+
+- Draft: `PEDIDO EM RASCUNHO`, em âmbar;
+- Sent: `PEDIDO ENVIADO`, em verde;
+- Cancelled: `PEDIDO CANCELADO`, em vermelho.
+
+A tarja é obrigatória na tela, impressão, PDF e anexos.
+
 ### Configuração de impressão
 
 - Admin e Manager definem separadamente o que aparece na impressão do navegador;
