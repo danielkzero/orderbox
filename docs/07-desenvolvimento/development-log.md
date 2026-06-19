@@ -3,6 +3,31 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Excel e modelo configurável do pedido
+
+### Funcionalidade
+
+Inclusão de download `.xlsx` e configuração corporativa das informações do
+documento do pedido.
+
+### Impactos
+
+- barra de ações com impressão, PDF, Excel e configuração;
+- seleção de colunas reais do produto e do item;
+- pré-visualização interativa antes de salvar;
+- tamanho configurável da foto;
+- ordenação por inserção, nome ou código;
+- totais opcionais de quantidade, peso, subtotal e valor;
+- configuração compartilhada por tela, PDF, e-mail e Excel;
+- alteração restrita a Admin e Manager.
+
+### Validação
+
+- persistência multiempresa;
+- geração de PDF e XLSX;
+- autorização do configurador;
+- suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Segurança comercial e distribuição de pedidos
 
 ### Funcionalidade

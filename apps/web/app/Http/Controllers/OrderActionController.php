@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\OrderDocumentMail;
 use App\Models\Order;
 use App\Models\OrderDelivery;
+use App\Models\OrderDocumentSetting;
 use App\Models\OrderItem;
 use App\Services\AuditService;
 use App\Services\OperationalAccess;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -27,8 +29,15 @@ class OrderActionController extends Controller
     public function show(Request $request, Order $order): View
     {
         $this->authorize($request, $order);
+        $order = $this->documents->load($order);
 
-        return view('orders.document', ['order' => $this->documents->load($order), 'pdfMode' => false]);
+        return view('orders.document', [
+            'order' => $order,
+            'settings' => $this->documents->settings($order),
+            'items' => $this->documents->items($order),
+            'columnLabels' => $this->documents->columnLabels(),
+            'pdfMode' => false,
+        ]);
     }
 
     public function pdf(Request $request, Order $order): Response
@@ -37,7 +46,7 @@ class OrderActionController extends Controller
 
         return response($this->documents->pdf($order), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="'.$order->order_number.'.pdf"',
+            'Content-Disposition' => 'attachment; filename="'.$order->order_number.'.pdf"',
         ]);
     }
 
@@ -48,6 +57,56 @@ class OrderActionController extends Controller
             'Content-Disposition' => 'inline; filename="'.$order->order_number.'.pdf"',
             'X-Robots-Tag' => 'noindex, nofollow',
         ]);
+    }
+
+    public function excel(Request $request, Order $order): Response
+    {
+        $this->authorize($request, $order);
+
+        return response($this->documents->excel($order), 200, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'Content-Disposition' => 'attachment; filename="'.$order->order_number.'.xlsx"',
+        ]);
+    }
+
+    public function updateDocumentSettings(Request $request, Order $order, AuditService $audit): RedirectResponse
+    {
+        $this->authorize($request, $order);
+        abort_unless($request->user()->isAdministrative(), 403);
+
+        $data = $request->validate([
+            'columns' => ['required', 'array', 'min:3'],
+            'columns.*' => ['required', 'string', Rule::in(OrderDocumentSetting::AVAILABLE_COLUMNS)],
+            'image_size' => ['required', Rule::in(['small', 'medium', 'large'])],
+            'item_order' => ['required', Rule::in(['insertion_asc', 'insertion_desc', 'product_name', 'sku'])],
+            'show_customer_address' => ['sometimes', 'boolean'],
+            'show_commercial_terms' => ['sometimes', 'boolean'],
+            'show_notes' => ['sometimes', 'boolean'],
+            'show_subtotal' => ['sometimes', 'boolean'],
+            'show_total_quantity' => ['sometimes', 'boolean'],
+            'show_total_weight' => ['sometimes', 'boolean'],
+            'show_total' => ['sometimes', 'boolean'],
+        ]);
+
+        foreach ([
+            'show_customer_address',
+            'show_commercial_terms',
+            'show_notes',
+            'show_subtotal',
+            'show_total_quantity',
+            'show_total_weight',
+            'show_total',
+        ] as $field) {
+            $data[$field] = $request->boolean($field);
+        }
+
+        $setting = OrderDocumentSetting::query()->updateOrCreate(
+            ['company_id' => $request->user()->company_id],
+            $data,
+        );
+        $audit->record($request->user(), 'UpdateOrderDocumentSetting', $setting, null, $setting->toArray());
+
+        return back()->with('status', 'Modelo do pedido atualizado.');
     }
 
     public function email(Request $request, Order $order, AuditService $audit): RedirectResponse

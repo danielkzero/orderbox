@@ -73,6 +73,7 @@ erDiagram
 
     ORDERS ||--o{ ORDER_ITEMS : contem
     ORDERS ||--o{ ORDER_DELIVERIES : distribuido
+    COMPANIES ||--o| ORDER_DOCUMENT_SETTINGS : configura
     SALES_REPRESENTATIVES }o--o{ PRICE_TABLES : visualiza
 
     PRODUCTS ||--o{ ORDER_ITEMS : vendido

@@ -105,6 +105,7 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 | Orders | `(company_id, order_number)` único; `(company_id, client_reference)` único quando informado; `version >= 1`; valores não negativos |
 | OrderItems | `quantity > 0`; `unit_price >= 0`; `total_amount >= 0` |
 | OrderDeliveries | canal e status obrigatórios; Company, Order e User consistentes |
+| OrderDocumentSettings | `company_id` único; ao menos três colunas válidas |
 | Devices | `(company_id, device_uuid)` único |
 | SyncOperations | `(company_id, operation_id)` único |
 | SyncChanges | `sequence` único e crescente |
@@ -147,6 +148,7 @@ Além de PKs, FKs e constraints únicas:
 | Orders | `(company_id, status, order_date)`, `(sales_representative_id, order_date)`, `(customer_id, order_date)`, `(company_id, updated_at)` |
 | AuditLogs | `(company_id, created_at)`, `(company_id, entity_type, entity_id)`, `(company_id, entity_label)` |
 | OrderDeliveries | `(company_id, order_id, created_at)` |
+| OrderDocumentSettings | `company_id` único |
 | AuthenticationSessions | `(company_id, user_id, channel)`, `(last_activity_at)`, `(revoked_at)` |
 | AuthenticationChallenges | `(user_id, channel, expires_at)` |
 | SyncLogs | `(company_id, device_id, started_at)` |

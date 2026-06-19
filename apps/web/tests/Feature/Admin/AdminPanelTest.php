@@ -553,10 +553,36 @@ class AdminPanelTest extends TestCase
         $this->actingAs($this->admin)->get(route('orders.show', $order))
             ->assertOk()
             ->assertSee($order->order_number)
-            ->assertSee($customer->trade_name ?: $customer->corporate_name);
+            ->assertSee($customer->trade_name ?: $customer->corporate_name)
+            ->assertSee('Download Excel')
+            ->assertSee('Configurar modelo do pedido');
+        $this->actingAs($this->admin)->put(route('orders.document-settings.update', $order), [
+            'columns' => ['sequence', 'sku', 'name', 'quantity', 'unit_price', 'total'],
+            'image_size' => 'small',
+            'item_order' => 'product_name',
+            'show_customer_address' => '1',
+            'show_commercial_terms' => '1',
+            'show_notes' => '0',
+            'show_subtotal' => '1',
+            'show_total_quantity' => '1',
+            'show_total_weight' => '1',
+            'show_total' => '1',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('order_document_settings', [
+            'company_id' => $this->admin->company_id,
+            'image_size' => 'small',
+            'item_order' => 'product_name',
+            'show_notes' => false,
+            'show_total_quantity' => true,
+        ]);
         $this->actingAs($this->admin)->get(route('orders.pdf', $order))
             ->assertOk()
-            ->assertHeader('content-type', 'application/pdf');
+            ->assertHeader('content-type', 'application/pdf')
+            ->assertHeader('content-disposition', 'attachment; filename="'.$order->order_number.'.pdf"');
+        $this->actingAs($this->admin)->get(route('orders.excel', $order))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            ->assertHeader('content-disposition', 'attachment; filename="'.$order->order_number.'.xlsx"');
 
         Mail::fake();
         $this->actingAs($this->admin)->post(route('orders.email', $order))->assertRedirect();
@@ -724,6 +750,22 @@ class AdminPanelTest extends TestCase
         $this->actingAs($representativeUser)
             ->get("/crud/customers/{$assignedCustomer->id}/edit")
             ->assertOk();
+
+        $representativeOrder = Order::query()
+            ->where('sales_representative_id', $representative->id)
+            ->firstOrFail();
+        $this->actingAs($representativeUser)
+            ->get(route('orders.show', $representativeOrder))
+            ->assertOk()
+            ->assertSee('Download Excel')
+            ->assertDontSee('Configurar modelo do pedido');
+        $this->actingAs($representativeUser)
+            ->put(route('orders.document-settings.update', $representativeOrder), [
+                'columns' => ['sku', 'name', 'total'],
+                'image_size' => 'medium',
+                'item_order' => 'insertion_asc',
+            ])
+            ->assertForbidden();
     }
 
     public function test_cross_company_resources_are_not_exposed(): void

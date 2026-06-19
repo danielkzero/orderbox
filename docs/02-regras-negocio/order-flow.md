@@ -101,6 +101,15 @@ Pedidos não podem ser excluídos fisicamente pela interface.
 - envios são registrados em OrderDeliveries;
 - duplicar cria um novo pedido em Draft, com novo número e cópia dos itens.
 
+### Modelo do documento
+
+- Admin e Manager configuram o modelo uma única vez por empresa;
+- a configuração define colunas, tamanho da foto, ordenação, informações gerais
+  e totais;
+- o mesmo modelo é aplicado à tela, impressão, PDF, e-mail e Excel;
+- o Excel é gerado em formato `.xlsx`;
+- representantes podem baixar e imprimir, mas não alterar o modelo.
+
 ---
 
 ## Regras Gerais

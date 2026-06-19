@@ -143,6 +143,10 @@ Toda alteração relevante deve gerar registro em AuditLog.
 Order possui relação 1:N com OrderDeliveries. O histórico registra canal,
 destinatário, usuário, status e data, sem alterar o estado comercial do pedido.
 
+A apresentação do pedido utiliza OrderDocumentSetting da Company. A configuração
+não faz parte do snapshot comercial do pedido e pode evoluir sem alterar seus
+valores persistidos.
+
 ### Descontos
 
 O pedido pode possuir múltiplos descontos.

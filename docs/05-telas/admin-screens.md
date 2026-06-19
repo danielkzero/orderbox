@@ -406,6 +406,9 @@ ações explícitas e confirmadas.
 Na lista de pedidos:
 
 - `Visualizar` abre o documento preparado para impressão;
+- a barra do documento oferece Imprimir, Download PDF e Download Excel;
+- `Configurar modelo do pedido` abre um modal para escolher colunas, tamanho de
+  foto, ordenação, informações gerais e totais, com pré-visualização interativa;
 - `E-mail` envia o PDF aos e-mails ativos do cliente;
 - `WhatsApp` abre a conversa com um link temporário para o PDF;
 - `Outros` reúne histórico de envios, duplicação e cancelamento;
@@ -418,6 +421,10 @@ vinculado automaticamente como representante principal.
 No cadastro administrativo de representante, a gestão define as tabelas de
 preço visíveis. No catálogo e no pedido, o representante visualiza somente
 essas tabelas.
+
+O configurador mostra somente dados suportados atualmente pelo produto. Campos
+tributários, frete e volumes devem ser adicionados apenas quando seus módulos e
+regras de cálculo existirem.
 
 ---
 

@@ -61,4 +61,5 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [x] Restringir cada prazo pelo valor mínimo configurado para o pedido.
 - [x] Restringir tabelas visíveis por representante sem substituir regras comerciais.
 - [x] Criar documento, PDF, e-mail, WhatsApp, histórico e duplicação de pedidos.
+- [x] Criar exportação Excel e modelo configurável de pedido por empresa.
 - [ ] Expor formas e prazos no contrato de sincronização Mobile.

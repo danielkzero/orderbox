@@ -43,6 +43,7 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 22. [Prazos de pagamento](03-modelagem/payment_terms.md)
 23. [Tabelas visíveis por representante](03-modelagem/sales_representative_price_tables.md)
 24. [Envios de pedidos](03-modelagem/order_deliveries.md)
+25. [Configuração do documento do pedido](03-modelagem/order_document_settings.md)
 
 ## Convenções
 
