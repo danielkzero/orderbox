@@ -1293,18 +1293,13 @@
                                 id="payment_terms"
                                 type="button"
                                 @click="paymentTermDropdownOpen = ! paymentTermDropdownOpen"
-                                class="{{ $inputClass }} !h-auto min-h-14 flex items-center justify-between gap-3 text-left"
+                                class="{{ $inputClass }} !h-11 flex items-center justify-between gap-3 text-left"
                                 :class="selectedPaymentTerm() ? 'text-gray-800 dark:text-white/90' : 'text-gray-400'"
                                 :aria-expanded="paymentTermDropdownOpen"
                                 aria-haspopup="listbox"
                             >
                                 <span class="min-w-0">
                                     <span class="block truncate" x-text="selectedPaymentTerm()?.name || 'Selecione o prazo'"></span>
-                                    <span
-                                        x-show="selectedPaymentTerm() && Number(selectedPaymentTerm().minimum_order_amount) > 0"
-                                        class="mt-0.5 block text-xs font-normal text-gray-500 dark:text-gray-400"
-                                        x-text="`Pedido mínimo: ${money(selectedPaymentTerm()?.minimum_order_amount)}`"
-                                    ></span>
                                 </span>
                                 <svg class="size-4 shrink-0 transition-transform" :class="paymentTermDropdownOpen && 'rotate-180'" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
                                     <path d="m5 7.5 5 5 5-5"/>

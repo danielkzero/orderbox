@@ -3,6 +3,12 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Altura do seletor de prazo
+
+O controle fechado do dropdown de prazos foi padronizado em `44px`, mantendo o
+alinhamento visual com os demais inputs e selects do formulário. As informações
+complementares continuam disponíveis na lista aberta.
+
 ## 2026-06-19 — Dropdown visual de prazos no pedido
 
 ### Funcionalidade
