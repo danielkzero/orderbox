@@ -19,6 +19,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $order->order_number }}</title>
+    <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     <style>
         @page { size: A4 portrait; margin: {{ $pdfMode ? '0' : $printMargin }}; }
         * { box-sizing: border-box; }

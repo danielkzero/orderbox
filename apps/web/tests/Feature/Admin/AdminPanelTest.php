@@ -556,6 +556,8 @@ class AdminPanelTest extends TestCase
             ->assertSee($order->order_number)
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
             ->assertSee('PEDIDO EM RASCUNHO')
+            ->assertSee('rel="icon"', false)
+            ->assertSee('favicon.svg', false)
             ->assertSee('Download Excel')
             ->assertSee('Configurar pedido')
             ->assertDontSee('button-primary" type="button"', false)

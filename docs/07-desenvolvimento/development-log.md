@@ -3,6 +3,11 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Ícone da página do pedido
+
+A visualização independente do pedido passou a usar o favicon oficial do
+OrderBox na aba do navegador.
+
 ## 2026-06-19 — Tarja de status no documento do pedido
 
 O documento, PDF, impressão e anexo de e-mail agora exibem uma tarja obrigatória
