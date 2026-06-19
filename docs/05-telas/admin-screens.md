@@ -55,7 +55,9 @@ independentes no menu lateral.
 Formas e prazos são administrados por Admin e Manager. Representantes utilizam
 as opções ativas diretamente no pedido. O cadastro de prazo informa os dias das
 parcelas e o valor mínimo do pedido. No formulário do pedido, opções abaixo do
-total mínimo permanecem desabilitadas e identificam o valor necessário.
+total mínimo permanecem visíveis em vermelho, bloqueadas para seleção e
+informam quanto falta para serem habilitadas. Um dropdown visual separa os
+prazos disponíveis dos bloqueados e atualiza o estado conforme o total muda.
 
 #### Configurações
 

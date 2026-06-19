@@ -3,6 +3,38 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Dropdown visual de prazos no pedido
+
+### Funcionalidade
+
+Substituição do select de prazos por um dropdown com estados visuais de
+disponibilidade.
+
+### Motivo
+
+Explicar diretamente no formulário por que um prazo não pode ser utilizado e
+quanto falta no total do pedido para liberá-lo.
+
+### Arquivos alterados
+
+- formulário administrativo de pedidos;
+- testes administrativos;
+- regras de negócio, documentação de telas e histórico.
+
+### Impactos
+
+- prazos bloqueados permanecem visíveis em vermelho;
+- cada bloqueio informa o valor restante para habilitação;
+- prazos disponíveis apresentam o mínimo aplicável;
+- a seleção é removida automaticamente se uma alteração no pedido tornar o
+  prazo incompatível;
+- a validação autoritativa permanece no servidor.
+
+### Validação
+
+- teste do contrato visual do dropdown;
+- suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Valor mínimo por prazo de pagamento
 
 ### Funcionalidade

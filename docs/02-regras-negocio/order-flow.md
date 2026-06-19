@@ -137,6 +137,8 @@ Representantes não podem cancelar pedidos enviados.
 - cada prazo pode exigir um valor mínimo do pedido;
 - o prazo somente é aceito quando o total final recalculado pelo servidor,
   após descontos e acréscimos, for igual ou superior ao mínimo configurado;
+- a interface mantém os prazos indisponíveis visíveis, identifica o bloqueio e
+  informa a diferença necessária para atingir o mínimo;
 - o código selecionado é preservado no pedido para manter o histórico;
 - inativar uma opção impede novos usos sem alterar pedidos anteriores.
 

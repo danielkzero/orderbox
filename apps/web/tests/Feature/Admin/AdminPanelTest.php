@@ -377,6 +377,9 @@ class AdminPanelTest extends TestCase
             ->assertSee('Transferência bancária')
             ->assertSee('paymentTerms:', false)
             ->assertSee('selectedPaymentTermCode:', false)
+            ->assertSee('Faltam ${money(paymentTermShortfall(term))} para habilitar este prazo', false)
+            ->assertSee('Bloqueado')
+            ->assertSee('Disponível')
             ->assertSee('minimum_order_amount', false);
     }
 

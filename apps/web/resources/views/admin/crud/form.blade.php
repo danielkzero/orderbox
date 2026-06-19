@@ -1040,6 +1040,7 @@
                     customerSearch: '',
                     representativeSearch: '',
                     representativeDropdownOpen: false,
+                    paymentTermDropdownOpen: false,
                     tableModalOpen: false,
                     bulkModalOpen: false,
                     adjustmentModalOpen: false,
@@ -1182,10 +1183,15 @@
                     },
                     subtotal() { return this.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0) },
                     total() { return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0) },
+                    selectedPaymentTerm() { return this.paymentTerms.find((term) => term.code === this.selectedPaymentTermCode) || null },
                     paymentTermAvailable(term) { return Boolean(term) && this.total() + 0.001 >= Number(term.minimum_order_amount || 0) },
-                    paymentTermLabel(term) {
-                        if (! Number(term.minimum_order_amount || 0)) return term.name;
-                        return `${term.name} · mínimo ${this.money(term.minimum_order_amount)}`;
+                    paymentTermShortfall(term) {
+                        return Math.max(0, Number(term?.minimum_order_amount || 0) - this.total());
+                    },
+                    selectPaymentTerm(term) {
+                        if (! this.paymentTermAvailable(term)) return;
+                        this.selectedPaymentTermCode = term.code;
+                        this.paymentTermDropdownOpen = false;
                     },
                     money(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0) }
                 }">
@@ -1277,24 +1283,81 @@
                     </div>
                     <div>
                         <x-input-label for="payment_terms" value="Prazo" />
-                        <select
-                            id="payment_terms"
-                            name="payment_terms"
-                            x-model="selectedPaymentTermCode"
-                            x-effect="if (selectedPaymentTermCode && ! paymentTermAvailable(paymentTerms.find(term => term.code === selectedPaymentTermCode))) selectedPaymentTermCode = ''"
-                            class="{{ $inputClass }}"
-                            required
+                        <div
+                            class="relative"
+                            @click.outside="paymentTermDropdownOpen = false"
+                            x-effect="if (selectedPaymentTermCode && ! paymentTermAvailable(selectedPaymentTerm())) selectedPaymentTermCode = ''"
                         >
-                            <option value="">Selecione</option>
-                            <template x-for="term in paymentTerms" :key="term.code">
-                                <option
-                                    :value="term.code"
-                                    :disabled="! paymentTermAvailable(term)"
-                                    x-text="paymentTermLabel(term)"
-                                ></option>
-                            </template>
-                        </select>
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Os prazos são liberados conforme o total final do pedido.</p>
+                            <input type="hidden" name="payment_terms" :value="selectedPaymentTermCode">
+                            <button
+                                id="payment_terms"
+                                type="button"
+                                @click="paymentTermDropdownOpen = ! paymentTermDropdownOpen"
+                                class="{{ $inputClass }} !h-auto min-h-14 flex items-center justify-between gap-3 text-left"
+                                :class="selectedPaymentTerm() ? 'text-gray-800 dark:text-white/90' : 'text-gray-400'"
+                                :aria-expanded="paymentTermDropdownOpen"
+                                aria-haspopup="listbox"
+                            >
+                                <span class="min-w-0">
+                                    <span class="block truncate" x-text="selectedPaymentTerm()?.name || 'Selecione o prazo'"></span>
+                                    <span
+                                        x-show="selectedPaymentTerm() && Number(selectedPaymentTerm().minimum_order_amount) > 0"
+                                        class="mt-0.5 block text-xs font-normal text-gray-500 dark:text-gray-400"
+                                        x-text="`Pedido mínimo: ${money(selectedPaymentTerm()?.minimum_order_amount)}`"
+                                    ></span>
+                                </span>
+                                <svg class="size-4 shrink-0 transition-transform" :class="paymentTermDropdownOpen && 'rotate-180'" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8">
+                                    <path d="m5 7.5 5 5 5-5"/>
+                                </svg>
+                            </button>
+
+                            <div
+                                x-show="paymentTermDropdownOpen"
+                                x-cloak
+                                x-transition
+                                role="listbox"
+                                class="absolute z-40 mt-2 max-h-80 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white p-2 shadow-theme-lg dark:border-gray-800 dark:bg-gray-900"
+                            >
+                                <template x-for="term in paymentTerms" :key="term.code">
+                                    <button
+                                        type="button"
+                                        role="option"
+                                        @click="selectPaymentTerm(term)"
+                                        :disabled="! paymentTermAvailable(term)"
+                                        :aria-selected="selectedPaymentTermCode === term.code"
+                                        class="mb-1 flex w-full items-start justify-between gap-4 rounded-lg border px-3 py-3 text-left last:mb-0"
+                                        :class="paymentTermAvailable(term)
+                                            ? (selectedPaymentTermCode === term.code
+                                                ? 'border-brand-200 bg-brand-50 dark:border-brand-500/30 dark:bg-brand-500/10'
+                                                : 'border-transparent hover:bg-gray-50 dark:hover:bg-white/[0.03]')
+                                            : 'cursor-not-allowed border-error-100 bg-error-50/70 dark:border-error-500/20 dark:bg-error-500/10'"
+                                    >
+                                        <span class="min-w-0">
+                                            <strong
+                                                class="block text-sm"
+                                                :class="paymentTermAvailable(term) ? 'text-gray-800 dark:text-white/90' : 'text-error-600 dark:text-error-400'"
+                                                x-text="term.name"
+                                            ></strong>
+                                            <span
+                                                class="mt-1 block text-xs"
+                                                :class="paymentTermAvailable(term) ? 'text-gray-500 dark:text-gray-400' : 'font-medium text-error-600 dark:text-error-400'"
+                                                x-text="paymentTermAvailable(term)
+                                                    ? (Number(term.minimum_order_amount) > 0 ? `Disponível a partir de ${money(term.minimum_order_amount)}` : 'Disponível para qualquer valor')
+                                                    : `Faltam ${money(paymentTermShortfall(term))} para habilitar este prazo`"
+                                            ></span>
+                                        </span>
+                                        <span
+                                            class="shrink-0 rounded-full px-2 py-1 text-[11px] font-semibold"
+                                            :class="paymentTermAvailable(term)
+                                                ? 'bg-success-50 text-success-700 dark:bg-success-500/10 dark:text-success-400'
+                                                : 'bg-error-100 text-error-700 dark:bg-error-500/20 dark:text-error-400'"
+                                            x-text="paymentTermAvailable(term) ? 'Disponível' : 'Bloqueado'"
+                                        ></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">A disponibilidade é atualizada automaticamente conforme o total final.</p>
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observações" />
