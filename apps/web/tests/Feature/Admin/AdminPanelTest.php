@@ -25,7 +25,6 @@ use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\CommercialRegionResolver;
-use App\Services\OrderDocumentService;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -557,8 +556,8 @@ class AdminPanelTest extends TestCase
             ->assertSee($order->order_number)
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
             ->assertSee('Download Excel')
-            ->assertSee('Configurar impressão')
-            ->assertSee('Configurar itens e ordem')
+            ->assertSee('Configurar pedido')
+            ->assertDontSee('button-primary" type="button"', false)
             ->assertSee('Ordem dos itens');
         $this->actingAs($this->admin)->put(route('orders.document-settings.update', $order), [
             'columns' => ['sequence', 'sku', 'name', 'quantity', 'unit_price', 'total'],
@@ -571,28 +570,6 @@ class AdminPanelTest extends TestCase
             'show_total_quantity' => '1',
             'show_total_weight' => '1',
             'show_total' => '1',
-        ])->assertRedirect();
-        $this->assertDatabaseHas('order_document_settings', [
-            'company_id' => $this->admin->company_id,
-            'image_size' => 'small',
-            'item_order' => 'product_name',
-            'show_notes' => false,
-            'show_total_quantity' => true,
-        ]);
-        $documentSettings = OrderDocumentSetting::query()
-            ->where('company_id', $this->admin->company_id)
-            ->firstOrFail();
-        $this->assertFalse(app(OrderDocumentService::class)->usesLandscape($documentSettings));
-        $documentSettings->update(['columns' => OrderDocumentSetting::DEFAULT_COLUMNS]);
-        $this->assertTrue(app(OrderDocumentService::class)->usesLandscape($documentSettings->refresh()));
-        $documentSettings->setRawAttributes([
-            ...$documentSettings->getAttributes(),
-            'columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
-            'print_columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
-        ]);
-        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->documentColumns());
-        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->printColumns());
-        $this->actingAs($this->admin)->put(route('orders.print-settings.update', $order), [
             'print_columns' => ['sequence', 'sku', 'name', 'quantity', 'total'],
             'print_image_size' => 'small',
             'print_margin' => 'none',
@@ -606,19 +583,35 @@ class AdminPanelTest extends TestCase
         ])->assertRedirect();
         $this->assertDatabaseHas('order_document_settings', [
             'company_id' => $this->admin->company_id,
+            'image_size' => 'small',
+            'item_order' => 'product_name',
+            'show_notes' => false,
+            'show_total_quantity' => true,
             'print_image_size' => 'small',
             'print_margin' => 'none',
             'print_commercial_terms' => false,
             'print_total_quantity' => true,
         ]);
+        $documentSettings = OrderDocumentSetting::query()
+            ->where('company_id', $this->admin->company_id)
+            ->firstOrFail();
+        $documentSettings->setRawAttributes([
+            ...$documentSettings->getAttributes(),
+            'columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
+            'print_columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
+        ]);
+        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->documentColumns());
+        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->printColumns());
         $this->actingAs($this->admin)->get(route('orders.show', $order))
             ->assertOk()
             ->assertSee('@page { size: A4 portrait; margin: 0; }', false)
-            ->assertSee('Configuração de impressão');
-        $this->actingAs($this->admin)->get(route('orders.pdf', $order))
-            ->assertOk()
+            ->assertSee('Impressão');
+        $pdfResponse = $this->actingAs($this->admin)->get(route('orders.pdf', $order));
+        $pdfResponse->assertOk()
             ->assertHeader('content-type', 'application/pdf')
             ->assertHeader('content-disposition', 'attachment; filename="'.$order->order_number.'.pdf"');
+        preg_match('/MediaBox\s*\[([^\]]+)\]/', $pdfResponse->getContent(), $mediaBox);
+        $this->assertStringContainsString('595.280 841.890', $mediaBox[1] ?? '');
         $this->actingAs($this->admin)->get(route('orders.excel', $order))
             ->assertOk()
             ->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -798,8 +791,7 @@ class AdminPanelTest extends TestCase
             ->get(route('orders.show', $representativeOrder))
             ->assertOk()
             ->assertSee('Download Excel')
-            ->assertDontSee('Configurar impressão')
-            ->assertDontSee('Configurar itens e ordem');
+            ->assertDontSee('Configurar pedido');
         $this->actingAs($representativeUser)
             ->put(route('orders.document-settings.update', $representativeOrder), [
                 'columns' => ['sku', 'name', 'total'],

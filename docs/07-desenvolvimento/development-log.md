@@ -3,6 +3,21 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — PDF retrato e configuração unificada
+
+### Correção
+
+Removida a orientação paisagem automática e consolidada a configuração do
+pedido em um único botão.
+
+### Impactos
+
+- PDF sempre em A4 retrato;
+- conteúdo usa largura automática, sem somar padding à largura da página;
+- tipografia e células compactas evitam corte lateral;
+- um único botão `Configurar pedido`;
+- o mesmo modal contém itens, ordem e opções de impressão.
+
 ## 2026-06-19 — Normalização das colunas do documento
 
 ### Correção
@@ -26,7 +41,6 @@ explícita da configuração de itens.
 
 ### Impactos
 
-- orientação paisagem automática acima de sete colunas;
 - tabela com largura fixa, quebra de texto e espaçamento compacto;
 - cabeçalho compatível com o motor de PDF;
 - botão renomeado para `Configurar itens e ordem`;

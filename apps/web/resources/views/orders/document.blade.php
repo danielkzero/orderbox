@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $order->order_number }}</title>
     <style>
-        @page { size: A4 {{ $pdfMode && $pdfLandscape ? 'landscape' : 'portrait' }}; margin: {{ $pdfMode ? '0' : $printMargin }}; }
+        @page { size: A4 portrait; margin: {{ $pdfMode ? '0' : $printMargin }}; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #f3f4f6; color: #1f2937; font-family: DejaVu Sans, sans-serif; font-size: 12px; }
         .page { width: 210mm; min-height: 297mm; margin: 20px auto; padding: 18mm; background: #fff; }
@@ -53,9 +53,10 @@
         .preview { margin-top: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; }
         .screen-column-hidden, .screen-block-hidden, .screen-row-hidden { display: none; }
         .pdf-mode { background: #fff; }
-        .pdf-mode .page { width: 100%; min-height: 0; margin: 0; padding: 10mm; }
-        .pdf-mode table { table-layout: fixed; font-size: 9px; }
-        .pdf-mode th, .pdf-mode td { padding: 5px 4px; line-height: 1.25; }
+        .pdf-mode .page { width: auto; min-height: 0; margin: 0; padding: 8mm; }
+        .pdf-mode table { width: 100%; table-layout: fixed; font-size: 7px; }
+        .pdf-mode th, .pdf-mode td { padding: 4px 2px; line-height: 1.2; }
+        .pdf-mode .section-title { margin-top: 14px; }
         .pdf-mode .header { display: table; width: 100%; table-layout: fixed; }
         .pdf-mode .header > div { display: table-cell; width: 50%; vertical-align: top; }
         .pdf-mode .header > div:last-child { text-align: right; }
@@ -92,10 +93,7 @@
                 <a class="button" href="{{ route('orders.excel', $order) }}">Download Excel</a>
             </div>
             @if (auth()->user()->isAdministrative())
-                <div class="toolbar-group">
-                    <button class="button" type="button" onclick="document.getElementById('print-settings').showModal()">Configurar impressão</button>
-                    <button class="button button-primary" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar itens e ordem</button>
-                </div>
+                <button class="button" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar pedido</button>
             @endif
         </div>
     @endunless
@@ -220,8 +218,8 @@
                     @method('PUT')
                     <div class="modal-header">
                         <div>
-                            <strong style="font-size: 17px;">Configurar itens e ordem do pedido</strong>
-                            <div class="muted" style="margin-top: 4px;">Escolha colunas, foto, totais e a ordenação usada no PDF, Excel e e-mail.</div>
+                            <strong style="font-size: 17px;">Configurar pedido</strong>
+                            <div class="muted" style="margin-top: 4px;">Defina itens, ordem, PDF, Excel, e-mail e impressão em um único lugar.</div>
                         </div>
                         <button class="button" type="button" onclick="document.getElementById('document-settings').close()">Fechar</button>
                     </div>
@@ -340,10 +338,65 @@
                                 </div>
                             @endif
                         </div>
+                        <div style="margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 22px;">
+                            <h3 class="setting-title">Impressão</h3>
+                            <p class="muted">Estas opções são usadas somente pelo botão Imprimir.</p>
+                            <div class="settings-grid" style="margin-top: 16px;">
+                                <section>
+                                    @foreach (['sequence', 'image', 'sku', 'name', 'quantity', 'unit', 'available_stock'] as $column)
+                                        <label class="check">
+                                            <input type="checkbox" name="print_columns[]" value="{{ $column }}" @checked($printColumns->contains($column))>
+                                            {{ $columnLabels[$column] }}
+                                        </label>
+                                    @endforeach
+                                </section>
+                                <section>
+                                    @foreach (['table_price', 'discounts', 'unit_price', 'total'] as $column)
+                                        <label class="check">
+                                            <input type="checkbox" name="print_columns[]" value="{{ $column }}" @checked($printColumns->contains($column))>
+                                            {{ $columnLabels[$column] }}
+                                        </label>
+                                    @endforeach
+                                    <label class="check" style="display:block; margin-top: 14px;">
+                                        Tamanho da foto
+                                        <select class="field" name="print_image_size">
+                                            <option value="small" @selected($settings->print_image_size === 'small')>Pequena</option>
+                                            <option value="medium" @selected(($settings->print_image_size ?: 'medium') === 'medium')>Média</option>
+                                            <option value="large" @selected($settings->print_image_size === 'large')>Grande</option>
+                                        </select>
+                                    </label>
+                                </section>
+                                <section>
+                                    @foreach ([
+                                        'print_customer_address' => 'Endereço do cliente',
+                                        'print_commercial_terms' => 'Condições comerciais',
+                                        'print_notes' => 'Observações',
+                                        'print_subtotal' => 'Subtotal',
+                                        'print_total_quantity' => 'Quantidade total',
+                                        'print_total_weight' => 'Peso bruto total',
+                                        'print_total' => 'Valor total',
+                                    ] as $field => $label)
+                                        <label class="check">
+                                            <input type="hidden" name="{{ $field }}" value="0">
+                                            <input type="checkbox" name="{{ $field }}" value="1" @checked($settings->{$field})>
+                                            {{ $label }}
+                                        </label>
+                                    @endforeach
+                                    <label class="check" style="display:block; margin-top: 14px;">
+                                        Margem
+                                        <select class="field" name="print_margin">
+                                            <option value="none" @selected($settings->print_margin === 'none')>Sem margem</option>
+                                            <option value="narrow" @selected($settings->print_margin === 'narrow')>Estreita</option>
+                                            <option value="standard" @selected(($settings->print_margin ?: 'standard') === 'standard')>Padrão</option>
+                                        </select>
+                                    </label>
+                                </section>
+                            </div>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button class="button" type="button" onclick="document.getElementById('document-settings').close()">Cancelar</button>
-                        <button class="button button-primary" type="submit">Salvar modelo</button>
+                        <button class="button button-primary" type="submit">Salvar configurações</button>
                     </div>
                 </form>
             </dialog>
