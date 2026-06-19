@@ -44,7 +44,7 @@ class OrderDocumentService
 
     public function usesLandscape(OrderDocumentSetting $settings): bool
     {
-        return collect($settings->columns)->count() > 7;
+        return count($settings->documentColumns()) > 7;
     }
 
     public function settings(Order $order): OrderDocumentSetting
@@ -86,7 +86,7 @@ class OrderDocumentService
     {
         $order = $this->load($order);
         $settings = $this->settings($order);
-        $columns = collect($settings->columns)->reject(fn (string $column): bool => $column === 'image')->values();
+        $columns = collect($settings->documentColumns())->reject(fn (string $column): bool => $column === 'image')->values();
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Pedido');

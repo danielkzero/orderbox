@@ -3,6 +3,20 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Normalização das colunas do documento
+
+### Correção
+
+Eliminada a dupla codificação JSON que fazia a lista inteira de colunas aparecer
+como um único cabeçalho e ocultava os itens.
+
+### Impactos
+
+- migration repara configurações já gravadas;
+- model aceita valores legados simples ou duplamente codificados;
+- criação de configuração não reutiliza atributos já serializados;
+- PDF, tela, impressão e Excel usam a mesma lista normalizada.
+
 ## 2026-06-19 — Ajuste de largura do PDF de pedido
 
 ### Funcionalidade

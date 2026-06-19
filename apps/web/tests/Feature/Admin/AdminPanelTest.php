@@ -585,6 +585,13 @@ class AdminPanelTest extends TestCase
         $this->assertFalse(app(OrderDocumentService::class)->usesLandscape($documentSettings));
         $documentSettings->update(['columns' => OrderDocumentSetting::DEFAULT_COLUMNS]);
         $this->assertTrue(app(OrderDocumentService::class)->usesLandscape($documentSettings->refresh()));
+        $documentSettings->setRawAttributes([
+            ...$documentSettings->getAttributes(),
+            'columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
+            'print_columns' => json_encode(json_encode(OrderDocumentSetting::DEFAULT_COLUMNS)),
+        ]);
+        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->documentColumns());
+        $this->assertSame(OrderDocumentSetting::DEFAULT_COLUMNS, $documentSettings->printColumns());
         $this->actingAs($this->admin)->put(route('orders.print-settings.update', $order), [
             'print_columns' => ['sequence', 'sku', 'name', 'quantity', 'total'],
             'print_image_size' => 'small',

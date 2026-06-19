@@ -1,6 +1,6 @@
 @php
-    $documentColumns = collect($settings->columns ?: \App\Models\OrderDocumentSetting::DEFAULT_COLUMNS);
-    $printColumns = collect($settings->print_columns ?: $documentColumns);
+    $documentColumns = collect($settings->documentColumns());
+    $printColumns = collect($settings->printColumns());
     $renderColumns = $pdfMode ? $documentColumns : $documentColumns->merge($printColumns)->unique()->values();
     $printMargin = match ($settings->print_margin) {
         'none' => '0',
@@ -231,7 +231,7 @@
                                 <h3 class="setting-title">Detalhes do produto</h3>
                                 @foreach (['sequence', 'image', 'sku', 'name', 'quantity', 'unit', 'available_stock'] as $column)
                                     <label class="check">
-                                        <input type="checkbox" name="columns[]" value="{{ $column }}" data-column-toggle="{{ $column }}" @checked(in_array($column, $settings->columns, true))>
+                                        <input type="checkbox" name="columns[]" value="{{ $column }}" data-column-toggle="{{ $column }}" @checked($documentColumns->contains($column))>
                                         {{ $columnLabels[$column] }}
                                     </label>
                                 @endforeach
@@ -248,7 +248,7 @@
                                 <h3 class="setting-title">Preços e subtotais</h3>
                                 @foreach (['table_price', 'discounts', 'unit_price', 'total'] as $column)
                                     <label class="check">
-                                        <input type="checkbox" name="columns[]" value="{{ $column }}" data-column-toggle="{{ $column }}" @checked(in_array($column, $settings->columns, true))>
+                                        <input type="checkbox" name="columns[]" value="{{ $column }}" data-column-toggle="{{ $column }}" @checked($documentColumns->contains($column))>
                                         {{ $columnLabels[$column] }}
                                     </label>
                                 @endforeach
@@ -299,14 +299,14 @@
                                         <thead>
                                             <tr>
                                                 @foreach (\App\Models\OrderDocumentSetting::AVAILABLE_COLUMNS as $column)
-                                                    <th data-preview-column="{{ $column }}" @style(['display:none' => ! in_array($column, $settings->columns, true)])>{{ $columnLabels[$column] }}</th>
+                                                    <th data-preview-column="{{ $column }}" @style(['display:none' => ! $documentColumns->contains($column)])>{{ $columnLabels[$column] }}</th>
                                                 @endforeach
                                             </tr>
                                         </thead>
                                         <tbody>
                                             <tr>
                                                 @foreach (\App\Models\OrderDocumentSetting::AVAILABLE_COLUMNS as $column)
-                                                    <td data-preview-column="{{ $column }}" @style(['display:none' => ! in_array($column, $settings->columns, true)])>
+                                                    <td data-preview-column="{{ $column }}" @style(['display:none' => ! $documentColumns->contains($column)])>
                                                         @if ($column === 'sequence')
                                                             1
                                                         @elseif ($column === 'image')

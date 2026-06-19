@@ -143,7 +143,7 @@ class OrderActionController extends Controller
 
         $setting = OrderDocumentSetting::query()->firstOrCreate(
             ['company_id' => $request->user()->company_id],
-            OrderDocumentSetting::defaults($request->user()->company_id)->getAttributes(),
+            OrderDocumentSetting::defaultAttributes($request->user()->company_id),
         );
         $setting->update($data);
         $audit->record($request->user(), 'UpdateOrderPrintSetting', $setting, null, $setting->toArray());

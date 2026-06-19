@@ -40,3 +40,6 @@ PDF, anexo de e-mail e exportação Excel do pedido.
   do documento, evitando margem duplicada;
 - a impressão usa exclusivamente a margem configurada;
 - a configuração não altera os valores do pedido.
+- `columns` e `print_columns` devem armazenar arrays JSON, nunca uma string que
+  contenha outro JSON; valores legados são normalizados na leitura e por
+  migration.

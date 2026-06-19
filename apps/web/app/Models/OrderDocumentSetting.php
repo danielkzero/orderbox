@@ -86,7 +86,12 @@ class OrderDocumentSetting extends Model
 
     public static function defaults(int $companyId): self
     {
-        return new self([
+        return new self(self::defaultAttributes($companyId));
+    }
+
+    public static function defaultAttributes(int $companyId): array
+    {
+        return [
             'company_id' => $companyId,
             'columns' => self::DEFAULT_COLUMNS,
             'print_columns' => self::DEFAULT_COLUMNS,
@@ -108,7 +113,42 @@ class OrderDocumentSetting extends Model
             'print_total_weight' => false,
             'show_total' => true,
             'print_total' => true,
-        ]);
+        ];
+    }
+
+    public function documentColumns(): array
+    {
+        return $this->normalizeColumns($this->columns, self::DEFAULT_COLUMNS);
+    }
+
+    public function printColumns(): array
+    {
+        return $this->normalizeColumns($this->print_columns, $this->documentColumns());
+    }
+
+    private function normalizeColumns(mixed $value, array $fallback): array
+    {
+        for ($attempt = 0; $attempt < 3 && is_string($value); $attempt++) {
+            $decoded = json_decode($value, true);
+
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return $fallback;
+            }
+
+            $value = $decoded;
+        }
+
+        if (! is_array($value)) {
+            return $fallback;
+        }
+
+        $columns = collect($value)
+            ->filter(fn ($column): bool => is_string($column) && in_array($column, self::AVAILABLE_COLUMNS, true))
+            ->unique()
+            ->values()
+            ->all();
+
+        return count($columns) >= 3 ? $columns : $fallback;
     }
 
     public function company(): BelongsTo
