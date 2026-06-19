@@ -409,6 +409,8 @@ Na lista de pedidos:
 - a barra do documento oferece Imprimir, Download PDF e Download Excel;
 - `Configurar modelo do pedido` abre um modal para escolher colunas, tamanho de
   foto, ordenação, informações gerais e totais, com pré-visualização interativa;
+- `Configurar impressão` abre um modal independente para definir colunas, blocos,
+  totais, tamanho da foto e margem usados somente pelo comando Imprimir;
 - `E-mail` envia o PDF aos e-mails ativos do cliente;
 - `WhatsApp` abre a conversa com um link temporário para o PDF;
 - `Outros` reúne histórico de envios, duplicação e cancelamento;

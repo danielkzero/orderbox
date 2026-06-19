@@ -62,4 +62,5 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [x] Restringir tabelas visíveis por representante sem substituir regras comerciais.
 - [x] Criar documento, PDF, e-mail, WhatsApp, histórico e duplicação de pedidos.
 - [x] Criar exportação Excel e modelo configurável de pedido por empresa.
+- [x] Separar configuração de impressão e corrigir margem duplicada do PDF.
 - [ ] Expor formas e prazos no contrato de sincronização Mobile.

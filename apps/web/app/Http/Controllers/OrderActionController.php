@@ -109,6 +109,47 @@ class OrderActionController extends Controller
         return back()->with('status', 'Modelo do pedido atualizado.');
     }
 
+    public function updatePrintSettings(Request $request, Order $order, AuditService $audit): RedirectResponse
+    {
+        $this->authorize($request, $order);
+        abort_unless($request->user()->isAdministrative(), 403);
+
+        $data = $request->validate([
+            'print_columns' => ['required', 'array', 'min:3'],
+            'print_columns.*' => ['required', 'string', Rule::in(OrderDocumentSetting::AVAILABLE_COLUMNS)],
+            'print_image_size' => ['required', Rule::in(['small', 'medium', 'large'])],
+            'print_margin' => ['required', Rule::in(['none', 'narrow', 'standard'])],
+            'print_customer_address' => ['sometimes', 'boolean'],
+            'print_commercial_terms' => ['sometimes', 'boolean'],
+            'print_notes' => ['sometimes', 'boolean'],
+            'print_subtotal' => ['sometimes', 'boolean'],
+            'print_total_quantity' => ['sometimes', 'boolean'],
+            'print_total_weight' => ['sometimes', 'boolean'],
+            'print_total' => ['sometimes', 'boolean'],
+        ]);
+
+        foreach ([
+            'print_customer_address',
+            'print_commercial_terms',
+            'print_notes',
+            'print_subtotal',
+            'print_total_quantity',
+            'print_total_weight',
+            'print_total',
+        ] as $field) {
+            $data[$field] = $request->boolean($field);
+        }
+
+        $setting = OrderDocumentSetting::query()->firstOrCreate(
+            ['company_id' => $request->user()->company_id],
+            OrderDocumentSetting::defaults($request->user()->company_id)->getAttributes(),
+        );
+        $setting->update($data);
+        $audit->record($request->user(), 'UpdateOrderPrintSetting', $setting, null, $setting->toArray());
+
+        return back()->with('status', 'Configuração de impressão atualizada.');
+    }
+
     public function email(Request $request, Order $order, AuditService $audit): RedirectResponse
     {
         $this->authorize($request, $order);

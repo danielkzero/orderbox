@@ -41,28 +41,46 @@ class OrderDocumentSetting extends Model
     protected $fillable = [
         'company_id',
         'columns',
+        'print_columns',
         'image_size',
+        'print_image_size',
         'item_order',
+        'print_margin',
         'show_customer_address',
+        'print_customer_address',
         'show_commercial_terms',
+        'print_commercial_terms',
         'show_notes',
+        'print_notes',
         'show_subtotal',
+        'print_subtotal',
         'show_total_quantity',
+        'print_total_quantity',
         'show_total_weight',
+        'print_total_weight',
         'show_total',
+        'print_total',
     ];
 
     protected function casts(): array
     {
         return [
             'columns' => 'array',
+            'print_columns' => 'array',
             'show_customer_address' => 'boolean',
+            'print_customer_address' => 'boolean',
             'show_commercial_terms' => 'boolean',
+            'print_commercial_terms' => 'boolean',
             'show_notes' => 'boolean',
+            'print_notes' => 'boolean',
             'show_subtotal' => 'boolean',
+            'print_subtotal' => 'boolean',
             'show_total_quantity' => 'boolean',
+            'print_total_quantity' => 'boolean',
             'show_total_weight' => 'boolean',
+            'print_total_weight' => 'boolean',
             'show_total' => 'boolean',
+            'print_total' => 'boolean',
         ];
     }
 
@@ -71,15 +89,25 @@ class OrderDocumentSetting extends Model
         return new self([
             'company_id' => $companyId,
             'columns' => self::DEFAULT_COLUMNS,
+            'print_columns' => self::DEFAULT_COLUMNS,
             'image_size' => 'medium',
+            'print_image_size' => 'medium',
             'item_order' => 'insertion_asc',
+            'print_margin' => 'standard',
             'show_customer_address' => true,
+            'print_customer_address' => true,
             'show_commercial_terms' => true,
+            'print_commercial_terms' => true,
             'show_notes' => true,
+            'print_notes' => true,
             'show_subtotal' => true,
+            'print_subtotal' => true,
             'show_total_quantity' => false,
+            'print_total_quantity' => false,
             'show_total_weight' => false,
+            'print_total_weight' => false,
             'show_total' => true,
+            'print_total' => true,
         ]);
     }
 

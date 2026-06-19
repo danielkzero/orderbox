@@ -3,6 +3,30 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Configuração de impressão e margem do PDF
+
+### Funcionalidade
+
+Separação entre o modelo digital do pedido e as opções usadas na impressão do
+navegador.
+
+### Impactos
+
+- PDF sem margem padrão adicional do DomPDF;
+- único espaçamento interno controlado pelo documento;
+- colunas e blocos específicos para impressão;
+- tamanho de foto específico;
+- margens sem margem, estreita ou padrão;
+- pré-visualização própria;
+- configurações restritas a Admin e Manager.
+
+### Validação
+
+- persistência da configuração de impressão;
+- autorização;
+- renderização CSS de página;
+- PDF, testes completos, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Excel e modelo configurável do pedido
 
 ### Funcionalidade

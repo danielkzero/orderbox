@@ -110,6 +110,14 @@ Pedidos não podem ser excluídos fisicamente pela interface.
 - o Excel é gerado em formato `.xlsx`;
 - representantes podem baixar e imprimir, mas não alterar o modelo.
 
+### Configuração de impressão
+
+- Admin e Manager definem separadamente o que aparece na impressão do navegador;
+- colunas, blocos gerais, totais, tamanho da foto e margem podem divergir do
+  modelo digital;
+- alterar a impressão não modifica PDF, Excel ou anexo de e-mail;
+- o PDF desativa a margem padrão do gerador para evitar margem dupla.
+
 ---
 
 ## Regras Gerais

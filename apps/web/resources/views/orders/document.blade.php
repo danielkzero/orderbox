@@ -1,3 +1,13 @@
+@php
+    $documentColumns = collect($settings->columns ?: \App\Models\OrderDocumentSetting::DEFAULT_COLUMNS);
+    $printColumns = collect($settings->print_columns ?: $documentColumns);
+    $renderColumns = $pdfMode ? $documentColumns : $documentColumns->merge($printColumns)->unique()->values();
+    $printMargin = match ($settings->print_margin) {
+        'none' => '0',
+        'narrow' => '8mm',
+        default => '15mm',
+    };
+@endphp
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -5,6 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $order->order_number }}</title>
     <style>
+        @page { size: A4; margin: {{ $pdfMode ? '0' : $printMargin }}; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #f3f4f6; color: #1f2937; font-family: DejaVu Sans, sans-serif; font-size: 12px; }
         .page { width: 210mm; min-height: 297mm; margin: 20px auto; padding: 18mm; background: #fff; }
@@ -40,6 +51,9 @@
         .check { display: flex; align-items: center; gap: 8px; margin: 9px 0; color: #374151; }
         .field { width: 100%; margin-top: 6px; padding: 9px 10px; border: 1px solid #d1d5db; border-radius: 7px; background: #fff; }
         .preview { margin-top: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; }
+        .screen-column-hidden, .screen-block-hidden, .screen-row-hidden { display: none; }
+        .pdf-mode { background: #fff; }
+        .pdf-mode .page { margin: 0; padding: 12mm; }
         @media (max-width: 760px) {
             .toolbar { width: auto; margin: 12px; flex-direction: column; }
             .toolbar-group { flex-wrap: wrap; }
@@ -49,11 +63,18 @@
         @media print {
             body { background: #fff; }
             .toolbar { display: none; }
-            .page { margin: 0; box-shadow: none; }
+            .page { width: auto; min-height: 0; margin: 0; padding: 0; box-shadow: none; }
+            .print-hidden { display: none !important; }
+            .screen-column-hidden { display: table-cell !important; }
+            .screen-block-hidden { display: block !important; }
+            .screen-row-hidden { display: table-row !important; }
+            .print-image-small .product-image { width: 34px; height: 34px; }
+            .print-image-medium .product-image { width: 54px; height: 54px; }
+            .print-image-large .product-image { width: 78px; height: 78px; }
         }
     </style>
 </head>
-<body>
+<body class="{{ $pdfMode ? 'pdf-mode' : '' }}">
     @unless ($pdfMode)
         <div class="toolbar">
             <div class="toolbar-group">
@@ -63,11 +84,14 @@
                 <a class="button" href="{{ route('orders.excel', $order) }}">Download Excel</a>
             </div>
             @if (auth()->user()->isAdministrative())
-                <button class="button button-primary" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar modelo do pedido</button>
+                <div class="toolbar-group">
+                    <button class="button" type="button" onclick="document.getElementById('print-settings').showModal()">Configurar impressão</button>
+                    <button class="button button-primary" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar modelo do pedido</button>
+                </div>
             @endif
         </div>
     @endunless
-    <main class="page">
+    <main class="page print-image-{{ $settings->print_image_size ?: $settings->image_size }}">
         <header class="header">
             <div>
                 <div class="brand">OrderBox</div>
@@ -86,13 +110,16 @@
                 <strong>{{ $order->customer->trade_name ?: $order->customer->corporate_name }}</strong><br>
                 {{ $order->customer->corporate_name }}<br>
                 {{ $order->customer->document }}<br>
-                @if ($settings->show_customer_address && ($address = $order->customer->addresses->sortByDesc('default_address')->first()))
-                    {{ $address->street }}, {{ $address->number }} {{ $address->complement }}<br>
-                    {{ $address->district }} — {{ $address->city }}/{{ $address->state }}
+                @if (($pdfMode ? $settings->show_customer_address : ($settings->show_customer_address || $settings->print_customer_address))
+                    && ($address = $order->customer->addresses->sortByDesc('default_address')->first()))
+                    <span class="{{ ! $settings->show_customer_address ? 'screen-block-hidden' : '' }} {{ ! $settings->print_customer_address ? 'print-hidden' : '' }}">
+                        {{ $address->street }}, {{ $address->number }} {{ $address->complement }}<br>
+                        {{ $address->district }} — {{ $address->city }}/{{ $address->state }}
+                    </span>
                 @endif
             </div>
-            @if ($settings->show_commercial_terms)
-                <div class="column">
+            @if ($pdfMode ? $settings->show_commercial_terms : ($settings->show_commercial_terms || $settings->print_commercial_terms))
+                <div class="column {{ ! $settings->show_commercial_terms ? 'screen-block-hidden' : '' }} {{ ! $settings->print_commercial_terms ? 'print-hidden' : '' }}">
                     <div class="section-title">Condições comerciais</div>
                     Representante: {{ $order->salesRepresentative->user->name }}<br>
                     Tabela: {{ $order->priceTable->name }}<br>
@@ -106,19 +133,23 @@
         <table>
             <thead>
                 <tr>
-                    @foreach ($settings->columns as $column)
-                        <th class="{{ in_array($column, ['quantity', 'available_stock', 'table_price', 'unit_price', 'total'], true) ? 'right' : '' }}">{{ $columnLabels[$column] ?? $column }}</th>
+                    @foreach ($renderColumns as $column)
+                        <th class="{{ in_array($column, ['quantity', 'available_stock', 'table_price', 'unit_price', 'total'], true) ? 'right' : '' }} {{ ! $documentColumns->contains($column) ? 'screen-column-hidden' : '' }} {{ ! $printColumns->contains($column) ? 'print-hidden' : '' }}">{{ $columnLabels[$column] ?? $column }}</th>
                     @endforeach
                 </tr>
             </thead>
             <tbody>
                 @foreach ($items as $index => $item)
                     <tr>
-                        @foreach ($settings->columns as $column)
+                        @foreach ($renderColumns as $column)
+                            @php
+                                $columnClass = (! $documentColumns->contains($column) ? 'screen-column-hidden ' : '')
+                                    .(! $printColumns->contains($column) ? 'print-hidden' : '');
+                            @endphp
                             @if ($column === 'sequence')
-                                <td>{{ $index + 1 }}</td>
+                                <td class="{{ $columnClass }}">{{ $index + 1 }}</td>
                             @elseif ($column === 'image')
-                                <td>
+                                <td class="{{ $columnClass }}">
                                     @if ($item->product->imageSrc())
                                         <img class="product-image product-image-{{ $settings->image_size }}" src="{{ $item->product->imageSrc() }}" alt="">
                                     @else
@@ -126,23 +157,23 @@
                                     @endif
                                 </td>
                             @elseif ($column === 'sku')
-                                <td>{{ $item->product->sku }}</td>
+                                <td class="{{ $columnClass }}">{{ $item->product->sku }}</td>
                             @elseif ($column === 'name')
-                                <td>{{ $item->product->name }}</td>
+                                <td class="{{ $columnClass }}">{{ $item->product->name }}</td>
                             @elseif ($column === 'quantity')
-                                <td class="right">{{ number_format((float) $item->quantity, 3, ',', '.') }}</td>
+                                <td class="right {{ $columnClass }}">{{ number_format((float) $item->quantity, 3, ',', '.') }}</td>
                             @elseif ($column === 'unit')
-                                <td>{{ $item->product->unit?->code ?? '-' }}</td>
+                                <td class="{{ $columnClass }}">{{ $item->product->unit?->code ?? '-' }}</td>
                             @elseif ($column === 'available_stock')
-                                <td class="right">{{ number_format((float) ($item->product->available_stock ?? 0), 3, ',', '.') }}</td>
+                                <td class="right {{ $columnClass }}">{{ number_format((float) ($item->product->available_stock ?? 0), 3, ',', '.') }}</td>
                             @elseif ($column === 'table_price')
-                                <td class="right">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
+                                <td class="right {{ $columnClass }}">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
                             @elseif ($column === 'discounts')
-                                <td>{{ app(\App\Services\OrderDocumentService::class)->adjustmentSummary($item->discounts) ?: '-' }}</td>
+                                <td class="{{ $columnClass }}">{{ app(\App\Services\OrderDocumentService::class)->adjustmentSummary($item->discounts) ?: '-' }}</td>
                             @elseif ($column === 'unit_price')
-                                <td class="right">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
+                                <td class="right {{ $columnClass }}">R$ {{ number_format((float) $item->unit_price, 2, ',', '.') }}</td>
                             @elseif ($column === 'total')
-                                <td class="right">R$ {{ number_format((float) $item->total_amount, 2, ',', '.') }}</td>
+                                <td class="right {{ $columnClass }}">R$ {{ number_format((float) $item->total_amount, 2, ',', '.') }}</td>
                             @endif
                         @endforeach
                     </tr>
@@ -151,23 +182,25 @@
         </table>
 
         <table class="totals">
-            @if ($settings->show_total_quantity)
-                <tr><td>Quantidade total</td><td class="right">{{ number_format((float) $items->sum('quantity'), 3, ',', '.') }}</td></tr>
+            @if ($pdfMode ? $settings->show_total_quantity : ($settings->show_total_quantity || $settings->print_total_quantity))
+                <tr class="{{ ! $settings->show_total_quantity ? 'screen-row-hidden' : '' }} {{ ! $settings->print_total_quantity ? 'print-hidden' : '' }}"><td>Quantidade total</td><td class="right">{{ number_format((float) $items->sum('quantity'), 3, ',', '.') }}</td></tr>
             @endif
-            @if ($settings->show_total_weight)
-                <tr><td>Peso bruto total</td><td class="right">{{ number_format((float) $items->sum(fn ($item) => (float) $item->quantity * (float) ($item->product->weight_kg ?? 0)), 3, ',', '.') }} kg</td></tr>
+            @if ($pdfMode ? $settings->show_total_weight : ($settings->show_total_weight || $settings->print_total_weight))
+                <tr class="{{ ! $settings->show_total_weight ? 'screen-row-hidden' : '' }} {{ ! $settings->print_total_weight ? 'print-hidden' : '' }}"><td>Peso bruto total</td><td class="right">{{ number_format((float) $items->sum(fn ($item) => (float) $item->quantity * (float) ($item->product->weight_kg ?? 0)), 3, ',', '.') }} kg</td></tr>
             @endif
-            @if ($settings->show_subtotal)
-                <tr><td>Subtotal</td><td class="right">R$ {{ number_format((float) $order->subtotal, 2, ',', '.') }}</td></tr>
+            @if ($pdfMode ? $settings->show_subtotal : ($settings->show_subtotal || $settings->print_subtotal))
+                <tr class="{{ ! $settings->show_subtotal ? 'screen-row-hidden' : '' }} {{ ! $settings->print_subtotal ? 'print-hidden' : '' }}"><td>Subtotal</td><td class="right">R$ {{ number_format((float) $order->subtotal, 2, ',', '.') }}</td></tr>
             @endif
-            @if ($settings->show_total)
-                <tr class="grand-total"><td>Total</td><td class="right">R$ {{ number_format((float) $order->total_amount, 2, ',', '.') }}</td></tr>
+            @if ($pdfMode ? $settings->show_total : ($settings->show_total || $settings->print_total))
+                <tr class="grand-total {{ ! $settings->show_total ? 'screen-row-hidden' : '' }} {{ ! $settings->print_total ? 'print-hidden' : '' }}"><td>Total</td><td class="right">R$ {{ number_format((float) $order->total_amount, 2, ',', '.') }}</td></tr>
             @endif
         </table>
 
-        @if ($settings->show_notes && $order->notes)
-            <div class="section-title">Observações</div>
-            <p>{{ $order->notes }}</p>
+        @if (($pdfMode ? $settings->show_notes : ($settings->show_notes || $settings->print_notes)) && $order->notes)
+            <div class="{{ ! $settings->show_notes ? 'screen-block-hidden' : '' }} {{ ! $settings->print_notes ? 'print-hidden' : '' }}">
+                <div class="section-title">Observações</div>
+                <p>{{ $order->notes }}</p>
+            </div>
         @endif
     </main>
 
@@ -306,6 +339,138 @@
                     </div>
                 </form>
             </dialog>
+            <dialog id="print-settings">
+                <form method="POST" action="{{ route('orders.print-settings.update', $order) }}">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-header">
+                        <div>
+                            <strong style="font-size: 17px;">Configuração de impressão</strong>
+                            <div class="muted" style="margin-top: 4px;">Escolha o que será enviado à impressora pelo navegador.</div>
+                        </div>
+                        <button class="button" type="button" onclick="document.getElementById('print-settings').close()">Fechar</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="settings-grid">
+                            <section>
+                                <h3 class="setting-title">Detalhes do produto</h3>
+                                @foreach (['sequence', 'image', 'sku', 'name', 'quantity', 'unit', 'available_stock'] as $column)
+                                    <label class="check">
+                                        <input type="checkbox" name="print_columns[]" value="{{ $column }}" data-print-column-toggle="{{ $column }}" @checked($printColumns->contains($column))>
+                                        {{ $columnLabels[$column] }}
+                                    </label>
+                                @endforeach
+                                <label class="check" style="display:block; margin-top: 16px;">
+                                    Tamanho da foto impressa
+                                    <select class="field" name="print_image_size" id="print-image-size">
+                                        <option value="small" @selected($settings->print_image_size === 'small')>Pequena</option>
+                                        <option value="medium" @selected(($settings->print_image_size ?: 'medium') === 'medium')>Média</option>
+                                        <option value="large" @selected($settings->print_image_size === 'large')>Grande</option>
+                                    </select>
+                                </label>
+                            </section>
+                            <section>
+                                <h3 class="setting-title">Preços e subtotais</h3>
+                                @foreach (['table_price', 'discounts', 'unit_price', 'total'] as $column)
+                                    <label class="check">
+                                        <input type="checkbox" name="print_columns[]" value="{{ $column }}" data-print-column-toggle="{{ $column }}" @checked($printColumns->contains($column))>
+                                        {{ $columnLabels[$column] }}
+                                    </label>
+                                @endforeach
+                                <h3 class="setting-title" style="margin-top: 22px;">Informações gerais</h3>
+                                @foreach ([
+                                    'print_customer_address' => 'Endereço do cliente',
+                                    'print_commercial_terms' => 'Condições comerciais',
+                                    'print_notes' => 'Observações',
+                                ] as $field => $label)
+                                    <label class="check">
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <input type="checkbox" name="{{ $field }}" value="1" @checked($settings->{$field})>
+                                        {{ $label }}
+                                    </label>
+                                @endforeach
+                            </section>
+                            <section>
+                                <h3 class="setting-title">Totais e página</h3>
+                                @foreach ([
+                                    'print_total_quantity' => 'Quantidade total',
+                                    'print_total_weight' => 'Peso bruto total',
+                                    'print_subtotal' => 'Subtotal',
+                                    'print_total' => 'Valor total',
+                                ] as $field => $label)
+                                    <label class="check">
+                                        <input type="hidden" name="{{ $field }}" value="0">
+                                        <input type="checkbox" name="{{ $field }}" value="1" @checked($settings->{$field})>
+                                        {{ $label }}
+                                    </label>
+                                @endforeach
+                                <label class="check" style="display:block; margin-top: 22px;">
+                                    Margem da impressão
+                                    <select class="field" name="print_margin">
+                                        <option value="none" @selected($settings->print_margin === 'none')>Sem margem</option>
+                                        <option value="narrow" @selected($settings->print_margin === 'narrow')>Estreita</option>
+                                        <option value="standard" @selected(($settings->print_margin ?: 'standard') === 'standard')>Padrão</option>
+                                    </select>
+                                </label>
+                            </section>
+                        </div>
+                        <div class="preview">
+                            <strong>Pré-visualização da impressão</strong>
+                            <p class="muted">As colunas selecionadas abaixo são independentes do PDF e do Excel.</p>
+                            @if ($previewItem = $items->first())
+                                <div style="overflow-x:auto; margin-top: 12px;">
+                                    <table>
+                                        <thead>
+                                            <tr>
+                                                @foreach (\App\Models\OrderDocumentSetting::AVAILABLE_COLUMNS as $column)
+                                                    <th data-print-preview-column="{{ $column }}" @style(['display:none' => ! $printColumns->contains($column)])>{{ $columnLabels[$column] }}</th>
+                                                @endforeach
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                @foreach (\App\Models\OrderDocumentSetting::AVAILABLE_COLUMNS as $column)
+                                                    <td data-print-preview-column="{{ $column }}" @style(['display:none' => ! $printColumns->contains($column)])>
+                                                        @if ($column === 'sequence')
+                                                            1
+                                                        @elseif ($column === 'image')
+                                                            @if ($previewItem->product->imageSrc())
+                                                                <img id="print-image-preview" class="product-image product-image-{{ $settings->print_image_size ?: 'medium' }}" src="{{ $previewItem->product->imageSrc() }}" alt="">
+                                                            @else
+                                                                -
+                                                            @endif
+                                                        @elseif ($column === 'sku')
+                                                            {{ $previewItem->product->sku }}
+                                                        @elseif ($column === 'name')
+                                                            {{ $previewItem->product->name }}
+                                                        @elseif ($column === 'quantity')
+                                                            {{ number_format((float) $previewItem->quantity, 3, ',', '.') }}
+                                                        @elseif ($column === 'unit')
+                                                            {{ $previewItem->product->unit?->code ?? '-' }}
+                                                        @elseif ($column === 'available_stock')
+                                                            {{ number_format((float) ($previewItem->product->available_stock ?? 0), 3, ',', '.') }}
+                                                        @elseif (in_array($column, ['table_price', 'unit_price'], true))
+                                                            R$ {{ number_format((float) $previewItem->unit_price, 2, ',', '.') }}
+                                                        @elseif ($column === 'discounts')
+                                                            {{ app(\App\Services\OrderDocumentService::class)->adjustmentSummary($previewItem->discounts) ?: '-' }}
+                                                        @elseif ($column === 'total')
+                                                            R$ {{ number_format((float) $previewItem->total_amount, 2, ',', '.') }}
+                                                        @endif
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="button" type="button" onclick="document.getElementById('print-settings').close()">Cancelar</button>
+                        <button class="button button-primary" type="submit">Salvar impressão</button>
+                    </div>
+                </form>
+            </dialog>
             <script>
                 document.querySelectorAll('[data-column-toggle]').forEach((checkbox) => {
                     checkbox.addEventListener('change', () => {
@@ -316,6 +481,19 @@
 
                 document.getElementById('document-image-size')?.addEventListener('change', (event) => {
                     const image = document.getElementById('document-image-preview');
+                    if (!image) return;
+                    image.className = `product-image product-image-${event.target.value}`;
+                });
+
+                document.querySelectorAll('[data-print-column-toggle]').forEach((checkbox) => {
+                    checkbox.addEventListener('change', () => {
+                        document.querySelectorAll(`[data-print-preview-column="${checkbox.dataset.printColumnToggle}"]`)
+                            .forEach((cell) => cell.style.display = checkbox.checked ? '' : 'none');
+                    });
+                });
+
+                document.getElementById('print-image-size')?.addEventListener('change', (event) => {
+                    const image = document.getElementById('print-image-preview');
                     if (!image) return;
                     image.className = `product-image product-image-${event.target.value}`;
                 });

@@ -555,6 +555,7 @@ class AdminPanelTest extends TestCase
             ->assertSee($order->order_number)
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
             ->assertSee('Download Excel')
+            ->assertSee('Configurar impressão')
             ->assertSee('Configurar modelo do pedido');
         $this->actingAs($this->admin)->put(route('orders.document-settings.update', $order), [
             'columns' => ['sequence', 'sku', 'name', 'quantity', 'unit_price', 'total'],
@@ -575,6 +576,29 @@ class AdminPanelTest extends TestCase
             'show_notes' => false,
             'show_total_quantity' => true,
         ]);
+        $this->actingAs($this->admin)->put(route('orders.print-settings.update', $order), [
+            'print_columns' => ['sequence', 'sku', 'name', 'quantity', 'total'],
+            'print_image_size' => 'small',
+            'print_margin' => 'none',
+            'print_customer_address' => '1',
+            'print_commercial_terms' => '0',
+            'print_notes' => '0',
+            'print_subtotal' => '0',
+            'print_total_quantity' => '1',
+            'print_total_weight' => '0',
+            'print_total' => '1',
+        ])->assertRedirect();
+        $this->assertDatabaseHas('order_document_settings', [
+            'company_id' => $this->admin->company_id,
+            'print_image_size' => 'small',
+            'print_margin' => 'none',
+            'print_commercial_terms' => false,
+            'print_total_quantity' => true,
+        ]);
+        $this->actingAs($this->admin)->get(route('orders.show', $order))
+            ->assertOk()
+            ->assertSee('@page { size: A4; margin: 0; }', false)
+            ->assertSee('Configuração de impressão');
         $this->actingAs($this->admin)->get(route('orders.pdf', $order))
             ->assertOk()
             ->assertHeader('content-type', 'application/pdf')
@@ -758,12 +782,20 @@ class AdminPanelTest extends TestCase
             ->get(route('orders.show', $representativeOrder))
             ->assertOk()
             ->assertSee('Download Excel')
+            ->assertDontSee('Configurar impressão')
             ->assertDontSee('Configurar modelo do pedido');
         $this->actingAs($representativeUser)
             ->put(route('orders.document-settings.update', $representativeOrder), [
                 'columns' => ['sku', 'name', 'total'],
                 'image_size' => 'medium',
                 'item_order' => 'insertion_asc',
+            ])
+            ->assertForbidden();
+        $this->actingAs($representativeUser)
+            ->put(route('orders.print-settings.update', $representativeOrder), [
+                'print_columns' => ['sku', 'name', 'total'],
+                'print_image_size' => 'medium',
+                'print_margin' => 'standard',
             ])
             ->assertForbidden();
     }

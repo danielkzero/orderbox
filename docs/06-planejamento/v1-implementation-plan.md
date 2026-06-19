@@ -120,6 +120,7 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 - tabelas de preço visíveis por representante;
 - visualização, PDF, e-mail, WhatsApp, histórico e duplicação de pedidos;
 - exportação Excel e configuração corporativa do documento do pedido;
+- configuração independente da impressão e margem única no PDF;
 - criação no Admin e Mobile;
 - edição e remoção de Draft;
 - envio e numeração;

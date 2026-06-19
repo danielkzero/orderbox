@@ -14,15 +14,25 @@ class OrderDocumentSettingFactory extends Factory
         return [
             'company_id' => Company::factory(),
             'columns' => OrderDocumentSetting::DEFAULT_COLUMNS,
+            'print_columns' => OrderDocumentSetting::DEFAULT_COLUMNS,
             'image_size' => 'medium',
+            'print_image_size' => 'medium',
             'item_order' => 'insertion_asc',
+            'print_margin' => 'standard',
             'show_customer_address' => true,
+            'print_customer_address' => true,
             'show_commercial_terms' => true,
+            'print_commercial_terms' => true,
             'show_notes' => true,
+            'print_notes' => true,
             'show_subtotal' => true,
+            'print_subtotal' => true,
             'show_total_quantity' => false,
+            'print_total_quantity' => false,
             'show_total_weight' => false,
+            'print_total_weight' => false,
             'show_total' => true,
+            'print_total' => true,
         ];
     }
 }

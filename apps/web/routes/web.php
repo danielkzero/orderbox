@@ -61,6 +61,7 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/orders/{order}/pdf', [OrderActionController::class, 'pdf'])->name('orders.pdf');
     Route::get('/orders/{order}/excel', [OrderActionController::class, 'excel'])->middleware('throttle:export')->name('orders.excel');
     Route::put('/orders/{order}/document-settings', [OrderActionController::class, 'updateDocumentSettings'])->middleware('throttle:sensitive-write')->name('orders.document-settings.update');
+    Route::put('/orders/{order}/print-settings', [OrderActionController::class, 'updatePrintSettings'])->middleware('throttle:sensitive-write')->name('orders.print-settings.update');
     Route::post('/orders/{order}/email', [OrderActionController::class, 'email'])->middleware('throttle:sensitive-write')->name('orders.email');
     Route::post('/orders/{order}/whatsapp', [OrderActionController::class, 'whatsapp'])->middleware('throttle:sensitive-write')->name('orders.whatsapp');
     Route::get('/orders/{order}/history', [OrderActionController::class, 'history'])->name('orders.history');
