@@ -51,6 +51,8 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 
 - PriceTables
 - ProductPrices
+- PaymentMethods
+- PaymentTerms
 - Regions
 - RegionMunicipalities
 
@@ -95,6 +97,8 @@ ERP
 - 1:N Units
 - 1:N Products
 - 1:N PriceTables
+- 1:N PaymentMethods
+- 1:N PaymentTerms
 - 1:N Orders
 - 1:N SalesRepresentatives
 - 1:N AuditLogs
@@ -244,6 +248,8 @@ Evitar remoção física de registros.
 
 - PriceTables
 - ProductPrices
+- PaymentMethods
+- PaymentTerms
 
 ### Fase 4
 

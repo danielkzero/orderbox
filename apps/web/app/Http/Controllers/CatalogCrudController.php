@@ -10,6 +10,8 @@ use App\Models\CustomerAddress;
 use App\Models\CustomerContact;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\PaymentMethod;
+use App\Models\PaymentTerm;
 use App\Models\PriceTable;
 use App\Models\Product;
 use App\Models\ProductPrice;
@@ -189,6 +191,18 @@ class CatalogCrudController extends Controller
                 ->get()
                 ->sortBy('user.name'),
             'priceTables' => PriceTable::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
+            'paymentMethods' => PaymentMethod::query()
+                ->where('company_id', $companyId)
+                ->where('active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
+            'paymentTerms' => PaymentTerm::query()
+                ->where('company_id', $companyId)
+                ->where('active', true)
+                ->orderBy('sort_order')
+                ->orderBy('name')
+                ->get(),
             'products' => Product::query()->with(['unit', 'prices'])->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'addressTypes' => CustomerAddress::query()
                 ->whereHas('customer', fn ($query) => $query->where('company_id', $companyId))
@@ -219,6 +233,24 @@ class CatalogCrudController extends Controller
 
         if ($resource === 'customers' && $request->has('document')) {
             $request->merge(['document' => BrazilianDocument::normalize($request->string('document')->toString())]);
+        }
+
+        if ($resource === 'payment-methods' && $request->has('code')) {
+            $request->merge(['code' => str($request->string('code')->toString())->lower()->slug()->toString()]);
+        }
+
+        if ($resource === 'payment-terms') {
+            $installmentDays = collect(preg_split('/[\s,;\/]+/', $request->string('installment_days_input')->toString()))
+                ->filter(fn ($day): bool => $day !== '')
+                ->map(fn ($day): int => (int) $day)
+                ->unique()
+                ->sort()
+                ->values()
+                ->all();
+            $request->merge([
+                'code' => trim($request->string('code')->toString()),
+                'installment_days' => $installmentDays,
+            ]);
         }
 
         return match ($resource) {
@@ -327,14 +359,30 @@ class CatalogCrudController extends Controller
                 'code' => ['required', 'string', 'max:50', Rule::unique('sales_representatives')->where('company_id', $companyId)->ignore($model)],
                 'active' => ['sometimes', 'boolean'],
             ]),
+            'payment-methods' => $request->validate([
+                'code' => ['required', 'string', 'max:50', Rule::unique('payment_methods')->where('company_id', $companyId)->ignore($model)],
+                'name' => ['required', 'string', 'max:100', Rule::unique('payment_methods')->where('company_id', $companyId)->ignore($model)],
+                'description' => ['nullable', 'string'],
+                'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
+                'active' => ['sometimes', 'boolean'],
+            ]),
+            'payment-terms' => $request->validate([
+                'code' => ['required', 'string', 'max:50', Rule::unique('payment_terms')->where('company_id', $companyId)->ignore($model)],
+                'name' => ['required', 'string', 'max:100', Rule::unique('payment_terms')->where('company_id', $companyId)->ignore($model)],
+                'installment_days' => ['required', 'array', 'min:1'],
+                'installment_days.*' => ['integer', 'min:0', 'max:3650'],
+                'description' => ['nullable', 'string'],
+                'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
+                'active' => ['sometimes', 'boolean'],
+            ]),
             'orders' => $request->validate([
                 'customer_id' => ['required', Rule::exists('customers', 'id')->where('company_id', $companyId)->where('active', true)],
                 'sales_representative_id' => ['required', Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)->where('active', true)],
                 'price_table_id' => ['required', Rule::exists('price_tables', 'id')->where('company_id', $companyId)->where('active', true)],
                 'version' => [$model ? 'required' : 'nullable', 'integer', 'min:1'],
                 'order_date' => ['required', 'date'],
-                'payment_method' => ['required', 'in:boleto,avista,cartao'],
-                'payment_terms' => ['required', 'string', 'max:50'],
+                'payment_method' => ['required', Rule::exists('payment_methods', 'code')->where('company_id', $companyId)->where('active', true)],
+                'payment_terms' => ['required', Rule::exists('payment_terms', 'code')->where('company_id', $companyId)->where('active', true)],
                 'notes' => ['nullable', 'string'],
                 'items' => ['required', 'array', 'min:1'],
                 'items.*.product_id' => ['required', Rule::exists('products', 'id')->where('company_id', $companyId)->where('active', true)],
@@ -805,6 +853,8 @@ class CatalogCrudController extends Controller
             'units' => ['model' => Unit::class, 'label' => 'Unidade', 'index' => 'units.index'],
             'regions' => ['model' => Region::class, 'label' => 'Região', 'index' => 'regions.index'],
             'representatives' => ['model' => SalesRepresentative::class, 'label' => 'Representante', 'index' => 'representatives.index'],
+            'payment-methods' => ['model' => PaymentMethod::class, 'label' => 'Forma de pagamento', 'index' => 'payment-methods.index'],
+            'payment-terms' => ['model' => PaymentTerm::class, 'label' => 'Prazo de pagamento', 'index' => 'payment-terms.index'],
             'orders' => ['model' => Order::class, 'label' => 'Pedido', 'index' => 'orders.index'],
             default => abort(404),
         };

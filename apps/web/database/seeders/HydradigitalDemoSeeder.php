@@ -51,6 +51,7 @@ class HydradigitalDemoSeeder extends Seeder
             ]);
 
             $admin->update(['name' => 'Daniel', 'role' => 'Admin', 'active' => true]);
+            (new PaymentSettingsSeeder)->seedCompany($company);
 
             $regions = $this->seedRegions($company);
             [$manager, $representatives] = $this->seedUsers($company, $regions);
@@ -371,6 +372,8 @@ class HydradigitalDemoSeeder extends Seeder
                     'total_amount' => $subtotal,
                     'notes' => 'Pedido fictício para validação do fluxo comercial.',
                     'source' => $index % 2 === 0 ? 'Mobile' : 'Admin',
+                    'payment_method' => 'boleto',
+                    'payment_terms' => '15/30/45',
                     'order_date' => now()->subDays(5 - $index),
                     'sent_at' => $status === 'Sent' ? now()->subDays(5 - $index) : null,
                     'version' => 1,

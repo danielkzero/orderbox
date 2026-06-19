@@ -35,6 +35,8 @@ Possuem `company_id` obrigatório:
 - Units
 - Products
 - PriceTables
+- PaymentMethods
+- PaymentTerms
 - SalesRepresentatives
 - Orders
 - Devices
@@ -97,6 +99,8 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 | Products | `(company_id, sku)` único; `available_stock >= 0` quando informado |
 | PriceTables | `(company_id, name)` único |
 | ProductPrices | `(product_id, price_table_id, minimum_quantity)` único; `price > 0`; `minimum_quantity > 0` quando informada |
+| PaymentMethods | `(company_id, code)` único; `(company_id, name)` único |
+| PaymentTerms | `(company_id, code)` único; `(company_id, name)` único; `installment_days` não vazio |
 | SalesRepresentatives | `(company_id, user_id)` único; `(company_id, code)` único |
 | Orders | `(company_id, order_number)` único; `(company_id, client_reference)` único quando informado; `version >= 1`; valores não negativos |
 | OrderItems | `quantity > 0`; `unit_price >= 0`; `total_amount >= 0` |
@@ -137,6 +141,8 @@ Além de PKs, FKs e constraints únicas:
 | CustomerRepresentatives | `(sales_representative_id, customer_id)` |
 | Products | `(company_id, active, name)`, `(company_id, category_id)`, `(company_id, updated_at)` |
 | ProductPrices | `(price_table_id, product_id, minimum_quantity)` |
+| PaymentMethods | `(company_id, active, sort_order)` |
+| PaymentTerms | `(company_id, active, sort_order)` |
 | Orders | `(company_id, status, order_date)`, `(sales_representative_id, order_date)`, `(customer_id, order_date)`, `(company_id, updated_at)` |
 | AuditLogs | `(company_id, created_at)`, `(company_id, entity_type, entity_id)` |
 | AuthenticationSessions | `(company_id, user_id, channel)`, `(last_activity_at)`, `(revoked_at)` |
@@ -169,6 +175,7 @@ Devem ocorrer em uma única transação:
 5. SalesRepresentatives e CustomerRepresentatives
 6. Categories, Brands e Units
 7. Products, PriceTables e ProductPrices
-8. Orders e OrderItems
-9. Devices, SyncLogs, SyncOperations e SyncChanges
-10. AuditLogs
+8. PaymentMethods e PaymentTerms
+9. Orders e OrderItems
+10. Devices, SyncLogs, SyncOperations e SyncChanges
+11. AuditLogs

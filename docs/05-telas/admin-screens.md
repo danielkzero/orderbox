@@ -46,6 +46,15 @@ Representantes e Regiões são exibidos somente para Admin e Manager.
 Categorias, Marcas e Unidades são configurações do catálogo e não ocupam itens
 independentes no menu lateral.
 
+#### Pedidos
+
+- Pedidos
+- Formas de pagamento
+- Prazos
+
+Formas e prazos são administrados por Admin e Manager. Representantes utilizam
+as opções ativas diretamente no pedido.
+
 #### Configurações
 
 - Meu perfil
@@ -357,6 +366,8 @@ Consultar pedidos gerados pela operação.
 - Itens
 - Descontos
 - Totais
+- Forma de pagamento
+- Prazo de pagamento
 
 Para Admin e Manager, o representante é selecionado por autocomplete com busca
 por código, nome ou e-mail. A lista exibe no máximo oito correspondências por
@@ -368,6 +379,16 @@ próprio representante e não permite alteração.
 A origem não é exibida nem enviada pelo formulário Web. O servidor registra
 automaticamente `Web`; canais autenticados pela API registram a origem
 correspondente ao canal.
+
+### Formas de Pagamento
+
+Permite criar, editar e inativar opções com código, nome, descrição e ordem de
+exibição.
+
+### Prazos de Pagamento
+
+Permite criar, editar e inativar condições com código, nome, dias das parcelas,
+descrição e ordem de exibição.
 
 ### Ações
 

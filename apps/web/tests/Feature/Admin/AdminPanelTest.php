@@ -13,6 +13,8 @@ use App\Models\CustomerAddress;
 use App\Models\CustomerContact;
 use App\Models\CustomerRepresentative;
 use App\Models\Order;
+use App\Models\PaymentMethod;
+use App\Models\PaymentTerm;
 use App\Models\PriceTable;
 use App\Models\Product;
 use App\Models\ProductPrice;
@@ -52,7 +54,7 @@ class AdminPanelTest extends TestCase
 
     public function test_operational_modules_are_rendered_for_the_authenticated_company(): void
     {
-        foreach (['customers', 'products', 'representatives', 'orders', 'categories', 'brands', 'units', 'regions'] as $path) {
+        foreach (['customers', 'products', 'representatives', 'orders', 'payment-methods', 'payment-terms', 'categories', 'brands', 'units', 'regions'] as $path) {
             $this->actingAs($this->admin)->get('/'.$path)->assertOk();
         }
 
@@ -110,6 +112,11 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee('Representantes')
             ->assertSee('Regiões');
+
+        $this->actingAs($this->admin)->get(route('orders.index'))
+            ->assertOk()
+            ->assertSee('Formas de pagamento')
+            ->assertSee('Prazos');
 
         $this->actingAs($this->admin)->get(route('profile.edit'))
             ->assertOk()
@@ -339,6 +346,36 @@ class AdminPanelTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_manage_payment_methods_and_terms(): void
+    {
+        $this->actingAs($this->admin)->post('/crud/payment-methods', [
+            'name' => 'Transferência bancária',
+            'code' => 'Transferência Bancária',
+            'description' => 'Pagamento por transferência.',
+            'sort_order' => 50,
+        ])->assertRedirect(route('payment-methods.index'));
+
+        $method = PaymentMethod::query()->where('company_id', $this->admin->company_id)->where('code', 'transferencia-bancaria')->firstOrFail();
+        $this->assertSame('Transferência bancária', $method->name);
+
+        $this->actingAs($this->admin)->post('/crud/payment-terms', [
+            'name' => '30/60/90 dias',
+            'code' => '30/60/90',
+            'installment_days_input' => '30 / 60 / 90',
+            'description' => 'Três parcelas mensais.',
+            'sort_order' => 100,
+        ])->assertRedirect(route('payment-terms.index'));
+
+        $term = PaymentTerm::query()->where('company_id', $this->admin->company_id)->where('code', '30/60/90')->firstOrFail();
+        $this->assertSame([30, 60, 90], $term->installment_days);
+        $this->assertSame('30/60/90 dias', $term->installmentSummary());
+
+        $this->actingAs($this->admin)->get('/crud/orders/create')
+            ->assertOk()
+            ->assertSee('Transferência bancária')
+            ->assertSee('30/60/90 dias');
+    }
+
     public function test_admin_can_create_and_rename_price_tables_from_product_header(): void
     {
         $this->actingAs($this->admin)->post(route('products.price-tables.store'), [
@@ -553,6 +590,8 @@ class AdminPanelTest extends TestCase
             ->assertDontSee('Auditoria');
         $this->actingAs($representativeUser)->get('/categories')->assertForbidden();
         $this->actingAs($representativeUser)->get('/regions')->assertForbidden();
+        $this->actingAs($representativeUser)->get('/payment-methods')->assertForbidden();
+        $this->actingAs($representativeUser)->get('/payment-terms')->assertForbidden();
         $this->actingAs($representativeUser)->get('/crud/products/create')->assertForbidden();
         $this->actingAs($representativeUser)->get('/crud/orders/create')
             ->assertOk()
@@ -599,6 +638,7 @@ class AdminPanelTest extends TestCase
             'name' => 'Tabela externa',
             'active' => true,
         ]);
+        $otherPaymentMethod = PaymentMethod::factory()->create(['company_id' => $otherCompany->id]);
 
         $this->actingAs($this->admin)
             ->get("/crud/categories/{$otherCategory->id}/edit")
@@ -610,6 +650,13 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)
             ->patch(route('products.price-tables.update', $otherPriceTable), ['name' => 'Tentativa'])
+            ->assertNotFound();
+
+        $this->actingAs($this->admin)
+            ->put("/crud/payment-methods/{$otherPaymentMethod->id}", [
+                'name' => 'Tentativa externa',
+                'code' => 'tentativa-externa',
+            ])
             ->assertNotFound();
     }
 

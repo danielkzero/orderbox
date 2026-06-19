@@ -3,6 +3,44 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Cadastros de formas e prazos de pagamento
+
+### Funcionalidade
+
+Criação dos cadastros multiempresa de formas e prazos de pagamento e integração
+com o formulário de pedidos.
+
+### Motivo
+
+Substituir opções fixas no código por condições comerciais administráveis pela
+empresa.
+
+### Arquivos alterados
+
+- migrations, models, factories e seeders;
+- controllers, rotas, navegação e formulário de pedidos;
+- testes administrativos;
+- regras de negócio, modelagem, API, telas, planejamento e roadmap.
+
+### Impactos
+
+- Admin e Manager gerenciam formas e prazos no contexto de Pedidos;
+- cada prazo armazena os dias corridos de suas parcelas;
+- representantes selecionam somente opções ativas;
+- pedidos validam códigos dentro da empresa autenticada;
+- pedidos existentes preservam os códigos históricos;
+- migration cria opções iniciais para empresas já existentes;
+- API e sincronização passam a prever os códigos das condições comerciais;
+- não altera o escopo financeiro: recebimento e faturamento permanecem no ERP.
+
+### Validação
+
+- migrations e seeders idempotentes;
+- testes de CRUD, pedido, autorização e isolamento multiempresa;
+- suíte completa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-19 — Consolidação da linguagem do produto
 
 ### Funcionalidade

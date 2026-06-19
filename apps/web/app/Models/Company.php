@@ -52,6 +52,16 @@ class Company extends Model
         return $this->hasMany(Order::class);
     }
 
+    public function paymentMethods(): HasMany
+    {
+        return $this->hasMany(PaymentMethod::class);
+    }
+
+    public function paymentTerms(): HasMany
+    {
+        return $this->hasMany(PaymentTerm::class);
+    }
+
     public function regions(): HasMany
     {
         return $this->hasMany(Region::class);

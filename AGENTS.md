@@ -33,9 +33,6 @@ docs/
 └── README.md
 ```
 
-Ignorar completamente `database/` e `scripts/` durante análises,
-planejamentos e atualizações de documentação.
-
 ## Stack oficial
 
 - Backend: PHP 8.2+, Laravel 12, Laravel Sanctum e MariaDB.

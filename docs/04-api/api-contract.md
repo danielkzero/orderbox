@@ -244,6 +244,8 @@ Exemplo de criação:
   "customer_id": 123,
   "sales_representative_id": 45,
   "price_table_id": 8,
+  "payment_method": "boleto",
+  "payment_terms": "15/30/45",
   "notes": "Entregar pela manhã",
   "items": [
     {
@@ -259,12 +261,13 @@ Exemplo de criação:
 Regras:
 
 - Admin e Mobile selecionam explicitamente a tabela de preço na V1.
+- Forma e prazo usam os códigos ativos disponibilizados pela empresa.
 - O servidor recalcula subtotal e total; valores calculados enviados pelo cliente são ignorados.
 - O preço informado deve corresponder a uma faixa válida da tabela selecionada, salvo permissão administrativa explícita.
 - Descontos são aplicados na ordem enviada; percentuais aceitam valores entre `0` e `100`, e valores fixos não podem ser negativos.
 - O total de um item e do pedido possui piso zero.
 - `order_number` é atribuído pelo servidor quando o pedido é aceito.
-- O envio exige ao menos um item, Customer ativo, representante ativo e tabela de preço ativa.
+- O envio exige ao menos um item, Customer ativo, representante ativo, tabela de preço ativa e condições de pagamento válidas.
 
 ---
 

@@ -28,6 +28,8 @@ Todo pedido pertence a uma Company.
 | total_amount | decimal(15,2) | Sim | Valor final do pedido |
 | notes | text | Não | Observações |
 | source | varchar(50) | Sim | Origem do pedido |
+| payment_method | varchar(50) | Sim | Código histórico da forma de pagamento |
+| payment_terms | varchar(50) | Sim | Código histórico do prazo de pagamento |
 | order_date | datetime | Sim | Data do pedido |
 | sent_at | timestamp | Não | Data de envio |
 | cancelled_at | timestamp | Não | Data de cancelamento |
@@ -123,6 +125,14 @@ Atualizações de Draft devem informar a versão atual do pedido. Alterações c
 ### Tabela de Preço
 
 Na V1, a tabela de preço é selecionada explicitamente na criação do pedido.
+
+### Pagamento
+
+A forma e o prazo devem estar ativos e pertencer à mesma empresa no momento da
+criação ou atualização do rascunho.
+
+O pedido armazena os códigos como snapshot. Alterações posteriores no nome,
+descrição ou status dos cadastros não modificam o histórico.
 
 ### Auditoria
 

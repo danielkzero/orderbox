@@ -100,6 +100,8 @@ O envio é um comando explícito e exige:
 - cliente ativo;
 - representante ativo;
 - tabela de preço ativa e aplicável;
+- forma de pagamento ativa da empresa;
+- prazo de pagamento ativo da empresa;
 - ao menos um item;
 - produtos ativos.
 
@@ -125,6 +127,15 @@ Representantes não podem cancelar pedidos enviados.
 - usuários representantes são vinculados automaticamente ao próprio cadastro;
 - o `sales_representative_id` sempre deve pertencer à mesma empresa e estar
   ativo.
+
+## Condições de Pagamento
+
+- Admin e Manager mantêm formas e prazos no contexto de Pedidos;
+- representantes apenas selecionam opções ativas;
+- forma e prazo devem pertencer à mesma empresa do pedido;
+- o prazo registra os dias corridos de cada parcela;
+- o código selecionado é preservado no pedido para manter o histórico;
+- inativar uma opção impede novos usos sem alterar pedidos anteriores.
 
 ### Concorrência
 

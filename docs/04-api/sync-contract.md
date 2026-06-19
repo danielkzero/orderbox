@@ -169,6 +169,9 @@ Quando `version` estiver desatualizada, a operação é rejeitada com `version_c
 
 São somente leitura no mobile. A versão recebida do servidor substitui a versão local.
 
+Formas e prazos de pagamento ativos também são sincronizados como cadastros de
+leitura para composição de novos pedidos.
+
 ---
 
 ## Inicialização e Recuperação

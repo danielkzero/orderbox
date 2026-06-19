@@ -7,6 +7,8 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\PaymentMethod;
+use App\Models\PaymentTerm;
 use App\Models\PriceTable;
 use App\Models\Product;
 use App\Models\Region;
@@ -119,6 +121,33 @@ class AdminModuleController extends Controller
             'Status' => fn (Order $item) => view('components.status-badge', ['active' => $item->status !== 'Cancelled', 'label' => $item->status]),
             'Total' => fn (Order $item) => 'R$ '.number_format((float) $item->total_amount, 2, ',', '.'),
             'Ações' => fn (Order $item) => view('admin.modules.actions', ['resource' => 'orders', 'item' => $item]),
+        ]);
+    }
+
+    public function paymentMethods(Request $request): View
+    {
+        $this->access->authorize($request->user(), 'payment-methods', 'view');
+
+        return $this->module($request, PaymentMethod::query(), 'Formas de pagamento', 'payment_methods', [
+            'Código' => 'code',
+            'Nome' => 'name',
+            'Ordem' => 'sort_order',
+            'Status' => fn (PaymentMethod $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (PaymentMethod $item) => view('admin.modules.actions', ['resource' => 'payment-methods', 'item' => $item]),
+        ]);
+    }
+
+    public function paymentTerms(Request $request): View
+    {
+        $this->access->authorize($request->user(), 'payment-terms', 'view');
+
+        return $this->module($request, PaymentTerm::query(), 'Prazos de pagamento', 'payment_terms', [
+            'Código' => 'code',
+            'Nome' => 'name',
+            'Parcelas' => fn (PaymentTerm $item) => $item->installmentSummary(),
+            'Ordem' => 'sort_order',
+            'Status' => fn (PaymentTerm $item) => view('components.status-badge', ['active' => $item->active]),
+            'Ações' => fn (PaymentTerm $item) => view('admin.modules.actions', ['resource' => 'payment-terms', 'item' => $item]),
         ]);
     }
 
@@ -238,6 +267,8 @@ class AdminModuleController extends Controller
                 'products' => 'products',
                 'sales_representatives' => 'representatives',
                 'orders' => 'orders',
+                'payment_methods' => 'payment-methods',
+                'payment_terms' => 'payment-terms',
                 'regions' => 'regions',
                 'categories' => 'categories',
                 'brands' => 'brands',

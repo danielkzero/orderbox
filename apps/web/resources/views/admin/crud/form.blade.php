@@ -894,6 +894,57 @@
                         </select>
                     </div>
                 </div>
+            @elseif ($resource === 'payment-methods')
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <x-input-label for="name" value="Nome" />
+                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" placeholder="Ex.: Boleto" required />
+                    </div>
+                    <div>
+                        <x-input-label for="code" value="Código" />
+                        <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" placeholder="Ex.: boleto" required />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Identificador enviado ao pedido e às integrações.</p>
+                    </div>
+                    <div>
+                        <x-input-label for="sort_order" value="Ordem de exibição" />
+                        <x-text-input id="sort_order" name="sort_order" type="number" min="0" max="65535" class="mt-1 block w-full" :value="old('sort_order', $model->sort_order ?? 0)" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="description" value="Descrição" />
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}" placeholder="Informe quando esta forma deve ser utilizada.">{{ old('description', $model->description) }}</textarea>
+                    </div>
+                </div>
+            @elseif ($resource === 'payment-terms')
+                <div class="grid gap-5 md:grid-cols-2">
+                    <div>
+                        <x-input-label for="name" value="Nome" />
+                        <x-text-input id="name" name="name" class="mt-1 block w-full" :value="old('name', $model->name)" placeholder="Ex.: 15/30/45 dias" required />
+                    </div>
+                    <div>
+                        <x-input-label for="code" value="Código" />
+                        <x-text-input id="code" name="code" class="mt-1 block w-full" :value="old('code', $model->code)" placeholder="Ex.: 15/30/45" required />
+                    </div>
+                    <div>
+                        <x-input-label for="installment_days_input" value="Dias das parcelas" />
+                        <x-text-input
+                            id="installment_days_input"
+                            name="installment_days_input"
+                            class="mt-1 block w-full"
+                            :value="old('installment_days_input', $model->exists ? collect($model->installment_days)->implode('/') : '')"
+                            placeholder="Ex.: 15/30/45"
+                            required
+                        />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use zero para pagamento à vista. Separe os dias por barra, vírgula ou espaço.</p>
+                    </div>
+                    <div>
+                        <x-input-label for="sort_order" value="Ordem de exibição" />
+                        <x-text-input id="sort_order" name="sort_order" type="number" min="0" max="65535" class="mt-1 block w-full" :value="old('sort_order', $model->sort_order ?? 0)" />
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label for="description" value="Descrição" />
+                        <textarea id="description" name="description" rows="4" class="{{ Str::replaceFirst('h-11', 'min-h-32', $inputClass) }}" placeholder="Informe as condições comerciais deste prazo.">{{ old('description', $model->description) }}</textarea>
+                    </div>
+                </div>
             @elseif ($resource === 'orders')
                 @php
                     $loggedRepresentative = auth()->user()->role === 'SalesRepresentative'
@@ -902,22 +953,6 @@
                     $selectedCustomerId = (int) old('customer_id', $model->customer_id);
                     $selectedPriceTableId = (int) old('price_table_id', $model->price_table_id);
                     $selectedRepresentativeId = (int) old('sales_representative_id', $loggedRepresentative?->id ?: $model->sales_representative_id);
-                    $paymentMethods = [
-                        'boleto' => 'Boleto',
-                        'avista' => 'À vista',
-                        'cartao' => 'Cartão',
-                    ];
-                    $paymentTerms = [
-                        'avista' => 'À vista',
-                        '7' => '7 dias',
-                        '15' => '15 dias',
-                        '30' => '30 dias',
-                        '15/30' => '15/30 dias',
-                        '15/30/45' => '15/30/45 dias',
-                        '15/30/45/60' => '15/30/45/60 dias',
-                        '15/30/45/60/75' => '15/30/45/60/75 dias',
-                        '15/30/45/60/75/90' => '15/30/45/60/75/90 dias',
-                    ];
                     $customerOptions = $customers->map(function ($customer) use ($applicablePriceTables) {
                         return [
                             'id' => $customer->id,
@@ -1208,16 +1243,18 @@
                     <div>
                         <x-input-label for="payment_method" value="Forma de pagamento" />
                         <select id="payment_method" name="payment_method" class="{{ $inputClass }}" required>
-                            @foreach ($paymentMethods as $value => $label)
-                                <option value="{{ $value }}" @selected(old('payment_method', $model->payment_method ?: 'boleto') === $value)>{{ $label }}</option>
+                            <option value="">Selecione</option>
+                            @foreach ($paymentMethods as $paymentMethod)
+                                <option value="{{ $paymentMethod->code }}" @selected(old('payment_method', $model->payment_method) === $paymentMethod->code)>{{ $paymentMethod->name }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div>
                         <x-input-label for="payment_terms" value="Prazo" />
                         <select id="payment_terms" name="payment_terms" class="{{ $inputClass }}" required>
-                            @foreach ($paymentTerms as $value => $label)
-                                <option value="{{ $value }}" @selected(old('payment_terms', $model->payment_terms ?: 'avista') === $value)>{{ $label }}</option>
+                            <option value="">Selecione</option>
+                            @foreach ($paymentTerms as $paymentTerm)
+                                <option value="{{ $paymentTerm->code }}" @selected(old('payment_terms', $model->payment_terms) === $paymentTerm->code)>{{ $paymentTerm->name }}</option>
                             @endforeach
                         </select>
                     </div>

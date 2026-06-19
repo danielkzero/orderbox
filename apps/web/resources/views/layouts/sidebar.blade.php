@@ -15,6 +15,7 @@
     $activeContexts = [
         'customers.index' => ['customers', 'representatives', 'regions'],
         'products.index' => ['products', 'categories', 'brands', 'units'],
+        'orders.index' => ['orders', 'payment-methods', 'payment-terms'],
         'profile.edit' => ['profile', 'security', 'users', 'api-clients', 'audit-logs'],
         'manual.index' => ['manual', 'api-guide'],
     ];

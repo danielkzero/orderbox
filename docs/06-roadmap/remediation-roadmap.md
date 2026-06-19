@@ -52,3 +52,10 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [ ] Criar testes de contrato.
 - [ ] Implementar sincronização Mobile.
 - [ ] Iniciar Mobile e B2B somente sobre contratos estáveis.
+
+## P1 — Condições comerciais
+
+- [x] Criar cadastros multiempresa de formas de pagamento.
+- [x] Criar cadastros multiempresa de prazos e dias das parcelas.
+- [x] Validar opções ativas na criação e edição de pedidos.
+- [ ] Expor formas e prazos no contrato de sincronização Mobile.

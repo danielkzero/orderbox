@@ -39,6 +39,8 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 18. [Revisão arquitetural e funcional](07-desenvolvimento/architectural-functional-review-2026-06-18.md)
 19. [Roadmap de remediação arquitetural](06-roadmap/remediation-roadmap.md)
 20. [Padrões de feedback e interação](07-desenvolvimento/ui-feedback-patterns.md)
+21. [Formas de pagamento](03-modelagem/payment_methods.md)
+22. [Prazos de pagamento](03-modelagem/payment_terms.md)
 
 ## Convenções
 

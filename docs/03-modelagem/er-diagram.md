@@ -61,6 +61,10 @@ erDiagram
 
     COMPANIES ||--o{ ORDERS : possui
 
+    COMPANIES ||--o{ PAYMENT_METHODS : configura
+
+    COMPANIES ||--o{ PAYMENT_TERMS : configura
+
     CUSTOMERS ||--o{ ORDERS : realiza
 
     USERS ||--o{ ORDERS : cria

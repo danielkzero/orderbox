@@ -9,6 +9,7 @@ Sistema de força de vendas com operação online e offline.
 - Cadastro de clientes
 - Cadastro de produtos
 - Tabelas de preço
+- Formas e prazos de pagamento
 - Representantes
 - Pedidos
 - Consulta de estoque disponível sincronizado do ERP

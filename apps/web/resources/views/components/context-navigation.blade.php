@@ -6,6 +6,8 @@
             || in_array($crudResource, ['customers', 'representatives', 'regions'], true) => 'commercial',
         request()->routeIs('products.*', 'categories.*', 'brands.*', 'units.*')
             || in_array($crudResource, ['products', 'categories', 'brands', 'units'], true) => 'catalog',
+        request()->routeIs('orders.*', 'payment-methods.*', 'payment-terms.*')
+            || in_array($crudResource, ['orders', 'payment-methods', 'payment-terms'], true) => 'orders',
         request()->routeIs('profile.*', 'security.*', 'users.*', 'api-clients.*', 'audit-logs.*') => 'settings',
         request()->routeIs('manual.*', 'api-guide.*') => 'help',
         default => null,
@@ -22,6 +24,11 @@
             ['route' => 'categories.index', 'label' => 'Categorias', 'icon' => 'folder', 'roles' => ['Admin', 'Manager']],
             ['route' => 'brands.index', 'label' => 'Marcas', 'icon' => 'badge', 'roles' => ['Admin', 'Manager']],
             ['route' => 'units.index', 'label' => 'Unidades', 'icon' => 'ruler', 'roles' => ['Admin', 'Manager']],
+        ],
+        'orders' => [
+            ['route' => 'orders.index', 'label' => 'Pedidos', 'icon' => 'cart'],
+            ['route' => 'payment-methods.index', 'label' => 'Formas de pagamento', 'icon' => 'payment', 'roles' => ['Admin', 'Manager']],
+            ['route' => 'payment-terms.index', 'label' => 'Prazos', 'icon' => 'calendar', 'roles' => ['Admin', 'Manager']],
         ],
         'settings' => [
             ['route' => 'profile.edit', 'label' => 'Meu perfil', 'icon' => 'user'],

@@ -37,6 +37,8 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
         ->name('products.price-tables.update');
     Route::get('/representatives', [AdminModuleController::class, 'representatives'])->name('representatives.index');
     Route::get('/orders', [AdminModuleController::class, 'orders'])->name('orders.index');
+    Route::get('/payment-methods', [AdminModuleController::class, 'paymentMethods'])->name('payment-methods.index');
+    Route::get('/payment-terms', [AdminModuleController::class, 'paymentTerms'])->name('payment-terms.index');
     Route::get('/categories', [AdminModuleController::class, 'categories'])->name('categories.index');
     Route::get('/brands', [AdminModuleController::class, 'brands'])->name('brands.index');
     Route::get('/units', [AdminModuleController::class, 'units'])->name('units.index');

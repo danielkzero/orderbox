@@ -114,6 +114,8 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 ### Entregas
 
 - Orders e OrderItems;
+- PaymentMethods e PaymentTerms;
+- cadastros de formas e prazos por empresa;
 - criação no Admin e Mobile;
 - edição e remoção de Draft;
 - envio e numeração;
@@ -127,6 +129,7 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 - pedido enviado é imutável;
 - totais são recalculados no servidor;
 - número do pedido é único dentro da Company.
+- forma e prazo inativos ou de outra empresa são rejeitados.
 
 ---
 

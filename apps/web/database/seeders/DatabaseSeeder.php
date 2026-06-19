@@ -43,5 +43,7 @@ class DatabaseSeeder extends Seeder
                 'active' => true,
             ],
         );
+
+        (new PaymentSettingsSeeder)->seedCompany($company);
     }
 }
