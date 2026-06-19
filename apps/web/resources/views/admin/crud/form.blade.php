@@ -934,6 +934,8 @@
                     $representativeOptions = $representatives->map(fn ($representative) => [
                         'id' => $representative->id,
                         'label' => $representative->code.' - '.$representative->user->name,
+                        'email' => $representative->user->email,
+                        'search' => strtolower($representative->code.' '.$representative->user->name.' '.$representative->user->email),
                     ])->values();
                     $productOptions = $products->map(fn ($product) => [
                         'id' => $product->id,
@@ -980,6 +982,8 @@
                     selectedRepresentativeId: @js($selectedRepresentativeId ?: null),
                     loggedRepresentativeId: @js($loggedRepresentative?->id),
                     customerSearch: '',
+                    representativeSearch: '',
+                    representativeDropdownOpen: false,
                     tableModalOpen: false,
                     bulkModalOpen: false,
                     adjustmentModalOpen: false,
@@ -996,6 +1000,10 @@
                                 this.selectedPriceTableId = customer.price_tables[0].id;
                             }
                         }
+                        const representative = this.selectedRepresentative();
+                        if (representative) {
+                            this.representativeSearch = representative.label;
+                        }
                         this.items = this.items.map((item) => this.hydrateItem(item));
                         this.refreshItemPrices();
                     },
@@ -1010,6 +1018,21 @@
                         const term = this.customerSearch.toLowerCase();
                         if (! term) return [];
                         return this.customers.filter((customer) => customer.search.includes(term)).slice(0, 8);
+                    },
+                    representativeMatches() {
+                        const term = this.representativeSearch.toLowerCase().trim();
+                        if (! term) return [];
+                        return this.representatives
+                            .filter((representative) => representative.search.includes(term))
+                            .slice(0, 8);
+                    },
+                    selectedRepresentative() {
+                        return this.representatives.find((representative) => representative.id === Number(this.selectedRepresentativeId));
+                    },
+                    selectRepresentative(representative) {
+                        this.selectedRepresentativeId = representative.id;
+                        this.representativeSearch = representative.label;
+                        this.representativeDropdownOpen = false;
                     },
                     selectCustomer(customer) {
                         this.selectedCustomerId = customer.id;
@@ -1105,7 +1128,6 @@
                     total() { return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0) },
                     money(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0) }
                 }">
-                    <input type="hidden" name="source" value="Web">
                     <input type="hidden" name="customer_id" :value="selectedCustomerId || ''">
                     <input type="hidden" name="price_table_id" :value="selectedPriceTableId || ''">
                     @if ($model->exists)
@@ -1140,17 +1162,36 @@
                         </div>
                     </div>
                     <div>
-                        <x-input-label for="sales_representative_id" value="Representante" />
+                        <x-input-label for="representative_search" value="Representante" />
                         @if ($loggedRepresentative)
                             <input type="hidden" name="sales_representative_id" value="{{ $loggedRepresentative->id }}">
-                            <input class="{{ $inputClass }}" value="{{ $loggedRepresentative->code }} - {{ $loggedRepresentative->user->name }}" readonly>
+                            <input id="representative_search" class="{{ $inputClass }}" value="{{ $loggedRepresentative->code }} - {{ $loggedRepresentative->user->name }}" readonly>
                         @else
-                            <select id="sales_representative_id" name="sales_representative_id" x-model="selectedRepresentativeId" class="{{ $inputClass }}" required>
-                                <option value="">Selecione</option>
-                                @foreach ($representatives as $representative)
-                                    <option value="{{ $representative->id }}">{{ $representative->code }} - {{ $representative->user->name }}</option>
-                                @endforeach
-                            </select>
+                            <input type="hidden" name="sales_representative_id" :value="selectedRepresentativeId || ''">
+                            <div class="relative" @click.outside="representativeDropdownOpen = false">
+                                <input
+                                    id="representative_search"
+                                    x-model="representativeSearch"
+                                    @focus="representativeDropdownOpen = true"
+                                    @input="selectedRepresentativeId = selectedRepresentative()?.label === representativeSearch ? selectedRepresentativeId : null"
+                                    @input.debounce.150ms="representativeDropdownOpen = true"
+                                    class="{{ $inputClass }}"
+                                    placeholder="Busque por código, nome ou e-mail..."
+                                    autocomplete="off"
+                                    required
+                                >
+                                <div x-show="representativeDropdownOpen && representativeMatches().length > 0" x-cloak class="absolute z-30 mt-2 max-h-72 w-full overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-theme-lg dark:border-gray-800 dark:bg-gray-900">
+                                    <template x-for="representative in representativeMatches()" :key="representative.id">
+                                        <button type="button" @click="selectRepresentative(representative)" class="flex w-full items-center justify-between gap-4 px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-white/[0.03]">
+                                            <span class="min-w-0">
+                                                <strong class="block truncate text-gray-800 dark:text-white/90" x-text="representative.label"></strong>
+                                                <span class="block truncate text-xs text-gray-500" x-text="representative.email"></span>
+                                            </span>
+                                            <span class="shrink-0 text-brand-500">Selecionar</span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
                         @endif
                     </div>
                     <div>
@@ -1179,10 +1220,6 @@
                                 <option value="{{ $value }}" @selected(old('payment_terms', $model->payment_terms ?: 'avista') === $value)>{{ $label }}</option>
                             @endforeach
                         </select>
-                    </div>
-                    <div>
-                        <x-input-label value="Origem" />
-                        <input class="{{ $inputClass }}" value="Web" readonly>
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observações" />

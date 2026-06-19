@@ -357,6 +357,17 @@ Consultar pedidos gerados pela operação.
 - Descontos
 - Totais
 
+Para Admin e Manager, o representante é selecionado por autocomplete com busca
+por código, nome ou e-mail. A lista exibe no máximo oito correspondências por
+vez, evitando um `select` extenso em empresas com muitos representantes.
+
+Quando o usuário autenticado é representante, o campo permanece fixo no
+próprio representante e não permite alteração.
+
+A origem não é exibida nem enviada pelo formulário Web. O servidor registra
+automaticamente `Web`; canais autenticados pela API registram a origem
+correspondente ao canal.
+
 ### Ações
 
 - Visualizar

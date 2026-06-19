@@ -333,7 +333,6 @@ class CatalogCrudController extends Controller
                 'price_table_id' => ['required', Rule::exists('price_tables', 'id')->where('company_id', $companyId)->where('active', true)],
                 'version' => [$model ? 'required' : 'nullable', 'integer', 'min:1'],
                 'order_date' => ['required', 'date'],
-                'source' => ['nullable', 'in:Web,App,Admin,Mobile'],
                 'payment_method' => ['required', 'in:boleto,avista,cartao'],
                 'payment_terms' => ['required', 'string', 'max:50'],
                 'notes' => ['nullable', 'string'],

@@ -434,7 +434,6 @@ class AdminPanelTest extends TestCase
             'sales_representative_id' => $representative->id,
             'price_table_id' => $priceTable->id,
             'order_date' => now()->format('Y-m-d H:i:s'),
-            'source' => 'Admin',
             'payment_method' => 'boleto',
             'payment_terms' => '15/30/45',
             'items' => [
@@ -461,7 +460,12 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee($order->order_number)
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
-            ->assertSee($priceTable->name);
+            ->assertSee($priceTable->name)
+            ->assertSee('Busque por código, nome ou e-mail...')
+            ->assertSee('representativeMatches()', false)
+            ->assertDontSee('<select id="sales_representative_id"', false)
+            ->assertDontSee('>Origem<', false)
+            ->assertDontSee('name="source"', false);
 
         $this->actingAs($this->admin)->post(route('orders.send', $order))
             ->assertRedirect();
@@ -534,6 +538,11 @@ class AdminPanelTest extends TestCase
         $this->actingAs($representativeUser)->get('/categories')->assertForbidden();
         $this->actingAs($representativeUser)->get('/regions')->assertForbidden();
         $this->actingAs($representativeUser)->get('/crud/products/create')->assertForbidden();
+        $this->actingAs($representativeUser)->get('/crud/orders/create')
+            ->assertOk()
+            ->assertSee($representative->code.' - '.$representativeUser->name)
+            ->assertDontSee('Busque por código, nome ou e-mail...')
+            ->assertDontSee('name="source"', false);
 
         $outsideCustomer = Customer::query()->create([
             'company_id' => $representativeUser->company_id,

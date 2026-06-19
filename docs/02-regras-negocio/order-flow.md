@@ -117,6 +117,15 @@ Somente Admin e Manager podem cancelar pedidos em Sent.
 
 Representantes não podem cancelar pedidos enviados.
 
+## Origem e Representante no Admin
+
+- pedidos criados ou editados no painel recebem origem `Web` no servidor;
+- o formulário não permite informar ou alterar a origem;
+- Admin e Manager pesquisam o representante por código, nome ou e-mail;
+- usuários representantes são vinculados automaticamente ao próprio cadastro;
+- o `sales_representative_id` sempre deve pertencer à mesma empresa e estar
+  ativo.
+
 ### Concorrência
 
 A edição de Draft exige a versão atual. Uma versão desatualizada é rejeitada

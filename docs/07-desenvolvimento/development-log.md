@@ -3,6 +3,41 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Busca de representante no pedido
+
+### Funcionalidade
+
+Substituição do select de representantes por autocomplete no formulário Web de
+pedidos e remoção do campo Origem.
+
+### Motivo
+
+Um select não é adequado para empresas com centenas de representantes. A
+origem também não deve ser escolhida pelo usuário quando o próprio canal Web é
+capaz de determiná-la.
+
+### Arquivos alterados
+
+- controller e formulário CRUD de pedidos;
+- testes administrativos;
+- regras de negócio, telas e registro de desenvolvimento.
+
+### Impactos
+
+- Admin e Manager pesquisam representantes por código, nome ou e-mail;
+- o dropdown limita a exibição aos oito primeiros resultados;
+- representantes autenticados continuam vinculados ao próprio cadastro;
+- a origem deixa de aparecer no formulário e é definida pelo servidor;
+- preserva validação de representante ativo e isolamento por `company_id`;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- teste de criação e edição do pedido;
+- suíte completa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-18 — Posicionamento dos tooltips de Produtos
 
 ### Funcionalidade
