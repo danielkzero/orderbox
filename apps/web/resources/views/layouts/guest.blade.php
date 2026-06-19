@@ -58,7 +58,7 @@
                         <p class="text-sm font-medium uppercase tracking-[0.28em] text-brand-200">Força de vendas</p>
                         <h2 class="mt-5 text-4xl font-semibold leading-tight">Autenticação segura para web, APP e API.</h2>
                         <p class="mt-5 text-base leading-7 text-gray-300">
-                            Controle sessão única por canal, 2FA, acesso administrativo e operação comercial em um fluxo consistente para a Hydradigital.
+                            Controle sessões, segurança e operação comercial em uma experiência única para toda a empresa.
                         </p>
                     </div>
                 </div>

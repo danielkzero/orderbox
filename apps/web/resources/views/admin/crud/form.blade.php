@@ -17,7 +17,7 @@
     <x-panel>
         <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
             <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $title }}</h2>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Campos no padrão TailAdmin, com foco no cadastro rápido e consistente.</p>
+            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Revise as informações abaixo e salve quando estiver tudo certo.</p>
         </div>
 
         <form method="POST" action="{{ $action }}" class="space-y-6 p-6" @if ($resource === 'products') enctype="multipart/form-data" @endif>

@@ -14,7 +14,7 @@
             <x-panel id="primeiro-acesso">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">1. Primeiro acesso</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Entre pelo painel web, confira a empresa no dashboard e valide se os indicadores aparecem com os dados da hydradigital.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Entre pelo painel web, confira sua empresa no dashboard e acompanhe os principais indicadores da operação.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Acesse o login web.</li>
                         <li>Informe o e-mail e senha do usuário autorizado.</li>
@@ -40,7 +40,7 @@
             <x-panel id="pedidos">
                 <div class="space-y-3 p-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">3. Pedidos e consulta</h2>
-                    <p class="text-sm text-gray-600 dark:text-gray-300">Os pedidos podem ser criados pelo painel com cliente, representante, tabela de preço e vários itens para teste do fluxo.</p>
+                    <p class="text-sm text-gray-600 dark:text-gray-300">Crie pedidos pelo painel selecionando cliente, representante, tabela de preço e todos os produtos necessários.</p>
                     <ul class="list-disc space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
                         <li>Pedidos vindos do APP entram com origem "APP".</li>
                         <li>Pedidos feitos pelo painel entram com origem "Web".</li>
@@ -54,7 +54,7 @@
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white">4. Usuários, sessões e 2FA</h2>
                     <p class="text-sm text-gray-600 dark:text-gray-300">Administradores gerenciam usuários. Cada credencial só pode manter uma sessão web e uma sessão APP ativa ao mesmo tempo.</p>
                     <ol class="list-decimal space-y-2 pl-5 text-sm text-gray-600 dark:text-gray-300">
-                        <li>Crie o usuário em Administração, Usuários.</li>
+                        <li>Crie o usuário em Configurações, Usuários.</li>
                         <li>Ative 2FA em Segurança quando a conta exigir confirmação dupla.</li>
                         <li>Ao ocorrer novo login no mesmo canal, a sessão anterior é invalidada.</li>
                         <li>Com 2FA ativo, a sessão anterior só cai depois da confirmação do código.</li>

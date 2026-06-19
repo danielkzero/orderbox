@@ -70,6 +70,22 @@ class AdminPanelTest extends TestCase
             ->assertSee('X-OrderBox-Client-Key');
     }
 
+    public function test_product_language_is_consistent_across_public_and_admin_pages(): void
+    {
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Uma experiência simples para vender, acompanhar e crescer.')
+            ->assertSee('Sua operação em tempo real');
+
+        $this->actingAs($this->admin)->get('/crud/categories/create')
+            ->assertOk()
+            ->assertSee('Revise as informações abaixo e salve quando estiver tudo certo.');
+
+        $this->actingAs($this->admin)->get(route('categories.index'))
+            ->assertOk()
+            ->assertSee('Consulte e gerencie as informações da sua empresa.');
+    }
+
     public function test_navigation_prioritizes_daily_work_and_uses_contextual_tabs(): void
     {
         $this->actingAs($this->admin)->get(route('dashboard'))
@@ -641,15 +657,15 @@ class AdminPanelTest extends TestCase
         AuditLog::query()->create([
             'company_id' => $this->admin->company_id,
             'user_id' => $this->admin->id,
-            'action' => 'TemplateInstalled',
+            'action' => 'AccessPolicyReviewed',
             'entity_type' => 'User',
             'entity_id' => $this->admin->id,
-            'new_values' => ['template' => 'TailAdmin Laravel'],
+            'new_values' => ['policy' => 'AdministrativeAccess'],
         ]);
 
         $this->actingAs($this->admin)
             ->get('/audit-logs')
             ->assertOk()
-            ->assertSee('TemplateInstalled');
+            ->assertSee('AccessPolicyReviewed');
     }
 }

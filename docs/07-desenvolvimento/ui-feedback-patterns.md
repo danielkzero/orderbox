@@ -2,8 +2,8 @@
 
 ## Objetivo
 
-Padronizar mensagens, confirmações e estados transitórios do painel Web com a
-linguagem visual do TailAdmin, preservando acessibilidade e previsibilidade.
+Padronizar mensagens, confirmações e estados transitórios do painel Web,
+preservando acessibilidade, clareza e previsibilidade.
 
 ## Componentes
 

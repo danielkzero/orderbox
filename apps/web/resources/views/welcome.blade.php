@@ -15,7 +15,7 @@
                 <x-application-logo class="size-11 shrink-0 shadow-theme-xs" />
                 <span>
                     <strong class="block text-xl font-semibold text-gray-900 dark:text-white">Orderbox</strong>
-                    <small class="block text-xs text-gray-500 dark:text-gray-400">Sales force platform</small>
+                    <small class="block text-xs text-gray-500 dark:text-gray-400">Força de vendas conectada</small>
                 </span>
             </a>
 
@@ -78,7 +78,7 @@
                     <div class="flex items-center justify-between border-b border-gray-100 px-2 pb-4 dark:border-gray-800">
                         <div>
                             <p class="text-sm font-medium text-gray-900 dark:text-white">Dashboard comercial</p>
-                            <p class="text-xs text-gray-500 dark:text-gray-400">Hydradigital em tempo real</p>
+                            <p class="text-xs text-gray-500 dark:text-gray-400">Sua operação em tempo real</p>
                         </div>
                         <span class="rounded-full bg-success-50 px-3 py-1 text-xs font-medium text-success-700 dark:bg-success-500/15 dark:text-success-400">Online</span>
                     </div>
@@ -159,7 +159,7 @@
                     ['Carteira de clientes', 'Acesse os clientes vinculados ao representante e sua região.'],
                     ['Pedido com vários itens', 'Monte pedidos com produtos, quantidades, descontos e totais calculados.'],
                     ['Catálogo comercial', 'Consulte produtos, marcas, unidades, estoque e tabelas ativas.'],
-                    ['Sincronização', 'Estrutura preparada para operação online e evolução offline.'],
+                    ['Sincronização', 'Continue trabalhando com segurança mesmo durante oscilações de conexão.'],
                 ] as [$title, $description])
                     <article class="rounded-2xl border border-gray-200 bg-white p-6 shadow-theme-xs dark:border-gray-800 dark:bg-gray-900">
                         <h3 class="font-semibold text-gray-900 dark:text-white">{{ $title }}</h3>
@@ -177,7 +177,7 @@
                         <h2 class="mt-3 text-3xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-4xl">Tudo que sustenta o ciclo comercial.</h2>
                     </div>
                     <p class="max-w-xl text-sm leading-6 text-gray-600 dark:text-gray-400">
-                        A home foi pensada como vitrine do que já existe no painel e do que está documentado como base da operação.
+                        Clientes, catálogo, preços, pedidos e integrações conectados em um único fluxo comercial.
                     </p>
                 </div>
 
@@ -227,8 +227,8 @@
             <div class="mx-auto max-w-7xl rounded-[2rem] bg-brand-500 p-8 text-white shadow-theme-xl lg:p-12">
                 <div class="flex flex-col justify-between gap-8 lg:flex-row lg:items-center">
                     <div>
-                        <h2 class="text-3xl font-semibold tracking-tight">Pronto para operar a Hydradigital no Orderbox?</h2>
-                        <p class="mt-3 max-w-2xl text-brand-50">Entre no painel, revise cadastros, valide pedidos e siga pelo manual interno para evoluir o uso da plataforma.</p>
+                        <h2 class="text-3xl font-semibold tracking-tight">Pronto para transformar sua operação comercial?</h2>
+                        <p class="mt-3 max-w-2xl text-brand-50">Entre no Orderbox e mantenha clientes, produtos, representantes e pedidos trabalhando no mesmo ritmo.</p>
                     </div>
                     <a href="{{ auth()->check() ? route('dashboard') : route('login') }}" class="inline-flex items-center justify-center rounded-lg bg-white px-6 py-3 text-sm font-medium text-brand-600 shadow-theme-xs hover:bg-gray-50">
                         {{ auth()->check() ? 'Abrir dashboard' : 'Entrar no sistema' }}
@@ -241,7 +241,7 @@
     <footer class="border-t border-gray-200 bg-white dark:border-gray-800 dark:bg-gray-950">
         <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-8 text-sm text-gray-500 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
             <span>Orderbox | Força de vendas conectada</span>
-            <span>Design simples baseado no padrão TailAdmin.</span>
+            <span>Uma experiência simples para vender, acompanhar e crescer.</span>
         </div>
     </footer>
 </body>

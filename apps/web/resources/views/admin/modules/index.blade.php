@@ -5,7 +5,7 @@
         <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-800 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">{{ $title }}</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Gerencie os registros da empresa autenticada.</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Encontre, acompanhe e atualize as informações desta área.</p>
             </div>
 
             @if ($resource && (auth()->user()->isAdministrative() || in_array($resource, ['customers', 'orders'], true)))

@@ -37,7 +37,7 @@ cria e renomeia tabelas, mas não as vincula a regiões.
 
 ## Cardinalidade
 
-Na implementação atual:
+Na V1:
 
 - uma Região possui zero ou várias Tabelas de Preço;
 - uma Tabela de Preço pertence a zero ou uma Região;

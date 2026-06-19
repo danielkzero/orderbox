@@ -3,6 +3,42 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Consolidação da linguagem do produto
+
+### Funcionalidade
+
+Revisão dos textos da interface, documentação e diretrizes para apresentar o
+OrderBox como produto final.
+
+### Motivo
+
+Remover referências a bases visuais, templates, bastidores de implementação e
+frases com caráter demonstrativo.
+
+### Arquivos alterados
+
+- diretrizes do monorepo;
+- interface pública e administrativa;
+- manual e documentação técnica;
+- revisão arquitetural;
+- testes administrativos;
+- avisos de terceiros.
+
+### Impactos
+
+- remove todas as menções ao nome da base visual anteriormente utilizada;
+- substitui textos técnicos e demonstrativos por linguagem orientada ao usuário;
+- remove referências fixas à empresa de desenvolvimento na interface pública;
+- preserva arquitetura, comportamento, permissões e isolamento multiempresa;
+- não altera banco de dados, API, Mobile ou B2B.
+
+### Validação
+
+- busca integral por referências residuais;
+- suíte completa;
+- Laravel Pint;
+- build Vite.
+
 ## 2026-06-19 — Busca de representante no pedido
 
 ### Funcionalidade
@@ -143,7 +179,7 @@ popovers, spinners, ribbons, progress bars e listas.
 ### Motivo
 
 Eliminar mensagens nativas e comportamentos inconsistentes, mantendo feedback
-claro, acessível e alinhado ao TailAdmin.
+claro, acessível e coerente em todo o OrderBox.
 
 ### Arquivos alterados
 

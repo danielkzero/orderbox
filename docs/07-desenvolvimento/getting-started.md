@@ -20,9 +20,7 @@ apps/web
 
 ### Interface Administrativa
 
-O painel utiliza componentes e padrões visuais do [TailAdmin Laravel](https://github.com/TailAdmin/tailadmin-laravel), distribuído sob licença MIT.
-
-A integração mantém as regras e autenticação próprias do OrderBox e inclui:
+O painel administrativo do OrderBox inclui:
 
 - layout responsivo com sidebar;
 - modo claro e escuro;

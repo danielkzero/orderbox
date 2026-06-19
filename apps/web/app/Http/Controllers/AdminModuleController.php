@@ -230,7 +230,7 @@ class AdminModuleController extends Controller
 
         return view('admin.modules.index', [
             'title' => $title,
-            'description' => 'Dados reais da empresa autenticada.',
+            'description' => 'Consulte e gerencie as informações da sua empresa.',
             'items' => $query->paginate(15)->withQueryString(),
             'columns' => $columns,
             'resource' => [

@@ -4,7 +4,7 @@ Data da revisão: 2026-06-18
 
 ## Objetivo
 
-Auditar a implementação atual do OrderBox quanto a responsabilidades,
+Avaliar o OrderBox quanto a responsabilidades,
 consistência funcional, multiempresa, segurança, resiliência, usabilidade,
 documentação e cobertura de testes.
 
@@ -445,7 +445,8 @@ Há AuditLog em várias escritas, porém:
 - o formulário de pedido e a matriz de preços possuem alta densidade;
 - estados de carregamento não são anunciados;
 - notificações simuladas prejudicam confiança;
-- textos e componentes legados não seguem integralmente o padrão TailAdmin.
+- textos e componentes legados não seguem integralmente o padrão visual do
+  produto.
 
 ## Melhorias funcionais recomendadas
 
@@ -517,7 +518,7 @@ Há AuditLog em várias escritas, porém:
 
 ## UI/UX recomendada
 
-1. manter TailAdmin, Tailwind e AlpineJS;
+1. manter Tailwind CSS e AlpineJS;
 2. padronizar cabeçalhos, filtros, estados vazios e ações;
 3. exibir ação primária única por tela;
 4. mover ações secundárias para menus contextuais;
@@ -532,8 +533,7 @@ Há AuditLog em várias escritas, porém:
 
 ### Web
 
-Impacto alto. Concentra a implementação atual e receberá as primeiras
-correções.
+Impacto alto. Concentra os principais fluxos administrativos e comerciais.
 
 ### API
 

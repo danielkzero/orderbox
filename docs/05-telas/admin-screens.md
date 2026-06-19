@@ -81,9 +81,10 @@ O painel utiliza componentes padronizados:
 
 Não são utilizados `window.confirm()` ou alerts nativos do navegador.
 
-### Implementação Atual
+### Experiência do Painel
 
-O painel administrativo utiliza TailAdmin Laravel como base visual, preservando Blade, Alpine.js e Tailwind CSS.
+O painel administrativo oferece navegação responsiva, feedback imediato e
+fluxos consistentes para as atividades comerciais.
 
 Os módulos do menu consultam exclusivamente os dados da Company autenticada. Usuários são gerenciados apenas por Admin; auditoria pode ser consultada por Admin e Manager; segurança e 2FA são gerenciados pelo próprio usuário.
 

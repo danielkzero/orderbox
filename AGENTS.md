@@ -39,7 +39,7 @@ planejamentos e atualizações de documentação.
 ## Stack oficial
 
 - Backend: PHP 8.2+, Laravel 12, Laravel Sanctum e MariaDB.
-- Administrativo: Laravel Blade, TailAdmin Laravel, Tailwind CSS e AlpineJS.
+- Administrativo: Laravel Blade, Tailwind CSS e AlpineJS.
 - Mobile: Ionic e Laravel Sanctum.
 - Portal B2B: Laravel 12, Blade e Tailwind CSS.
 
