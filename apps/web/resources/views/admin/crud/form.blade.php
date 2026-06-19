@@ -937,6 +937,20 @@
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Use zero para pagamento à vista. Separe os dias por barra, vírgula ou espaço.</p>
                     </div>
                     <div>
+                        <x-input-label for="minimum_order_amount" value="Valor mínimo do pedido" />
+                        <x-text-input
+                            id="minimum_order_amount"
+                            name="minimum_order_amount"
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            class="mt-1 block w-full"
+                            :value="old('minimum_order_amount', $model->minimum_order_amount ?? 0)"
+                            required
+                        />
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">O prazo ficará disponível somente quando o total final do pedido atingir este valor.</p>
+                    </div>
+                    <div>
                         <x-input-label for="sort_order" value="Ordem de exibição" />
                         <x-text-input id="sort_order" name="sort_order" type="number" min="0" max="65535" class="mt-1 block w-full" :value="old('sort_order', $model->sort_order ?? 0)" />
                     </div>
@@ -971,6 +985,11 @@
                         'label' => $representative->code.' - '.$representative->user->name,
                         'email' => $representative->user->email,
                         'search' => strtolower($representative->code.' '.$representative->user->name.' '.$representative->user->email),
+                    ])->values();
+                    $paymentTermOptions = $paymentTerms->map(fn ($paymentTerm) => [
+                        'code' => $paymentTerm->code,
+                        'name' => $paymentTerm->name,
+                        'minimum_order_amount' => (float) $paymentTerm->minimum_order_amount,
                     ])->values();
                     $productOptions = $products->map(fn ($product) => [
                         'id' => $product->id,
@@ -1012,9 +1031,11 @@
                     customers: @js($customerOptions),
                     representatives: @js($representativeOptions),
                     products: @js($productOptions),
+                    paymentTerms: @js($paymentTermOptions),
                     selectedCustomerId: @js($selectedCustomerId ?: null),
                     selectedPriceTableId: @js($selectedPriceTableId ?: null),
                     selectedRepresentativeId: @js($selectedRepresentativeId ?: null),
+                    selectedPaymentTermCode: @js(old('payment_terms', $model->payment_terms) ?: ''),
                     loggedRepresentativeId: @js($loggedRepresentative?->id),
                     customerSearch: '',
                     representativeSearch: '',
@@ -1161,6 +1182,11 @@
                     },
                     subtotal() { return this.items.reduce((sum, item) => sum + (Number(item.quantity || 0) * Number(item.unit_price || 0)), 0) },
                     total() { return this.items.reduce((sum, item) => sum + this.lineTotal(item), 0) },
+                    paymentTermAvailable(term) { return Boolean(term) && this.total() + 0.001 >= Number(term.minimum_order_amount || 0) },
+                    paymentTermLabel(term) {
+                        if (! Number(term.minimum_order_amount || 0)) return term.name;
+                        return `${term.name} · mínimo ${this.money(term.minimum_order_amount)}`;
+                    },
                     money(value) { return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0) }
                 }">
                     <input type="hidden" name="customer_id" :value="selectedCustomerId || ''">
@@ -1251,12 +1277,24 @@
                     </div>
                     <div>
                         <x-input-label for="payment_terms" value="Prazo" />
-                        <select id="payment_terms" name="payment_terms" class="{{ $inputClass }}" required>
+                        <select
+                            id="payment_terms"
+                            name="payment_terms"
+                            x-model="selectedPaymentTermCode"
+                            x-effect="if (selectedPaymentTermCode && ! paymentTermAvailable(paymentTerms.find(term => term.code === selectedPaymentTermCode))) selectedPaymentTermCode = ''"
+                            class="{{ $inputClass }}"
+                            required
+                        >
                             <option value="">Selecione</option>
-                            @foreach ($paymentTerms as $paymentTerm)
-                                <option value="{{ $paymentTerm->code }}" @selected(old('payment_terms', $model->payment_terms) === $paymentTerm->code)>{{ $paymentTerm->name }}</option>
-                            @endforeach
+                            <template x-for="term in paymentTerms" :key="term.code">
+                                <option
+                                    :value="term.code"
+                                    :disabled="! paymentTermAvailable(term)"
+                                    x-text="paymentTermLabel(term)"
+                                ></option>
+                            </template>
                         </select>
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Os prazos são liberados conforme o total final do pedido.</p>
                     </div>
                     <div class="md:col-span-2">
                         <x-input-label for="notes" value="Observações" />

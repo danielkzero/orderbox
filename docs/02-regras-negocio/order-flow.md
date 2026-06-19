@@ -134,6 +134,9 @@ Representantes não podem cancelar pedidos enviados.
 - representantes apenas selecionam opções ativas;
 - forma e prazo devem pertencer à mesma empresa do pedido;
 - o prazo registra os dias corridos de cada parcela;
+- cada prazo pode exigir um valor mínimo do pedido;
+- o prazo somente é aceito quando o total final recalculado pelo servidor,
+  após descontos e acréscimos, for igual ou superior ao mínimo configurado;
 - o código selecionado é preservado no pedido para manter o histórico;
 - inativar uma opção impede novos usos sem alterar pedidos anteriores.
 

@@ -3,6 +3,40 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Valor mínimo por prazo de pagamento
+
+### Funcionalidade
+
+Inclusão do valor mínimo do pedido no cadastro de prazos e aplicação da regra
+na seleção e gravação do pedido.
+
+### Motivo
+
+Impedir que condições comerciais mais longas sejam utilizadas em pedidos cujo
+total não atinja o mínimo definido pela empresa.
+
+### Arquivos alterados
+
+- migration, model, factory e seeder de prazos;
+- controllers e formulário administrativo;
+- testes de cadastro e pedido;
+- regras de negócio, modelagem, API, telas, planejamento e roadmap.
+
+### Impactos
+
+- Admin e Manager definem o valor mínimo de cada prazo;
+- o formulário desabilita prazos incompatíveis com o total atual;
+- o servidor recalcula o pedido e rejeita prazos abaixo do mínimo;
+- a regra respeita o isolamento por empresa;
+- prazos existentes recebem mínimo zero e mantêm o comportamento atual.
+
+### Validação
+
+- migration de evolução com valor padrão;
+- teste de persistência do mínimo;
+- teste de rejeição após o cálculo autoritativo do total;
+- suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Cadastros de formas e prazos de pagamento
 
 ### Funcionalidade

@@ -116,6 +116,7 @@ Aplicação executável com health check, migration inicial e testes no pipeline
 - Orders e OrderItems;
 - PaymentMethods e PaymentTerms;
 - cadastros de formas e prazos por empresa;
+- valor mínimo configurável por prazo e validação sobre o total final;
 - criação no Admin e Mobile;
 - edição e remoção de Draft;
 - envio e numeração;

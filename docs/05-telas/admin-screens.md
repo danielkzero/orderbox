@@ -53,7 +53,9 @@ independentes no menu lateral.
 - Prazos
 
 Formas e prazos são administrados por Admin e Manager. Representantes utilizam
-as opções ativas diretamente no pedido.
+as opções ativas diretamente no pedido. O cadastro de prazo informa os dias das
+parcelas e o valor mínimo do pedido. No formulário do pedido, opções abaixo do
+total mínimo permanecem desabilitadas e identificam o valor necessário.
 
 #### Configurações
 

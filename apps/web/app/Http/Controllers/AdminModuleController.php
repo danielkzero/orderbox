@@ -145,6 +145,7 @@ class AdminModuleController extends Controller
             'Código' => 'code',
             'Nome' => 'name',
             'Parcelas' => fn (PaymentTerm $item) => $item->installmentSummary(),
+            'Pedido mínimo' => fn (PaymentTerm $item) => 'R$ '.number_format((float) $item->minimum_order_amount, 2, ',', '.'),
             'Ordem' => 'sort_order',
             'Status' => fn (PaymentTerm $item) => view('components.status-badge', ['active' => $item->active]),
             'Ações' => fn (PaymentTerm $item) => view('admin.modules.actions', ['resource' => 'payment-terms', 'item' => $item]),

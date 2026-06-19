@@ -263,6 +263,8 @@ Regras:
 - Admin e Mobile selecionam explicitamente a tabela de preço na V1.
 - Forma e prazo usam os códigos ativos disponibilizados pela empresa.
 - O servidor recalcula subtotal e total; valores calculados enviados pelo cliente são ignorados.
+- O prazo é rejeitado quando o total final recalculado for inferior ao
+  `minimum_order_amount` configurado para ele.
 - O preço informado deve corresponder a uma faixa válida da tabela selecionada, salvo permissão administrativa explícita.
 - Descontos são aplicados na ordem enviada; percentuais aceitam valores entre `0` e `100`, e valores fixos não podem ser negativos.
 - O total de um item e do pedido possui piso zero.

@@ -38,7 +38,7 @@ class PaymentSettingsSeeder extends Seeder
             ['code' => '15/30/45/60/75/90', 'name' => '15/30/45/60/75/90 dias', 'installment_days' => [15, 30, 45, 60, 75, 90], 'sort_order' => 90],
         ])->each(fn (array $term) => PaymentTerm::query()->updateOrCreate(
             ['company_id' => $company->id, 'code' => $term['code']],
-            $term + ['active' => true],
+            $term + ['minimum_order_amount' => 0, 'active' => true],
         ));
     }
 }

@@ -13,6 +13,7 @@ Definir condições de vencimento disponíveis para os pedidos de uma empresa.
 | code | varchar(50) | Sim | Código persistido no pedido e usado em integrações |
 | name | varchar(100) | Sim | Nome exibido ao usuário |
 | installment_days | json | Sim | Dias corridos de cada parcela |
+| minimum_order_amount | decimal(15,2) | Sim | Total mínimo do pedido para habilitar o prazo |
 | description | text | Não | Orientação comercial |
 | sort_order | smallint unsigned | Sim | Ordem de exibição |
 | active | boolean | Sim | Disponibilidade para novos pedidos |
@@ -25,6 +26,9 @@ Definir condições de vencimento disponíveis para os pedidos de uma empresa.
 - `installment_days` possui ao menos um inteiro entre `0` e `3650`;
 - o valor `0` representa pagamento à vista;
 - dias repetidos são normalizados e armazenados em ordem crescente;
+- `minimum_order_amount` é maior ou igual a zero;
+- a elegibilidade considera o total final recalculado pelo servidor, após
+  descontos e acréscimos;
 - somente registros ativos podem ser usados em novos pedidos;
 - inativação não altera pedidos já criados;
 - o pedido mantém o código como snapshot histórico.

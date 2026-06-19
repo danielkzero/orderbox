@@ -371,6 +371,7 @@ class CatalogCrudController extends Controller
                 'name' => ['required', 'string', 'max:100', Rule::unique('payment_terms')->where('company_id', $companyId)->ignore($model)],
                 'installment_days' => ['required', 'array', 'min:1'],
                 'installment_days.*' => ['integer', 'min:0', 'max:3650'],
+                'minimum_order_amount' => ['required', 'numeric', 'min:0', 'max:9999999999999.99'],
                 'description' => ['nullable', 'string'],
                 'sort_order' => ['nullable', 'integer', 'min:0', 'max:65535'],
                 'active' => ['sometimes', 'boolean'],
@@ -747,6 +748,23 @@ class CatalogCrudController extends Controller
             $data['status'] = 'Draft';
             $data['subtotal'] = $items->sum(fn (array $item): float => round((float) $item['quantity'] * (float) $item['unit_price'], 2));
             $data['total_amount'] = $items->sum('total_amount');
+
+            $paymentTerm = PaymentTerm::query()
+                ->where('company_id', $request->user()->company_id)
+                ->where('code', $data['payment_terms'])
+                ->where('active', true)
+                ->firstOrFail();
+
+            if ((float) $data['total_amount'] < (float) $paymentTerm->minimum_order_amount) {
+                throw ValidationException::withMessages([
+                    'payment_terms' => sprintf(
+                        'O prazo %s exige pedido mínimo de R$ %s.',
+                        $paymentTerm->name,
+                        number_format((float) $paymentTerm->minimum_order_amount, 2, ',', '.'),
+                    ),
+                ]);
+            }
+
             $data['sent_at'] = null;
             $data['cancelled_at'] = null;
             $data['version'] = $model instanceof Order ? $model->version + 1 : 1;

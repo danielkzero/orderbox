@@ -19,6 +19,7 @@ class PaymentTermFactory extends Factory
             'code' => $code,
             'name' => $days === [0] ? 'À vista' : implode('/', $days).' dias',
             'installment_days' => $days,
+            'minimum_order_amount' => fake()->randomElement([0, 100, 300, 500]),
             'description' => fake()->sentence(),
             'sort_order' => 0,
             'active' => true,

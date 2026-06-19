@@ -362,18 +362,22 @@ class AdminPanelTest extends TestCase
             'name' => '30/60/90 dias',
             'code' => '30/60/90',
             'installment_days_input' => '30 / 60 / 90',
+            'minimum_order_amount' => '500.00',
             'description' => 'Três parcelas mensais.',
             'sort_order' => 100,
         ])->assertRedirect(route('payment-terms.index'));
 
         $term = PaymentTerm::query()->where('company_id', $this->admin->company_id)->where('code', '30/60/90')->firstOrFail();
         $this->assertSame([30, 60, 90], $term->installment_days);
+        $this->assertSame('500.00', $term->minimum_order_amount);
         $this->assertSame('30/60/90 dias', $term->installmentSummary());
 
         $this->actingAs($this->admin)->get('/crud/orders/create')
             ->assertOk()
             ->assertSee('Transferência bancária')
-            ->assertSee('30/60/90 dias');
+            ->assertSee('paymentTerms:', false)
+            ->assertSee('selectedPaymentTermCode:', false)
+            ->assertSee('minimum_order_amount', false);
     }
 
     public function test_admin_can_create_and_rename_price_tables_from_product_header(): void
@@ -482,7 +486,7 @@ class AdminPanelTest extends TestCase
             ['price' => '10.00'],
         );
 
-        $this->actingAs($this->admin)->post('/crud/orders', [
+        $orderPayload = [
             'customer_id' => $customer->id,
             'sales_representative_id' => $representative->id,
             'price_table_id' => $priceTable->id,
@@ -494,7 +498,11 @@ class AdminPanelTest extends TestCase
                 ['product_id' => $secondProduct->id, 'quantity' => '1', 'unit_price' => '999.99', 'discount' => '10'],
             ],
             'notes' => 'Pedido criado pelo teste.',
-        ])->assertRedirect(route('orders.index'))->assertSessionHasNoErrors();
+        ];
+
+        $this->actingAs($this->admin)->post('/crud/orders', $orderPayload)
+            ->assertRedirect(route('orders.index'))
+            ->assertSessionHasNoErrors();
 
         $order = Order::query()->where('company_id', $this->admin->company_id)->latest('id')->firstOrFail();
 
@@ -507,6 +515,21 @@ class AdminPanelTest extends TestCase
         $this->assertSame('15/30/45', $order->payment_terms);
         $this->assertSame(2, $order->items()->count());
         $this->assertSame('10.00', $order->items()->where('product_id', $secondProduct->id)->firstOrFail()->unit_price);
+
+        PaymentTerm::query()
+            ->where('company_id', $this->admin->company_id)
+            ->where('code', '15/30/45')
+            ->update(['minimum_order_amount' => 50]);
+
+        $this->actingAs($this->admin)
+            ->from('/crud/orders/create')
+            ->post('/crud/orders', $orderPayload)
+            ->assertRedirect('/crud/orders/create')
+            ->assertSessionHasErrors([
+                'payment_terms' => 'O prazo 15/30/45 dias exige pedido mínimo de R$ 50,00.',
+            ]);
+
+        $this->assertSame(1, Order::query()->where('company_id', $this->admin->company_id)->where('notes', 'Pedido criado pelo teste.')->count());
 
         $this->actingAs($this->admin)
             ->get(route('crud.edit', ['resource' => 'orders', 'id' => $order->id]))

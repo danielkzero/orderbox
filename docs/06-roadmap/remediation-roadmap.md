@@ -58,4 +58,5 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [x] Criar cadastros multiempresa de formas de pagamento.
 - [x] Criar cadastros multiempresa de prazos e dias das parcelas.
 - [x] Validar opções ativas na criação e edição de pedidos.
+- [x] Restringir cada prazo pelo valor mínimo configurado para o pedido.
 - [ ] Expor formas e prazos no contrato de sincronização Mobile.

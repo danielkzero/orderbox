@@ -17,6 +17,7 @@ class PaymentTerm extends Model
         'code',
         'name',
         'installment_days',
+        'minimum_order_amount',
         'description',
         'sort_order',
         'active',
@@ -26,6 +27,7 @@ class PaymentTerm extends Model
     {
         return [
             'installment_days' => 'array',
+            'minimum_order_amount' => 'decimal:2',
             'sort_order' => 'integer',
             'active' => 'boolean',
         ];
