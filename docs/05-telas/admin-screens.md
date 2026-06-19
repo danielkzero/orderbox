@@ -407,7 +407,7 @@ Na lista de pedidos:
 
 - `Visualizar` abre o documento preparado para impressão;
 - a barra do documento oferece Imprimir, Download PDF e Download Excel;
-- `Configurar modelo do pedido` abre um modal para escolher colunas, tamanho de
+- `Configurar itens e ordem` abre um modal para escolher colunas, tamanho de
   foto, ordenação, informações gerais e totais, com pré-visualização interativa;
 - `Configurar impressão` abre um modal independente para definir colunas, blocos,
   totais, tamanho da foto e margem usados somente pelo comando Imprimir;

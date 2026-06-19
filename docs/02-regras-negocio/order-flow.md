@@ -117,6 +117,10 @@ Pedidos não podem ser excluídos fisicamente pela interface.
   modelo digital;
 - alterar a impressão não modifica PDF, Excel ou anexo de e-mail;
 - o PDF desativa a margem padrão do gerador para evitar margem dupla.
+- quando a quantidade de colunas ultrapassa o limite seguro do A4 vertical, o
+  PDF muda automaticamente para orientação paisagem;
+- tabelas do PDF usam largura fixa, quebra de texto e tipografia compacta para
+  impedir corte lateral.
 
 ---
 

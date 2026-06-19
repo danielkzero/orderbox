@@ -29,14 +29,22 @@ class OrderDocumentService
     public function pdf(Order $order): string
     {
         $order = $this->load($order);
+        $settings = $this->settings($order);
+        $landscape = $this->usesLandscape($settings);
 
         return Pdf::loadView('orders.document', [
             'order' => $order,
-            'settings' => $this->settings($order),
+            'settings' => $settings,
             'items' => $this->items($order),
             'columnLabels' => $this->columnLabels(),
+            'pdfLandscape' => $landscape,
             'pdfMode' => true,
-        ])->setPaper('a4')->output();
+        ])->setPaper('a4', $landscape ? 'landscape' : 'portrait')->output();
+    }
+
+    public function usesLandscape(OrderDocumentSetting $settings): bool
+    {
+        return collect($settings->columns)->count() > 7;
     }
 
     public function settings(Order $order): OrderDocumentSetting

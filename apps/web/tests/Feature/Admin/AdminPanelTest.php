@@ -14,6 +14,7 @@ use App\Models\CustomerAddress;
 use App\Models\CustomerContact;
 use App\Models\CustomerRepresentative;
 use App\Models\Order;
+use App\Models\OrderDocumentSetting;
 use App\Models\PaymentMethod;
 use App\Models\PaymentTerm;
 use App\Models\PriceTable;
@@ -24,6 +25,7 @@ use App\Models\SalesRepresentative;
 use App\Models\Unit;
 use App\Models\User;
 use App\Services\CommercialRegionResolver;
+use App\Services\OrderDocumentService;
 use Database\Seeders\HydradigitalDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -556,7 +558,8 @@ class AdminPanelTest extends TestCase
             ->assertSee($customer->trade_name ?: $customer->corporate_name)
             ->assertSee('Download Excel')
             ->assertSee('Configurar impressão')
-            ->assertSee('Configurar modelo do pedido');
+            ->assertSee('Configurar itens e ordem')
+            ->assertSee('Ordem dos itens');
         $this->actingAs($this->admin)->put(route('orders.document-settings.update', $order), [
             'columns' => ['sequence', 'sku', 'name', 'quantity', 'unit_price', 'total'],
             'image_size' => 'small',
@@ -576,6 +579,12 @@ class AdminPanelTest extends TestCase
             'show_notes' => false,
             'show_total_quantity' => true,
         ]);
+        $documentSettings = OrderDocumentSetting::query()
+            ->where('company_id', $this->admin->company_id)
+            ->firstOrFail();
+        $this->assertFalse(app(OrderDocumentService::class)->usesLandscape($documentSettings));
+        $documentSettings->update(['columns' => OrderDocumentSetting::DEFAULT_COLUMNS]);
+        $this->assertTrue(app(OrderDocumentService::class)->usesLandscape($documentSettings->refresh()));
         $this->actingAs($this->admin)->put(route('orders.print-settings.update', $order), [
             'print_columns' => ['sequence', 'sku', 'name', 'quantity', 'total'],
             'print_image_size' => 'small',
@@ -597,7 +606,7 @@ class AdminPanelTest extends TestCase
         ]);
         $this->actingAs($this->admin)->get(route('orders.show', $order))
             ->assertOk()
-            ->assertSee('@page { size: A4; margin: 0; }', false)
+            ->assertSee('@page { size: A4 portrait; margin: 0; }', false)
             ->assertSee('Configuração de impressão');
         $this->actingAs($this->admin)->get(route('orders.pdf', $order))
             ->assertOk()
@@ -783,7 +792,7 @@ class AdminPanelTest extends TestCase
             ->assertOk()
             ->assertSee('Download Excel')
             ->assertDontSee('Configurar impressão')
-            ->assertDontSee('Configurar modelo do pedido');
+            ->assertDontSee('Configurar itens e ordem');
         $this->actingAs($representativeUser)
             ->put(route('orders.document-settings.update', $representativeOrder), [
                 'columns' => ['sku', 'name', 'total'],

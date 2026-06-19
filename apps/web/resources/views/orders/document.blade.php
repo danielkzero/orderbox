@@ -15,7 +15,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ $order->order_number }}</title>
     <style>
-        @page { size: A4; margin: {{ $pdfMode ? '0' : $printMargin }}; }
+        @page { size: A4 {{ $pdfMode && $pdfLandscape ? 'landscape' : 'portrait' }}; margin: {{ $pdfMode ? '0' : $printMargin }}; }
         * { box-sizing: border-box; }
         body { margin: 0; background: #f3f4f6; color: #1f2937; font-family: DejaVu Sans, sans-serif; font-size: 12px; }
         .page { width: 210mm; min-height: 297mm; margin: 20px auto; padding: 18mm; background: #fff; }
@@ -30,9 +30,9 @@
         .grid { display: table; width: 100%; margin-top: 20px; table-layout: fixed; }
         .column { display: table-cell; width: 50%; vertical-align: top; padding-right: 20px; }
         .section-title { margin: 24px 0 8px; font-size: 13px; font-weight: 700; text-transform: uppercase; color: #465fff; }
-        table { width: 100%; border-collapse: collapse; }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; }
         th { background: #f3f4f6; text-align: left; }
-        th, td { padding: 9px; border-bottom: 1px solid #e5e7eb; }
+        th, td { padding: 9px; border-bottom: 1px solid #e5e7eb; overflow-wrap: anywhere; word-break: break-word; }
         .right { text-align: right; }
         .totals { width: 280px; margin: 20px 0 0 auto; }
         .totals td { border: 0; padding: 5px; }
@@ -53,7 +53,15 @@
         .preview { margin-top: 24px; padding: 16px; border: 1px solid #e5e7eb; border-radius: 10px; background: #f8fafc; }
         .screen-column-hidden, .screen-block-hidden, .screen-row-hidden { display: none; }
         .pdf-mode { background: #fff; }
-        .pdf-mode .page { margin: 0; padding: 12mm; }
+        .pdf-mode .page { width: 100%; min-height: 0; margin: 0; padding: 10mm; }
+        .pdf-mode table { table-layout: fixed; font-size: 9px; }
+        .pdf-mode th, .pdf-mode td { padding: 5px 4px; line-height: 1.25; }
+        .pdf-mode .header { display: table; width: 100%; table-layout: fixed; }
+        .pdf-mode .header > div { display: table-cell; width: 50%; vertical-align: top; }
+        .pdf-mode .header > div:last-child { text-align: right; }
+        .pdf-mode .product-image-large { width: 58px; height: 58px; }
+        .pdf-mode .product-image-medium { width: 44px; height: 44px; }
+        .pdf-mode .product-image-small { width: 30px; height: 30px; }
         @media (max-width: 760px) {
             .toolbar { width: auto; margin: 12px; flex-direction: column; }
             .toolbar-group { flex-wrap: wrap; }
@@ -86,7 +94,7 @@
             @if (auth()->user()->isAdministrative())
                 <div class="toolbar-group">
                     <button class="button" type="button" onclick="document.getElementById('print-settings').showModal()">Configurar impressão</button>
-                    <button class="button button-primary" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar modelo do pedido</button>
+                    <button class="button button-primary" type="button" onclick="document.getElementById('document-settings').showModal()">Configurar itens e ordem</button>
                 </div>
             @endif
         </div>
@@ -212,8 +220,8 @@
                     @method('PUT')
                     <div class="modal-header">
                         <div>
-                            <strong style="font-size: 17px;">Configurar modelo do pedido</strong>
-                            <div class="muted" style="margin-top: 4px;">Defina as informações exibidas em todos os pedidos da empresa.</div>
+                            <strong style="font-size: 17px;">Configurar itens e ordem do pedido</strong>
+                            <div class="muted" style="margin-top: 4px;">Escolha colunas, foto, totais e a ordenação usada no PDF, Excel e e-mail.</div>
                         </div>
                         <button class="button" type="button" onclick="document.getElementById('document-settings').close()">Fechar</button>
                     </div>

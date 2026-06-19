@@ -36,6 +36,7 @@ class OrderActionController extends Controller
             'settings' => $this->documents->settings($order),
             'items' => $this->documents->items($order),
             'columnLabels' => $this->documents->columnLabels(),
+            'pdfLandscape' => false,
             'pdfMode' => false,
         ]);
     }

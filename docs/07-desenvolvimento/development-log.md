@@ -3,6 +3,27 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Ajuste de largura do PDF de pedido
+
+### Funcionalidade
+
+Correção do corte lateral em documentos com muitas colunas e identificação
+explícita da configuração de itens.
+
+### Impactos
+
+- orientação paisagem automática acima de sete colunas;
+- tabela com largura fixa, quebra de texto e espaçamento compacto;
+- cabeçalho compatível com o motor de PDF;
+- botão renomeado para `Configurar itens e ordem`;
+- ordenação permanece disponível no mesmo configurador.
+
+### Validação
+
+- renderização Blade;
+- geração de PDF com modelos compactos e extensos;
+- suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Configuração de impressão e margem do PDF
 
 ### Funcionalidade
