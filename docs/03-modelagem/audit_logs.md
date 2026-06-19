@@ -20,6 +20,7 @@ Todo registro de auditoria pertence a uma Company.
 | action | varchar(100) | Sim | Ação executada |
 | entity_type | varchar(100) | Sim | Entidade afetada |
 | entity_id | bigint | Sim | Registro afetado |
+| entity_label | varchar(255) | Não | Identificação legível preservada no momento da ação |
 | old_values | json | Não | Valores anteriores |
 | new_values | json | Não | Novos valores |
 | ip_address | varchar(45) | Não | IP do usuário |
@@ -132,6 +133,10 @@ Registros de auditoria nunca podem ser removidos.
 ### Rastreabilidade
 
 Toda alteração crítica deve gerar auditoria.
+
+O log deve preservar uma identificação operacional do registro. Para pedidos,
+`entity_label` armazena o `order_number`, permitindo reconhecer diretamente qual
+pedido foi enviado, cancelado ou alterado sem depender apenas do ID interno.
 
 ---
 

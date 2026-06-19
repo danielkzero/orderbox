@@ -9,7 +9,7 @@ class AuditLog extends Model
 {
     public const UPDATED_AT = null;
 
-    protected $fillable = ['company_id', 'user_id', 'action', 'entity_type', 'entity_id', 'old_values', 'new_values', 'ip_address', 'user_agent'];
+    protected $fillable = ['company_id', 'user_id', 'action', 'entity_type', 'entity_id', 'entity_label', 'old_values', 'new_values', 'ip_address', 'user_agent'];
 
     protected function casts(): array
     {

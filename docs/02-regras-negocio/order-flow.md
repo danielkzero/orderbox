@@ -82,6 +82,8 @@ Restrições:
 - não pode voltar para Draft.
 
 O cancelamento deve gerar registro em AuditLog.
+O registro deve preservar o `order_number` como identificação legível do pedido
+cancelado, além do ID interno.
 
 ---
 

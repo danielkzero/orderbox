@@ -552,6 +552,19 @@ class AdminPanelTest extends TestCase
 
         $this->actingAs($this->admin)->post(route('orders.cancel', $order))->assertRedirect();
         $this->assertSame('Cancelled', $order->refresh()->status);
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'CancelOrder',
+            'entity_type' => 'Order',
+            'entity_id' => $order->id,
+            'entity_label' => $order->order_number,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get('/audit-logs?search='.urlencode($order->order_number))
+            ->assertOk()
+            ->assertSee('Pedido cancelado')
+            ->assertSee('Pedido')
+            ->assertSee($order->order_number.' (#'.$order->id.')');
     }
 
     public function test_admin_can_create_a_user_and_the_action_is_audited(): void
@@ -733,12 +746,14 @@ class AdminPanelTest extends TestCase
             'action' => 'AccessPolicyReviewed',
             'entity_type' => 'User',
             'entity_id' => $this->admin->id,
+            'entity_label' => $this->admin->email,
             'new_values' => ['policy' => 'AdministrativeAccess'],
         ]);
 
         $this->actingAs($this->admin)
             ->get('/audit-logs')
             ->assertOk()
-            ->assertSee('AccessPolicyReviewed');
+            ->assertSee('AccessPolicyReviewed')
+            ->assertSee($this->admin->email.' (#'.$this->admin->id.')');
     }
 }

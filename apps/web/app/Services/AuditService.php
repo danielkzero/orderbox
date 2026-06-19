@@ -16,11 +16,25 @@ class AuditService
             'action' => $action,
             'entity_type' => class_basename($entity),
             'entity_id' => $entity->getKey(),
+            'entity_label' => $this->entityLabel($entity),
             'old_values' => $this->sanitize($oldValues),
             'new_values' => $this->sanitize($newValues),
             'ip_address' => request()->ip(),
             'user_agent' => request()->userAgent(),
         ]);
+    }
+
+    private function entityLabel(object $entity): string
+    {
+        foreach (['order_number', 'trade_name', 'corporate_name', 'name', 'code', 'sku', 'email', 'client_key'] as $attribute) {
+            $value = data_get($entity, $attribute);
+
+            if (filled($value)) {
+                return (string) $value;
+            }
+        }
+
+        return class_basename($entity).' #'.$entity->getKey();
     }
 
     private function sanitize(?array $values): ?array

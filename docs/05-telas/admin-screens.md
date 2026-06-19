@@ -435,5 +435,9 @@ Consultar ações realizadas no sistema.
 
 - Ação
 - Usuário
-- Registro afetado
+- Registro afetado, com identificação legível e ID interno
 - Data
+
+Para pedidos, a coluna Registro exibe o número comercial, por exemplo
+`PED-202606-000005 (#5)`. A ação `CancelOrder` é apresentada como
+`Pedido cancelado`, e a pesquisa aceita o número do pedido.

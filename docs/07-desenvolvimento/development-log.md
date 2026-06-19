@@ -3,6 +3,33 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Identificação dos pedidos na auditoria
+
+### Funcionalidade
+
+Inclusão de uma identificação legível e imutável para os recursos registrados
+na auditoria.
+
+### Motivo
+
+O tipo da entidade e o ID interno não eram suficientes para reconhecer
+operacionalmente qual pedido havia sido cancelado.
+
+### Impactos
+
+- novos logs armazenam `entity_label`;
+- pedidos usam o número comercial como identificação;
+- cancelamentos exibem `Pedido cancelado` e `PED-... (#ID)`;
+- a pesquisa da auditoria aceita o número do pedido;
+- logs existentes de pedidos são preenchidos pela migration quando o pedido
+  ainda existe.
+
+### Validação
+
+- teste do snapshot criado no cancelamento;
+- teste de pesquisa e apresentação pelo número do pedido;
+- migration, suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Altura do seletor de prazo
 
 O controle fechado do dropdown de prazos foi padronizado em `44px`, mantendo o

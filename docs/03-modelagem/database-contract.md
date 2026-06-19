@@ -144,7 +144,7 @@ Além de PKs, FKs e constraints únicas:
 | PaymentMethods | `(company_id, active, sort_order)` |
 | PaymentTerms | `(company_id, active, sort_order)` |
 | Orders | `(company_id, status, order_date)`, `(sales_representative_id, order_date)`, `(customer_id, order_date)`, `(company_id, updated_at)` |
-| AuditLogs | `(company_id, created_at)`, `(company_id, entity_type, entity_id)` |
+| AuditLogs | `(company_id, created_at)`, `(company_id, entity_type, entity_id)`, `(company_id, entity_label)` |
 | AuthenticationSessions | `(company_id, user_id, channel)`, `(last_activity_at)`, `(revoked_at)` |
 | AuthenticationChallenges | `(user_id, channel, expires_at)` |
 | SyncLogs | `(company_id, device_id, started_at)` |

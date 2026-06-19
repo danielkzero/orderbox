@@ -217,9 +217,28 @@ class AdminModuleController extends Controller
         return $this->module($request, AuditLog::query()->with('user')->latest('created_at'), 'Auditoria', 'audit_logs', [
             'Data' => fn (AuditLog $item) => $item->created_at->format('d/m/Y H:i:s'),
             'Usuário' => fn (AuditLog $item) => $item->user->name,
-            'Ação' => 'action',
-            'Entidade' => 'entity_type',
-            'Registro' => 'entity_id',
+            'Ação' => fn (AuditLog $item) => match ($item->action) {
+                'CancelOrder' => 'Pedido cancelado',
+                'SendOrder' => 'Pedido enviado',
+                'Create' => 'Criação',
+                'Update' => 'Alteração',
+                'Deactivate' => 'Inativação',
+                default => $item->action,
+            },
+            'Entidade' => fn (AuditLog $item) => match ($item->entity_type) {
+                'Order' => 'Pedido',
+                'Customer' => 'Cliente',
+                'Product' => 'Produto',
+                'PaymentMethod' => 'Forma de pagamento',
+                'PaymentTerm' => 'Prazo de pagamento',
+                'PriceTable' => 'Tabela de preço',
+                'SalesRepresentative' => 'Representante',
+                'User' => 'Usuário',
+                default => $item->entity_type,
+            },
+            'Registro' => fn (AuditLog $item) => filled($item->entity_label)
+                ? $item->entity_label.' (#'.$item->entity_id.')'
+                : '#'.$item->entity_id,
             'IP' => 'ip_address',
         ]);
     }
@@ -236,7 +255,7 @@ class AdminModuleController extends Controller
 
         if ($search !== '') {
             $query->where(function (Builder $query) use ($search, $table): void {
-                foreach (['name', 'trade_name', 'corporate_name', 'document', 'sku', 'code', 'order_number', 'city', 'state'] as $column) {
+                foreach (['name', 'trade_name', 'corporate_name', 'document', 'sku', 'code', 'order_number', 'entity_label', 'city', 'state'] as $column) {
                     if (\Schema::hasColumn($table, $column)) {
                         $query->orWhere($table.'.'.$column, 'like', '%'.$search.'%');
                     }
