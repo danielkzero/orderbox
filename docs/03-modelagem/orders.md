@@ -138,6 +138,11 @@ descrição ou status dos cadastros não modificam o histórico.
 
 Toda alteração relevante deve gerar registro em AuditLog.
 
+### Distribuição
+
+Order possui relação 1:N com OrderDeliveries. O histórico registra canal,
+destinatário, usuário, status e data, sem alterar o estado comercial do pedido.
+
 ### Descontos
 
 O pedido pode possuir múltiplos descontos.

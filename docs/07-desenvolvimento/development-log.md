@@ -3,6 +3,42 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-19 — Segurança comercial e distribuição de pedidos
+
+### Funcionalidade
+
+Restrição dos cadastros operados por representantes, vínculo de tabelas
+visíveis e conjunto de ações para distribuição e acompanhamento de pedidos.
+
+### Impactos
+
+- SalesRepresentative não altera limite, vínculos comerciais ou tabelas do
+  cliente;
+- novos clientes são vinculados automaticamente ao próprio representante;
+- representantes visualizam somente tabelas autorizadas pela gestão;
+- pedidos possuem visualização, impressão, PDF, e-mail, WhatsApp, histórico,
+  duplicação e cancelamento antes do envio;
+- PDFs compartilhados usam URL assinada com expiração;
+- e-mails recebem PDF anexo;
+- toda distribuição e ação relevante é rastreada.
+
+### Arquivos alterados
+
+- migration, models, relacionamentos e seeder;
+- controllers, services, mailable, rotas e views;
+- dependência de geração de PDF;
+- testes administrativos;
+- documentação funcional, técnica e de modelagem.
+
+### Validação
+
+- autorização por empresa e representante;
+- validação de campos proibidos;
+- geração de documento e PDF;
+- envio de e-mail simulado;
+- duplicação, cancelamento e histórico;
+- suíte completa, Laravel Pint e build Vite.
+
 ## 2026-06-19 — Identificação dos pedidos na auditoria
 
 ### Funcionalidade

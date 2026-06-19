@@ -403,6 +403,22 @@ descrição e ordem de exibição.
 Criação e edição sempre salvam o pedido como rascunho. Envio e cancelamento são
 ações explícitas e confirmadas.
 
+Na lista de pedidos:
+
+- `Visualizar` abre o documento preparado para impressão;
+- `E-mail` envia o PDF aos e-mails ativos do cliente;
+- `WhatsApp` abre a conversa com um link temporário para o PDF;
+- `Outros` reúne histórico de envios, duplicação e cancelamento;
+- cancelamento aparece somente enquanto o pedido ainda não foi enviado.
+
+No cadastro de cliente por SalesRepresentative, limite de crédito,
+representantes e tabelas diretas não são exibidos. O usuário autenticado é
+vinculado automaticamente como representante principal.
+
+No cadastro administrativo de representante, a gestão define as tabelas de
+preço visíveis. No catálogo e no pedido, o representante visualiza somente
+essas tabelas.
+
 ---
 
 ## Tela: Usuários

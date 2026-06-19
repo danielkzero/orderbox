@@ -270,6 +270,8 @@ Regras:
 - O total de um item e do pedido possui piso zero.
 - `order_number` é atribuído pelo servidor quando o pedido é aceito.
 - O envio exige ao menos um item, Customer ativo, representante ativo, tabela de preço ativa e condições de pagamento válidas.
+- Aplicações que operam como representante devem respeitar também as tabelas
+  visíveis vinculadas ao representante.
 
 ---
 

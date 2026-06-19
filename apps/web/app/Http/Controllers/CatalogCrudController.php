@@ -84,12 +84,8 @@ class CatalogCrudController extends Controller
         $this->access->authorize($request->user(), $resource, 'delete', $model);
         $oldValues = $model->toArray();
 
-        if ($resource === 'orders' && $model->status === 'Draft') {
-            $model->items()->delete();
-            $model->delete();
-            $newValues = ['deleted' => true];
-        } elseif ($resource === 'orders') {
-            return back()->withErrors(['order' => 'Somente pedidos em rascunho podem ser excluídos.']);
+        if ($resource === 'orders') {
+            return back()->withErrors(['order' => 'Pedidos não são excluídos. Use a ação Cancelar para preservar o histórico.']);
         } else {
             $model->update(['active' => false]);
             $newValues = ['active' => false];
@@ -130,8 +126,8 @@ class CatalogCrudController extends Controller
     public function cancelOrder(Request $request, Order $order, AuditService $audit): RedirectResponse
     {
         abort_unless($order->company_id === $request->user()->company_id, 404);
-        abort_unless($request->user()->isAdministrative(), 403);
-        abort_unless($order->status === 'Sent', 422, 'Somente pedidos enviados podem ser cancelados.');
+        $this->access->authorize($request->user(), 'orders', 'update', $order);
+        abort_unless($order->status === 'Draft', 422, 'Somente pedidos ainda não enviados podem ser cancelados.');
 
         DB::transaction(function () use ($request, $order, $audit): void {
             $oldValues = $order->only(['status', 'cancelled_at', 'version']);
@@ -165,8 +161,33 @@ class CatalogCrudController extends Controller
             $model->loadMissing(['items.product']);
         }
 
+        if ($resource === 'representatives' && $model->exists) {
+            $model->loadMissing('priceTables');
+        }
+
         if ($resource === 'regions' && $model->exists) {
             $model->loadMissing(['municipalities', 'priceTables']);
+        }
+
+        $priceTables = PriceTable::query()
+            ->where('company_id', $companyId)
+            ->where('active', true)
+            ->when(
+                $request->user()->role === 'SalesRepresentative',
+                fn ($query) => $query->whereHas(
+                    'salesRepresentatives',
+                    fn ($relation) => $relation->whereKey($this->access->representativeId($request->user())),
+                ),
+            )
+            ->orderBy('name')
+            ->get();
+        $applicablePriceTables = $this->applicablePriceTables->forCustomers($customers);
+
+        if ($request->user()->role === 'SalesRepresentative') {
+            $visibleTableIds = $priceTables->pluck('id');
+            $applicablePriceTables = $applicablePriceTables->map(
+                fn ($tables) => $tables->whereIn('id', $visibleTableIds)->values(),
+            );
         }
 
         return view('admin.crud.form', [
@@ -179,7 +200,7 @@ class CatalogCrudController extends Controller
             'regions' => Region::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'users' => User::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
             'customers' => $customers,
-            'applicablePriceTables' => $this->applicablePriceTables->forCustomers($customers),
+            'applicablePriceTables' => $applicablePriceTables,
             'representatives' => SalesRepresentative::query()
                 ->with('user')
                 ->where('company_id', $companyId)
@@ -190,7 +211,7 @@ class CatalogCrudController extends Controller
                 )
                 ->get()
                 ->sortBy('user.name'),
-            'priceTables' => PriceTable::query()->where('company_id', $companyId)->where('active', true)->orderBy('name')->get(),
+            'priceTables' => $priceTables,
             'paymentMethods' => PaymentMethod::query()
                 ->where('company_id', $companyId)
                 ->where('active', true)
@@ -260,7 +281,12 @@ class CatalogCrudController extends Controller
                 'document' => ['required', 'string', 'max:20', new ValidBrazilianDocument, Rule::unique('customers')->where('company_id', $companyId)->ignore($model)],
                 'email' => ['nullable', 'email', 'max:255'],
                 'phone' => ['nullable', 'string', 'max:20'],
-                'credit_limit' => ['nullable', 'numeric', 'min:0'],
+                'credit_limit' => [
+                    Rule::prohibitedIf($request->user()->role === 'SalesRepresentative'),
+                    'nullable',
+                    'numeric',
+                    'min:0',
+                ],
                 'version' => [$model ? 'required' : 'nullable', 'integer', 'min:1'],
                 'addresses' => ['nullable', 'array'],
                 'addresses.*.id' => ['nullable', 'integer'],
@@ -286,10 +312,14 @@ class CatalogCrudController extends Controller
                 'contacts.*.whatsapp' => ['nullable', 'string', 'max:20'],
                 'contacts.*.primary_contact' => ['nullable', 'boolean'],
                 'contacts.*.active' => ['nullable', 'boolean'],
-                'representative_ids' => ['nullable', 'array'],
+                'representative_ids' => [Rule::prohibitedIf($request->user()->role === 'SalesRepresentative'), 'nullable', 'array'],
                 'representative_ids.*' => [Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
-                'primary_representative_id' => ['nullable', Rule::exists('sales_representatives', 'id')->where('company_id', $companyId)],
-                'price_table_ids' => ['nullable', 'array'],
+                'primary_representative_id' => [
+                    Rule::prohibitedIf($request->user()->role === 'SalesRepresentative'),
+                    'nullable',
+                    Rule::exists('sales_representatives', 'id')->where('company_id', $companyId),
+                ],
+                'price_table_ids' => [Rule::prohibitedIf($request->user()->role === 'SalesRepresentative'), 'nullable', 'array'],
                 'price_table_ids.*' => [Rule::exists('price_tables', 'id')->where('company_id', $companyId)->where('active', true)],
                 'active' => ['sometimes', 'boolean'],
             ]),
@@ -357,6 +387,8 @@ class CatalogCrudController extends Controller
                 'user_id' => ['required', Rule::exists('users', 'id')->where('company_id', $companyId)->where('role', 'SalesRepresentative')->where('active', true)],
                 'region_id' => ['nullable', Rule::exists('regions', 'id')->where('company_id', $companyId)],
                 'code' => ['required', 'string', 'max:50', Rule::unique('sales_representatives')->where('company_id', $companyId)->ignore($model)],
+                'price_table_ids' => ['nullable', 'array'],
+                'price_table_ids.*' => [Rule::exists('price_tables', 'id')->where('company_id', $companyId)->where('active', true)],
                 'active' => ['sometimes', 'boolean'],
             ]),
             'payment-methods' => $request->validate([
@@ -406,6 +438,7 @@ class CatalogCrudController extends Controller
             'customers' => $this->saveCustomer($request, $data, $model),
             'products' => $this->saveProduct($request, $data, $model),
             'regions' => $this->saveRegion($request, $data, $model),
+            'representatives' => $this->saveRepresentative($request, $data, $model),
             'categories' => $this->saveCategory($request, $data, $model),
             'orders' => $this->saveOrder($request, $data, $model),
             default => $model
@@ -443,6 +476,23 @@ class CatalogCrudController extends Controller
             $this->syncProductPrices($product, $tablePrices);
 
             return $product->load('prices');
+        });
+    }
+
+    private function saveRepresentative(Request $request, array $data, ?Model $model = null): SalesRepresentative
+    {
+        $priceTableIds = collect($data['price_table_ids'] ?? [])->map(fn ($id): int => (int) $id)->unique();
+        unset($data['price_table_ids']);
+
+        return DB::transaction(function () use ($request, $data, $model, $priceTableIds): SalesRepresentative {
+            /** @var SalesRepresentative $representative */
+            $representative = $model instanceof SalesRepresentative
+                ? tap($model)->update($data)
+                : SalesRepresentative::query()->create($data + ['company_id' => $request->user()->company_id]);
+
+            $representative->priceTables()->sync($priceTableIds);
+
+            return $representative->load('priceTables');
         });
     }
 
@@ -499,11 +549,18 @@ class CatalogCrudController extends Controller
                 : $representativeIds->first();
 
             if ($request->user()->role === 'SalesRepresentative') {
-                $representativeIds = collect([$this->access->representativeId($request->user())]);
-                $primaryId = $representativeIds->first();
-                $priceTableIds = $model instanceof Customer
-                    ? $model->priceTables()->pluck('price_tables.id')
-                    : collect();
+                if ($model instanceof Customer) {
+                    $representativeIds = $model->representatives()->pluck('sales_representative_id');
+                    $primaryId = $model->representatives()
+                        ->where('is_primary', true)
+                        ->value('sales_representative_id');
+                    $priceTableIds = $model->priceTables()->pluck('price_tables.id');
+                } else {
+                    $representativeIds = collect([$this->access->representativeId($request->user())]);
+                    $primaryId = $representativeIds->first();
+                    $priceTableIds = collect();
+                }
+                $data['credit_limit'] = $model instanceof Customer ? $model->credit_limit : null;
             }
             if ($primaryId && ! $representativeIds->contains($primaryId)) {
                 $representativeIds->prepend($primaryId);
@@ -720,6 +777,19 @@ class CatalogCrudController extends Controller
             throw ValidationException::withMessages([
                 'price_table_id' => 'A tabela de preço não está habilitada para o endereço padrão ou para o cliente selecionado.',
             ]);
+        }
+
+        if ($request->user()->role === 'SalesRepresentative') {
+            $representativeHasPriceTable = $request->user()->salesRepresentative
+                ->priceTables()
+                ->whereKey((int) $data['price_table_id'])
+                ->exists();
+
+            if (! $representativeHasPriceTable) {
+                throw ValidationException::withMessages([
+                    'price_table_id' => 'A tabela de preço não está habilitada para este representante.',
+                ]);
+            }
         }
 
         return DB::transaction(function () use ($request, $data, $model): Order {

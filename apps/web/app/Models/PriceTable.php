@@ -35,4 +35,9 @@ class PriceTable extends Model
     {
         return $this->belongsToMany(Customer::class)->withTimestamps();
     }
+
+    public function salesRepresentatives(): BelongsToMany
+    {
+        return $this->belongsToMany(SalesRepresentative::class, 'sales_representative_price_table')->withTimestamps();
+    }
 }

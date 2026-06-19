@@ -53,6 +53,7 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 - ProductPrices
 - PaymentMethods
 - PaymentTerms
+- OrderDeliveries
 - Regions
 - RegionMunicipalities
 

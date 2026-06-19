@@ -41,6 +41,8 @@ Os documentos em `99-futuro` são propostas de evolução e não fazem parte da 
 20. [Padrões de feedback e interação](07-desenvolvimento/ui-feedback-patterns.md)
 21. [Formas de pagamento](03-modelagem/payment_methods.md)
 22. [Prazos de pagamento](03-modelagem/payment_terms.md)
+23. [Tabelas visíveis por representante](03-modelagem/sales_representative_price_tables.md)
+24. [Envios de pedidos](03-modelagem/order_deliveries.md)
 
 ## Convenções
 

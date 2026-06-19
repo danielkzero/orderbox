@@ -85,6 +85,22 @@ O cancelamento deve gerar registro em AuditLog.
 O registro deve preservar o `order_number` como identificação legível do pedido
 cancelado, além do ID interno.
 
+Somente pedidos em rascunho, ainda não enviados, podem ser cancelados por quem
+possui acesso ao pedido. Pedidos enviados permanecem imutáveis.
+Pedidos não podem ser excluídos fisicamente pela interface.
+
+### Distribuição do pedido
+
+- a visualização utiliza um documento próprio para impressão;
+- o PDF contém os mesmos dados comerciais da visualização;
+- o envio por e-mail utiliza o e-mail principal e os contatos ativos do cliente,
+  remove duplicidades e anexa o PDF;
+- o compartilhamento por WhatsApp usa prioritariamente o contato principal com
+  WhatsApp e inclui um link assinado para o PDF, válido por sete dias;
+- sem telefone cadastrado, o compartilhamento abre sem destinatário;
+- envios são registrados em OrderDeliveries;
+- duplicar cria um novo pedido em Draft, com novo número e cópia dos itens.
+
 ---
 
 ## Regras Gerais
@@ -129,6 +145,16 @@ Representantes não podem cancelar pedidos enviados.
 - usuários representantes são vinculados automaticamente ao próprio cadastro;
 - o `sales_representative_id` sempre deve pertencer à mesma empresa e estar
   ativo.
+
+Ao cadastrar ou editar cliente como SalesRepresentative:
+
+- o próprio representante é o único vínculo e o representante principal;
+- limite de crédito não pode ser informado ou alterado;
+- tabelas diretas do cliente não podem ser vinculadas ou removidas;
+- tentativas de envio desses campos são rejeitadas pelo backend.
+
+As tabelas visíveis no catálogo e no pedido são limitadas pelos vínculos do
+representante. Essa limitação não altera as regras existentes de aplicabilidade.
 
 ## Condições de Pagamento
 

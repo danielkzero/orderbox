@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class SalesRepresentative extends Model
@@ -38,5 +39,10 @@ class SalesRepresentative extends Model
     public function orders(): HasMany
     {
         return $this->hasMany(Order::class);
+    }
+
+    public function priceTables(): BelongsToMany
+    {
+        return $this->belongsToMany(PriceTable::class, 'sales_representative_price_table')->withTimestamps();
     }
 }

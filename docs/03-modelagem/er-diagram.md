@@ -72,6 +72,8 @@ erDiagram
     PRICE_TABLES ||--o{ ORDERS : utiliza
 
     ORDERS ||--o{ ORDER_ITEMS : contem
+    ORDERS ||--o{ ORDER_DELIVERIES : distribuido
+    SALES_REPRESENTATIVES }o--o{ PRICE_TABLES : visualiza
 
     PRODUCTS ||--o{ ORDER_ITEMS : vendido
 

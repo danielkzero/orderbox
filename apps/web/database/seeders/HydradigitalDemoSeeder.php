@@ -57,6 +57,7 @@ class HydradigitalDemoSeeder extends Seeder
             [$manager, $representatives] = $this->seedUsers($company, $regions);
             [$categories, $brands, $units] = $this->seedCatalogReferences($company);
             [$products, $priceTables] = $this->seedProducts($company, $categories, $brands, $units, $regions);
+            $representatives->each(fn (SalesRepresentative $representative) => $representative->priceTables()->sync($priceTables->pluck('id')));
             $customers = $this->seedCustomers($company, $representatives, $regions);
             $this->seedOrders($company, $manager, $representatives, $customers, $products, $priceTables);
             $this->seedApiClient($company);

@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin;
 
 use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
+use App\Mail\OrderDocumentMail;
 use App\Models\ApiClient;
 use App\Models\AuditLog;
 use App\Models\Brand;
@@ -28,6 +29,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use PragmaRX\Google2FA\Google2FA;
 use Tests\TestCase;
@@ -472,9 +474,11 @@ class AdminPanelTest extends TestCase
             'user_id' => $user->id,
             'region_id' => Region::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id,
             'code' => 'REP-999',
+            'price_table_ids' => [PriceTable::query()->where('company_id', $this->admin->company_id)->firstOrFail()->id],
         ])->assertRedirect(route('representatives.index'));
 
         $representative = SalesRepresentative::query()->where('code', 'REP-999')->firstOrFail();
+        $this->assertCount(1, $representative->priceTables);
         $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();
         $priceTable = $customer->applicablePriceTables()->first();
         $products = Product::query()->where('company_id', $this->admin->company_id)->limit(2)->get();
@@ -546,25 +550,51 @@ class AdminPanelTest extends TestCase
             ->assertDontSee('>Origem<', false)
             ->assertDontSee('name="source"', false);
 
-        $this->actingAs($this->admin)->post(route('orders.send', $order))
-            ->assertRedirect();
-        $this->assertSame('Sent', $order->refresh()->status);
+        $this->actingAs($this->admin)->get(route('orders.show', $order))
+            ->assertOk()
+            ->assertSee($order->order_number)
+            ->assertSee($customer->trade_name ?: $customer->corporate_name);
+        $this->actingAs($this->admin)->get(route('orders.pdf', $order))
+            ->assertOk()
+            ->assertHeader('content-type', 'application/pdf');
 
-        $this->actingAs($this->admin)->post(route('orders.cancel', $order))->assertRedirect();
-        $this->assertSame('Cancelled', $order->refresh()->status);
+        Mail::fake();
+        $this->actingAs($this->admin)->post(route('orders.email', $order))->assertRedirect();
+        Mail::assertSent(OrderDocumentMail::class);
+        $this->assertDatabaseHas('order_deliveries', ['order_id' => $order->id, 'channel' => 'Email', 'status' => 'Sent']);
+
+        $this->actingAs($this->admin)->post(route('orders.whatsapp', $order))
+            ->assertRedirectContains('https://wa.me/');
+        $this->assertDatabaseHas('order_deliveries', ['order_id' => $order->id, 'channel' => 'WhatsApp', 'status' => 'Opened']);
+        $this->actingAs($this->admin)->get(route('orders.history', $order))
+            ->assertOk()
+            ->assertSee('Histórico de envios')
+            ->assertSee('Compartilhamento aberto');
+
+        $this->actingAs($this->admin)->post(route('orders.duplicate', $order))->assertRedirect();
+        $duplicate = Order::query()->where('company_id', $this->admin->company_id)->whereKeyNot($order->id)->latest('id')->firstOrFail();
+        $this->assertSame('Draft', $duplicate->status);
+        $this->assertSame($order->items()->count(), $duplicate->items()->count());
+
+        $this->actingAs($this->admin)->post(route('orders.cancel', $duplicate))->assertRedirect();
+        $this->assertSame('Cancelled', $duplicate->refresh()->status);
         $this->assertDatabaseHas('audit_logs', [
             'action' => 'CancelOrder',
             'entity_type' => 'Order',
-            'entity_id' => $order->id,
-            'entity_label' => $order->order_number,
+            'entity_id' => $duplicate->id,
+            'entity_label' => $duplicate->order_number,
         ]);
 
+        $this->actingAs($this->admin)->post(route('orders.send', $order))->assertRedirect();
+        $this->assertSame('Sent', $order->refresh()->status);
+        $this->actingAs($this->admin)->post(route('orders.cancel', $order))->assertUnprocessable();
+
         $this->actingAs($this->admin)
-            ->get('/audit-logs?search='.urlencode($order->order_number))
+            ->get('/audit-logs?search='.urlencode($duplicate->order_number))
             ->assertOk()
             ->assertSee('Pedido cancelado')
             ->assertSee('Pedido')
-            ->assertSee($order->order_number.' (#'.$order->id.')');
+            ->assertSee($duplicate->order_number.' (#'.$duplicate->id.')');
     }
 
     public function test_admin_can_create_a_user_and_the_action_is_audited(): void
@@ -615,6 +645,8 @@ class AdminPanelTest extends TestCase
     {
         $representativeUser = User::query()->where('role', 'SalesRepresentative')->firstOrFail();
         $representative = $representativeUser->salesRepresentative;
+        $visiblePriceTable = PriceTable::query()->where('company_id', $representativeUser->company_id)->firstOrFail();
+        $representative->priceTables()->sync([$visiblePriceTable->id]);
 
         $this->actingAs($representativeUser)->get('/products')->assertOk();
         $this->actingAs($representativeUser)->get('/price-tables')->assertNotFound();
@@ -635,8 +667,38 @@ class AdminPanelTest extends TestCase
         $this->actingAs($representativeUser)->get('/crud/orders/create')
             ->assertOk()
             ->assertSee($representative->code.' - '.$representativeUser->name)
+            ->assertSee($visiblePriceTable->name)
             ->assertDontSee('Busque por código, nome ou e-mail...')
             ->assertDontSee('name="source"', false);
+
+        $this->actingAs($representativeUser)->get('/crud/customers/create')
+            ->assertOk()
+            ->assertDontSee('name="credit_limit"', false)
+            ->assertDontSee('name="price_table_ids[]"', false)
+            ->assertDontSee('name="representative_ids[]"', false)
+            ->assertSee('Você será definido automaticamente como representante principal');
+
+        $this->actingAs($representativeUser)->post('/crud/customers', [
+            'corporate_name' => 'Cliente criado pelo representante',
+            'document' => '52998224725',
+            'credit_limit' => 999999,
+            'price_table_ids' => [$visiblePriceTable->id],
+            'representative_ids' => [$representative->id],
+        ])->assertSessionHasErrors(['credit_limit', 'price_table_ids', 'representative_ids']);
+
+        $this->actingAs($representativeUser)->post('/crud/customers', [
+            'corporate_name' => 'Cliente criado pelo representante',
+            'document' => '52998224725',
+        ])->assertRedirect(route('customers.index'));
+
+        $createdCustomer = Customer::query()->where('corporate_name', 'Cliente criado pelo representante')->firstOrFail();
+        $this->assertNull($createdCustomer->credit_limit);
+        $this->assertTrue($createdCustomer->priceTables->isEmpty());
+        $this->assertDatabaseHas('customer_representatives', [
+            'customer_id' => $createdCustomer->id,
+            'sales_representative_id' => $representative->id,
+            'is_primary' => true,
+        ]);
 
         $outsideCustomer = Customer::query()->create([
             'company_id' => $representativeUser->company_id,

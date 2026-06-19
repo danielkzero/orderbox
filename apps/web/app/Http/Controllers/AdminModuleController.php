@@ -32,7 +32,9 @@ class AdminModuleController extends Controller
             'Documento' => 'document',
             'Cidade' => fn (Customer $item) => $item->addresses->first()?->city ?? '-',
             'Região' => fn (Customer $item) => $item->region?->name ?? '-',
-            'Limite' => fn (Customer $item) => 'R$ '.number_format((float) $item->credit_limit, 2, ',', '.'),
+            ...($request->user()->isAdministrative() ? [
+                'Limite' => fn (Customer $item) => 'R$ '.number_format((float) $item->credit_limit, 2, ',', '.'),
+            ] : []),
             'Status' => fn (Customer $item) => view('components.status-badge', ['active' => $item->active]),
             'Ações' => fn (Customer $item) => view('admin.modules.actions', ['resource' => 'customers', 'item' => $item]),
         ]);
@@ -79,6 +81,13 @@ class AdminModuleController extends Controller
             'priceTables' => PriceTable::query()
                 ->where('company_id', $companyId)
                 ->where('active', true)
+                ->when(
+                    $request->user()->role === 'SalesRepresentative',
+                    fn (Builder $query) => $query->whereHas(
+                        'salesRepresentatives',
+                        fn (Builder $relation) => $relation->whereKey($this->access->representativeId($request->user())),
+                    ),
+                )
                 ->orderBy('id')
                 ->get(),
             'filters' => [

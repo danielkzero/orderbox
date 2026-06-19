@@ -6,6 +6,7 @@ use App\Http\Controllers\CatalogCrudController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\LocationController;
+use App\Http\Controllers\OrderActionController;
 use App\Http\Controllers\ProductPriceTableController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SecurityController;
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/shared/orders/{order}/pdf', [OrderActionController::class, 'sharedPdf'])
+    ->middleware(['signed', 'throttle:60,1'])
+    ->name('orders.pdf.shared');
 
 Route::get('/dashboard', DashboardController::class)
     ->middleware(['auth', 'active.session', 'company.context', 'verified'])
@@ -53,6 +57,12 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::post('/crud/{resource}/{id}/deactivate', [CatalogCrudController::class, 'deactivate'])->name('crud.deactivate');
     Route::post('/orders/{order}/send', [CatalogCrudController::class, 'sendOrder'])->middleware('throttle:sensitive-write')->name('orders.send');
     Route::post('/orders/{order}/cancel', [CatalogCrudController::class, 'cancelOrder'])->middleware('throttle:sensitive-write')->name('orders.cancel');
+    Route::get('/orders/{order}/view', [OrderActionController::class, 'show'])->name('orders.show');
+    Route::get('/orders/{order}/pdf', [OrderActionController::class, 'pdf'])->name('orders.pdf');
+    Route::post('/orders/{order}/email', [OrderActionController::class, 'email'])->middleware('throttle:sensitive-write')->name('orders.email');
+    Route::post('/orders/{order}/whatsapp', [OrderActionController::class, 'whatsapp'])->middleware('throttle:sensitive-write')->name('orders.whatsapp');
+    Route::get('/orders/{order}/history', [OrderActionController::class, 'history'])->name('orders.history');
+    Route::post('/orders/{order}/duplicate', [OrderActionController::class, 'duplicate'])->middleware('throttle:sensitive-write')->name('orders.duplicate');
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('api-clients.index');
     Route::post('/api-clients', [ApiClientController::class, 'store'])->name('api-clients.store');
     Route::post('/api-clients/{apiClient}/regenerate', [ApiClientController::class, 'regenerate'])->name('api-clients.regenerate');

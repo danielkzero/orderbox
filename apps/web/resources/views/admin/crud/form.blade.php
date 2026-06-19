@@ -188,10 +188,12 @@
                                 <x-input-label for="phone" value="Telefone" />
                                 <x-text-input id="phone" name="phone" class="mt-1 block w-full" :value="old('phone', $model->phone)" />
                             </div>
-                            <div>
-                                <x-input-label for="credit_limit" value="Limite de crédito" />
-                                <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
-                            </div>
+                            @if (auth()->user()->isAdministrative())
+                                <div>
+                                    <x-input-label for="credit_limit" value="Limite de crédito" />
+                                    <x-text-input id="credit_limit" name="credit_limit" type="number" step="0.01" min="0" class="mt-1 block w-full" :value="old('credit_limit', $model->credit_limit)" />
+                                </div>
+                            @endif
                         </div>
                     </div>
 
@@ -335,6 +337,7 @@
                         </div>
                     </div>
 
+                    @if (auth()->user()->isAdministrative())
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <h3 class="font-semibold text-gray-800 dark:text-white/90">Representantes</h3>
@@ -416,6 +419,11 @@
                             </div>
                         </div>
                     </div>
+                    @else
+                        <div class="rounded-2xl border border-brand-100 bg-brand-50/60 p-5 text-sm text-brand-700 dark:border-brand-500/20 dark:bg-brand-500/10 dark:text-brand-300">
+                            Você será definido automaticamente como representante principal deste cliente. Limite de crédito e tabelas comerciais são administrados pela gestão.
+                        </div>
+                    @endif
                 </div>
             @elseif ($resource === 'products')
                 @php
@@ -490,7 +498,6 @@
                             </div>
                         </div>
                     </div>
-
                     <div class="rounded-2xl border border-gray-200 dark:border-gray-800">
                         <div class="border-b border-gray-200 px-5 py-4 dark:border-gray-800">
                             <h3 class="font-semibold text-gray-800 dark:text-white/90">Preço e disponibilidade</h3>
@@ -892,6 +899,35 @@
                                 <option value="{{ $region->id }}" @selected((int) old('region_id', $model->region_id) === $region->id)>{{ $region->name }}</option>
                             @endforeach
                         </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <x-input-label value="Tabelas de preço visíveis" />
+                        <p class="mb-3 mt-1 text-xs text-gray-500 dark:text-gray-400">A seleção controla apenas quais tabelas o representante pode visualizar e utilizar. As regras comerciais existentes permanecem válidas.</p>
+                        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                            @php
+                                $representativePriceTableIds = collect(old(
+                                    'price_table_ids',
+                                    $model->exists ? $model->priceTables->pluck('id')->all() : [],
+                                ))->map(fn ($id) => (int) $id);
+                            @endphp
+                            @forelse ($priceTables as $priceTable)
+                                <label class="flex items-center gap-3 rounded-xl border border-gray-200 px-4 py-3 text-sm text-gray-700 dark:border-gray-800 dark:text-gray-300">
+                                    <input
+                                        type="checkbox"
+                                        name="price_table_ids[]"
+                                        value="{{ $priceTable->id }}"
+                                        @checked($representativePriceTableIds->contains($priceTable->id))
+                                        class="rounded border-gray-300 text-brand-500 focus:ring-brand-500"
+                                    >
+                                    <span>
+                                        <strong class="block font-medium">{{ $priceTable->name }}</strong>
+                                        <span class="text-xs text-gray-500">{{ $priceTable->region?->name ?? 'Todas as regiões' }}</span>
+                                    </span>
+                                </label>
+                            @empty
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Nenhuma tabela ativa cadastrada.</p>
+                            @endforelse
+                        </div>
                     </div>
                 </div>
             @elseif ($resource === 'payment-methods')
