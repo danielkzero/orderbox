@@ -106,9 +106,10 @@ compactos com ícones. Cada botão possui tooltip e nome acessível para
 identificar sua função, incluindo editar, visualizar, enviar, inativar,
 regenerar, bloquear e revogar.
 
-O tooltip é centralizado imediatamente acima do botão correspondente. Ele só é
-reposicionado abaixo quando não existe espaço suficiente no topo da janela,
-evitando sobreposição com ações vizinhas.
+O tooltip segue o padrão `top`: é centralizado imediatamente acima do botão
+correspondente e possui uma seta inferior apontando para o controle. Nos
+limites laterais da janela, a caixa é ajustada sem perder o alinhamento da seta
+com o botão.
 
 Quando uma linha possui ações secundárias, o acesso ocorre pelo ícone de três
 pontos verticais. O menu aberto mantém ícone e texto em cada opção para evitar

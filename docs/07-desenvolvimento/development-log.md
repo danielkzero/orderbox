@@ -3,6 +3,20 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Tooltip superior com seta
+
+### Correção
+
+Os tooltips de ações passaram a seguir o padrão visual superior com uma seta
+inferior apontando diretamente para o botão relacionado.
+
+### Impactos
+
+- tooltip exibido acima do controle;
+- seta alinhada ao centro do botão;
+- ajuste horizontal da caixa nas bordas da janela sem deslocar a seta;
+- padrão aplicado aos ícones das tabelas e demais usos do componente.
+
 ## 2026-06-22 — Posicionamento dos tooltips de ações
 
 ### Correção

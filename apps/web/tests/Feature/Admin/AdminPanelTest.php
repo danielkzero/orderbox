@@ -156,6 +156,7 @@ class AdminPanelTest extends TestCase
             ->assertSee('x-teleport="body"', false)
             ->assertSee('fixed z-[100002]', false)
             ->assertSee('rect.top - tooltip.height - gap', false)
+            ->assertSee('-bottom-1 -translate-x-1/2', false)
             ->assertSee('Adicionar tabela de preço');
     }
 

@@ -6,6 +6,7 @@
         open: false,
         position: @js($position),
         style: '',
+        arrowStyle: '',
         repositionHandler: null,
         init() {
             this.repositionHandler = () => {
@@ -25,6 +26,8 @@
             const tooltip = this.$refs.tooltip.getBoundingClientRect();
             const gap = 8;
             const viewportPadding = 8;
+            const triggerCenterX = rect.left + (rect.width / 2);
+            const triggerCenterY = rect.top + (rect.height / 2);
             let left = rect.left + ((rect.width - tooltip.width) / 2);
             let top = rect.top - tooltip.height - gap;
 
@@ -36,8 +39,6 @@
             } else if (this.position === 'right') {
                 left = rect.right + gap;
                 top = rect.top + ((rect.height - tooltip.height) / 2);
-            } else if (top < viewportPadding) {
-                top = rect.bottom + gap;
             }
 
             left = Math.min(
@@ -50,6 +51,20 @@
             );
 
             this.style = `left: ${Math.round(left)}px; top: ${Math.round(top)}px;`;
+
+            if (this.position === 'left' || this.position === 'right') {
+                const arrowTop = Math.min(
+                    Math.max(8, triggerCenterY - top),
+                    tooltip.height - 8,
+                );
+                this.arrowStyle = `top: ${Math.round(arrowTop)}px;`;
+            } else {
+                const arrowLeft = Math.min(
+                    Math.max(8, triggerCenterX - left),
+                    tooltip.width - 8,
+                );
+                this.arrowStyle = `left: ${Math.round(arrowLeft)}px;`;
+            }
         },
         show() {
             this.open = true;
@@ -82,6 +97,17 @@
             role="tooltip"
         >
             {{ $text }}
+            <span
+                aria-hidden="true"
+                :style="arrowStyle"
+                @class([
+                    'absolute size-2 rotate-45 bg-gray-900 dark:bg-gray-700',
+                    '-bottom-1 -translate-x-1/2' => $position === 'top',
+                    '-top-1 -translate-x-1/2' => $position === 'bottom',
+                    '-right-1 -translate-y-1/2' => $position === 'left',
+                    '-left-1 -translate-y-1/2' => $position === 'right',
+                ])
+            ></span>
         </span>
     </template>
 </span>
