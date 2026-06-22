@@ -530,6 +530,8 @@ Carregar os cadastros essenciais para iniciar a operação da empresa.
 ### Comportamento
 
 - download de modelo preenchido com exemplo e aba de instruções;
+- colunas `codigo`, `sku` e `barcode` do modelo de produtos formatadas como
+  texto para preservar zeros à esquerda e códigos longos;
 - limite de 10 MB e 5.000 linhas;
 - envio imediato para a fila;
 - processamento sequencial em blocos de 100 linhas;

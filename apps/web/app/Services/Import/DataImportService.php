@@ -22,7 +22,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use Throwable;
 
@@ -196,7 +199,9 @@ class DataImportService
             ];
             foreach ($headers as $index => $header) {
                 if ($header !== '') {
-                    $row[$header] = $values[$index] ?? null;
+                    $row[$header] = in_array($header, ['codigo', 'sku', 'barcode'], true)
+                        ? $this->identifierCellValue($sheet, $index + 1, $offset + 2)
+                        : ($values[$index] ?? null);
                 }
             }
             $rows[] = $row;
@@ -458,6 +463,31 @@ class DataImportService
     private function normalizeHeader(string $header): string
     {
         return Str::of($header)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->toString();
+    }
+
+    private function identifierCellValue(Worksheet $sheet, int $column, int $row): ?string
+    {
+        $cell = $sheet->getCell(Coordinate::stringFromColumnIndex($column).$row);
+        $value = $cell->getValue();
+
+        if ($value === null || $value === '') {
+            return null;
+        }
+
+        if ($cell->getDataType() === DataType::TYPE_STRING) {
+            return trim((string) $value);
+        }
+
+        $format = $cell->getStyle()->getNumberFormat()->getFormatCode();
+        if ($format !== NumberFormat::FORMAT_GENERAL) {
+            return trim((string) $cell->getFormattedValue());
+        }
+
+        if (is_numeric($value) && abs((float) $value - round((float) $value)) < 0.000001) {
+            return number_format((float) $value, 0, '.', '');
+        }
+
+        return trim((string) $cell->getFormattedValue());
     }
 
     private function validateQuantityConfiguration(array $row, array $data): void

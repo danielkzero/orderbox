@@ -74,14 +74,19 @@ A aba Produtos concentra dados de:
 Categorias, marcas, unidades e tabelas de preço inexistentes são criadas
 automaticamente dentro da empresa autenticada.
 
+`codigo` (`products.external_id`), `sku` e `barcode` são identificadores
+textuais. O modelo formata essas colunas como texto e o importador preserva
+zeros à esquerda. Códigos longos devem ser preenchidos no modelo fornecido sem
+alterar essa formatação, evitando a conversão ou perda de precisão pelo Excel.
+
 ### Colunas de Produto
 
 | Coluna | Obrigatória | Destino/Regra |
 |---|---|---|
-| codigo | Não | `products.external_id` |
+| codigo | Não | Texto preservado em `products.external_id` |
 | nome | Sim | Nome do produto |
-| sku | Sim | Chave de criação/atualização |
-| barcode | Não | Código de barras |
+| sku | Sim | Texto usado como chave de criação/atualização |
+| barcode | Não | Código de barras preservado como texto |
 | peso_kg | Não | Peso em quilogramas |
 | comprimento_cm | Não | Comprimento |
 | largura_cm | Não | Largura |

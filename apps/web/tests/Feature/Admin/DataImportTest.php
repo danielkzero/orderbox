@@ -12,8 +12,10 @@ use App\Services\Import\DataImportTemplateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Queue;
+use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
 
@@ -42,7 +44,8 @@ class DataImportTest extends TestCase
             ->assertDownload('orderbox-importacao-products.xlsx');
 
         $path = app(DataImportTemplateService::class)->create('products');
-        $headers = IOFactory::load($path)->getSheetByName('Produtos')->rangeToArray('A1:U1')[0];
+        $productsSheet = IOFactory::load($path)->getSheetByName('Produtos');
+        $headers = $productsSheet->rangeToArray('A1:U1')[0];
 
         $this->assertContains('quantidade_minima', $headers);
         $this->assertContains('multiplo', $headers);
@@ -51,6 +54,42 @@ class DataImportTest extends TestCase
         $this->assertNotContains('descricao_curta', $headers);
         $this->assertNotContains('url_imagem', $headers);
         $this->assertNotContains('unidade_codigo', $headers);
+        $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('A2')->getNumberFormat()->getFormatCode());
+        $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('C2')->getNumberFormat()->getFormatCode());
+        $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('D2')->getNumberFormat()->getFormatCode());
+    }
+
+    public function test_product_import_preserves_identifiers_as_strings(): void
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Produtos');
+        $sheet->fromArray([
+            'codigo', 'nome', 'sku', 'barcode', 'categoria', 'unidade',
+        ], null, 'A1');
+        $sheet->fromArray([
+            1234, 'Produto com códigos numéricos', 567, null, 'Geral', 'UN',
+        ], null, 'A2');
+        $sheet->getStyle('A2')->getNumberFormat()->setFormatCode('000000');
+        $sheet->getStyle('C2')->getNumberFormat()->setFormatCode('000000');
+        $sheet->setCellValueExplicit('D2', '000789123', DataType::TYPE_STRING);
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), [
+                'type' => 'products',
+                'file' => $this->uploadedSpreadsheet($spreadsheet),
+            ])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
+        $this->assertDatabaseHas('products', [
+            'company_id' => $this->admin->company_id,
+            'external_id' => '001234',
+            'sku' => '000567',
+            'barcode' => '000789123',
+        ]);
     }
 
     public function test_product_import_creates_related_catalog_and_prices(): void

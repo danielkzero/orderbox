@@ -3,6 +3,23 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Identificadores textuais na importação de produtos
+
+### Correção
+
+O modelo e o leitor da importação passaram a tratar `codigo`
+(`products.external_id`), `sku` e `barcode` como identificadores textuais.
+
+### Impactos
+
+- modelo Excel formata as três colunas como texto;
+- zeros à esquerda são preservados em células textuais ou com máscara numérica;
+- números inteiros no formato Geral são convertidos para texto sem notação
+  científica;
+- instruções do modelo alertam sobre códigos longos e perda de precisão do
+  Excel;
+- nenhuma alteração estrutural no banco de dados ou na API.
+
 ## 2026-06-22 — Inativação de tabelas de preço
 
 ### Funcionalidade

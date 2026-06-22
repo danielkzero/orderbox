@@ -5,6 +5,7 @@ namespace App\Services\Import;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class DataImportTemplateService
@@ -54,7 +55,7 @@ class DataImportTemplateService
                 'Categoria exemplo', '', 'Marca exemplo', 'UN', 89.9, 79.9,
             ];
 
-            $this->addSheet($spreadsheet, 'Produtos', $headers, $example);
+            $this->addSheet($spreadsheet, 'Produtos', $headers, $example, ['codigo', 'sku', 'barcode']);
         }
 
         if (in_array($type, ['initial', 'customers'], true)) {
@@ -82,11 +83,26 @@ class DataImportTemplateService
         return $path;
     }
 
-    private function addSheet(Spreadsheet $spreadsheet, string $title, array $headers, array $example): void
-    {
+    private function addSheet(
+        Spreadsheet $spreadsheet,
+        string $title,
+        array $headers,
+        array $example,
+        array $textHeaders = [],
+    ): void {
         $sheet = $spreadsheet->createSheet();
         $sheet->setTitle($title);
         $sheet->fromArray($headers, null, 'A1');
+
+        foreach ($headers as $index => $header) {
+            if (in_array($header, $textHeaders, true)) {
+                $column = Coordinate::stringFromColumnIndex($index + 1);
+                $sheet->getStyle("{$column}2:{$column}5001")
+                    ->getNumberFormat()
+                    ->setFormatCode(NumberFormat::FORMAT_TEXT);
+            }
+        }
+
         $sheet->fromArray($example, null, 'A2');
         $lastColumn = $sheet->getHighestColumn();
         $sheet->getStyle("A1:{$lastColumn}1")->getFont()->setBold(true)->getColor()->setARGB('FFFFFFFF');
@@ -109,6 +125,7 @@ class DataImportTemplateService
             ['Limite', 'Máximo de 5.000 linhas de dados e 10 MB por arquivo.'],
             ['Atualização', 'Produtos são identificados pelo SKU; clientes pelo CPF/CNPJ; formas e prazos pelo código.'],
             ['Valores', 'Decimais podem usar vírgula ou ponto. Campos booleanos aceitam sim/não, 1/0, true/false.'],
+            ['Identificadores', 'Código, SKU e barcode são textos. Não remova a formatação textual dessas colunas para preservar zeros à esquerda e códigos longos.'],
             ['Produtos', 'Categoria, categoria pai, marca, unidade e tabelas de preço são criadas quando ainda não existem.'],
             ['Tabelas de preço', 'Depois da coluna unidade, use cada cabeçalho como nome de tabela e informe somente o preço nas linhas. São aceitas até 20 tabelas.'],
             ['Quantidades', 'Quantidade mínima e múltiplo pertencem ao produto. Fator peso aceita decimais para venda por peso ou medida.'],
