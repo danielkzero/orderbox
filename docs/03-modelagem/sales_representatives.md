@@ -8,6 +8,12 @@ Permite controlar a carteira de clientes de cada representante.
 
 Todo representante está vinculado a um usuário.
 
+Todo usuário com role `SalesRepresentative` deve possuir um
+SalesRepresentative na mesma empresa. Ao criar ou converter o usuário para
+esse perfil, o sistema provisiona automaticamente um cadastro operacional com
+código provisório `REP-USR-{user_id}`. Região, carteira e tabelas de preço são
+configuradas posteriormente por Admin ou Manager.
+
 ---
 
 ## Campos
@@ -40,6 +46,9 @@ SalesRepresentative
 ### Código Único
 
 O código deve ser único dentro da empresa.
+
+O código provisório gerado automaticamente pode ser substituído na manutenção
+do representante.
 
 ### Exclusão
 

@@ -718,6 +718,30 @@ class AdminPanelTest extends TestCase
             ->assertSee($duplicate->order_number.' (#'.$duplicate->id.')');
     }
 
+    public function test_sales_representative_user_is_provisioned_and_can_open_dashboard(): void
+    {
+        $this->actingAs($this->admin)->post(route('users.store'), [
+            'name' => 'Representante provisionado',
+            'email' => 'representante.provisionado@hydradigital.test',
+            'role' => 'SalesRepresentative',
+            'password' => 'password',
+            'password_confirmation' => 'password',
+        ])->assertRedirect(route('users.index'));
+
+        $representativeUser = User::query()
+            ->where('email', 'representante.provisionado@hydradigital.test')
+            ->firstOrFail();
+        $representative = $representativeUser->salesRepresentative()->firstOrFail();
+
+        $this->assertSame($representativeUser->company_id, $representative->company_id);
+        $this->assertSame('REP-USR-'.$representativeUser->id, $representative->code);
+        $this->assertTrue($representative->active);
+
+        $this->actingAs($representativeUser)
+            ->get(route('dashboard'))
+            ->assertOk();
+    }
+
     public function test_order_quantity_respects_product_minimum_multiple_and_fractional_sale(): void
     {
         $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();

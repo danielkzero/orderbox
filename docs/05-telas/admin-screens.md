@@ -130,6 +130,11 @@ Representantes visualizam catálogo, clientes da própria carteira e pedidos
 próprios. Cadastros administrativos e cancelamento de pedidos enviados são
 restritos a Admin e Manager.
 
+Ao criar um usuário com perfil SalesRepresentative, o sistema cria
+automaticamente seu cadastro operacional de representante. O código provisório
+pode ser ajustado posteriormente na tela Representantes, junto com região e
+tabelas de preço.
+
 ---
 
 ## Tela: Dashboard

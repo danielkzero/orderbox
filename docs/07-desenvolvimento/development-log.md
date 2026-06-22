@@ -3,6 +3,24 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Provisionamento obrigatório de representantes
+
+### Correção
+
+Usuários com role `SalesRepresentative` sem registro correspondente em
+`sales_representatives` recebiam HTTP 403 ao abrir o dashboard, porque o
+isolamento da carteira não conseguia identificar o representante.
+
+### Impactos
+
+- criação e conversão de usuário provisionam o representante automaticamente;
+- código provisório único segue o padrão `REP-USR-{user_id}`;
+- usuários existentes sem vínculo são corrigidos por migration de dados;
+- inativação do usuário também inativa o cadastro operacional;
+- região, carteira e tabelas de preço continuam exigindo configuração
+  administrativa;
+- isolamento por empresa e por representante permanece inalterado.
+
 ## 2026-06-22 — Identificadores textuais na importação de produtos
 
 ### Correção

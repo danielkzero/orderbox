@@ -5,13 +5,19 @@ namespace App\Http\Controllers;
 use App\Models\User;
 use App\Services\AuditService;
 use App\Services\Authentication\AuthenticationSessionService;
+use App\Services\SalesRepresentativeProvisioner;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class UserManagementController extends Controller
 {
+    public function __construct(
+        private readonly SalesRepresentativeProvisioner $representatives,
+    ) {}
+
     public function index(Request $request): View
     {
         $this->authorizeAdmin($request);
@@ -39,7 +45,12 @@ class UserManagementController extends Controller
         $data['company_id'] = $request->user()->company_id;
         $data['active'] = true;
         $data['email_verified_at'] = now();
-        $user = User::query()->create($data);
+        $user = DB::transaction(function () use ($data): User {
+            $user = User::query()->create($data);
+            $this->representatives->ensure($user);
+
+            return $user;
+        });
         $audit->record($request->user(), 'Create', $user, null, $user->only(['name', 'email', 'role', 'active']));
 
         return redirect()->route('users.index')->with('status', 'Usuário criado.');
@@ -62,7 +73,23 @@ class UserManagementController extends Controller
         }
 
         $oldValues = $user->only(['name', 'email', 'role', 'active']);
-        $user->update($data);
+        DB::transaction(function () use ($user, $data, $oldValues): void {
+            $user->update($data);
+
+            if ($user->role !== 'SalesRepresentative') {
+                $this->representatives->deactivate($user);
+
+                return;
+            }
+
+            $shouldActivate = $oldValues['role'] !== 'SalesRepresentative'
+                || (! $oldValues['active'] && $user->active);
+            $this->representatives->ensure($user, $shouldActivate);
+
+            if (! $user->active) {
+                $this->representatives->deactivate($user);
+            }
+        });
         $audit->record($request->user(), 'Update', $user, $oldValues, $user->only(['name', 'email', 'role', 'active']));
 
         return redirect()->route('users.index')->with('status', 'Usuário atualizado.');
@@ -72,7 +99,10 @@ class UserManagementController extends Controller
     {
         $this->authorizeAdmin($request, $user);
         abort_if($user->is($request->user()), 422, 'Você não pode inativar sua própria conta.');
-        $user->update(['active' => false]);
+        DB::transaction(function () use ($user): void {
+            $user->update(['active' => false]);
+            $this->representatives->deactivate($user);
+        });
         $sessions->revokeAll($user);
         $audit->record($request->user(), 'Deactivate', $user, ['active' => true], ['active' => false]);
 

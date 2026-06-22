@@ -101,7 +101,7 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 | ProductPrices | `(product_id, price_table_id)` único; `price > 0` |
 | PaymentMethods | `(company_id, code)` único; `(company_id, name)` único |
 | PaymentTerms | `(company_id, code)` único; `(company_id, name)` único; `installment_days` não vazio; `minimum_order_amount >= 0` |
-| SalesRepresentatives | `(company_id, user_id)` único; `(company_id, code)` único |
+| SalesRepresentatives | `(company_id, user_id)` único; `(company_id, code)` único; obrigatório para todo User com role `SalesRepresentative` |
 | Orders | `(company_id, order_number)` único; `(company_id, client_reference)` único quando informado; `version >= 1`; valores não negativos |
 | OrderItems | `quantity > 0`; `unit_price >= 0`; `total_amount >= 0` |
 | OrderDeliveries | canal e status obrigatórios; Company, Order e User consistentes |
