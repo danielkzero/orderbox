@@ -85,20 +85,41 @@
                         @foreach ($priceTables as $priceTable)
                             <th class="min-w-[180px] px-5 py-4" x-data="{ editing: false }">
                                 @if (auth()->user()->isAdministrative())
-                                    <x-tooltip text="Editar nome da tabela" position="top">
-                                        <button
-                                            type="button"
-                                            x-show="! editing"
-                                            @click="editing = true; $nextTick(() => $refs.name.focus())"
-                                            class="group flex items-center gap-2 text-left font-semibold text-gray-700 hover:text-brand-600 dark:text-gray-200 dark:hover:text-brand-400"
-                                            aria-label="Editar nome da tabela {{ $priceTable->name }}"
+                                    <div x-show="! editing" class="flex items-center gap-1.5">
+                                        <span class="font-semibold text-gray-700 dark:text-gray-200">{{ $priceTable->name }}</span>
+                                        <x-tooltip text="Editar nome da tabela" position="top">
+                                            <button
+                                                type="button"
+                                                @click="editing = true; $nextTick(() => $refs.name.focus())"
+                                                class="inline-flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/10 dark:hover:text-brand-400"
+                                                aria-label="Editar nome da tabela {{ $priceTable->name }}"
+                                            >
+                                                <x-icon name="pencil" class="size-3.5" />
+                                            </button>
+                                        </x-tooltip>
+                                        <form
+                                            method="POST"
+                                            action="{{ route('products.price-tables.deactivate', $priceTable) }}"
+                                            data-confirm-title="Inativar tabela de preço?"
+                                            data-confirm-message="A tabela deixará de aparecer em novos produtos, clientes, representantes e pedidos. Preços e históricos existentes serão preservados."
+                                            data-confirm-label="Continuar"
+                                            data-confirm-level="double"
+                                            data-confirm-variant="danger"
+                                            data-confirm-final-title="Confirmar inativação da tabela?"
+                                            data-confirm-final-message="Pedidos em rascunho que usam esta tabela não poderão ser enviados até selecionar outra tabela ativa."
+                                            data-confirm-final-label="Sim, inativar"
                                         >
-                                            <span>{{ $priceTable->name }}</span>
-                                            <svg class="size-4 opacity-0 transition group-hover:opacity-100" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-                                                <path d="m4 20 4.5-1 10-10a2.1 2.1 0 0 0-3-3l-10 10L4 20Z" stroke-linecap="round" stroke-linejoin="round" />
-                                            </svg>
-                                        </button>
-                                    </x-tooltip>
+                                            @csrf
+                                            <x-tooltip text="Inativar tabela" position="top">
+                                                <button
+                                                    class="inline-flex size-7 items-center justify-center rounded-lg text-gray-400 hover:bg-error-50 hover:text-error-600 dark:hover:bg-error-500/10 dark:hover:text-error-400"
+                                                    aria-label="Inativar tabela {{ $priceTable->name }}"
+                                                >
+                                                    <x-icon name="ban" class="size-3.5" />
+                                                </button>
+                                            </x-tooltip>
+                                        </form>
+                                    </div>
                                     <form
                                         x-show="editing"
                                         x-cloak

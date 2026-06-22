@@ -40,6 +40,9 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::patch('/products/price-tables/{priceTable}', [ProductPriceTableController::class, 'update'])
         ->middleware('throttle:sensitive-write')
         ->name('products.price-tables.update');
+    Route::post('/products/price-tables/{priceTable}/deactivate', [ProductPriceTableController::class, 'deactivate'])
+        ->middleware('throttle:sensitive-write')
+        ->name('products.price-tables.deactivate');
     Route::get('/representatives', [AdminModuleController::class, 'representatives'])->name('representatives.index');
     Route::get('/orders', [AdminModuleController::class, 'orders'])->name('orders.index');
     Route::get('/payment-methods', [AdminModuleController::class, 'paymentMethods'])->name('payment-methods.index');

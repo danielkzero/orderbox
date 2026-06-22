@@ -249,7 +249,12 @@ O cabeçalho da listagem de Produtos concentra:
 - criação de tabela pelo botão `+` ao lado de Preço;
 - exibição de cada tabela ativa como coluna;
 - renomeação inline no cabeçalho da coluna;
+- inativação com confirmação dupla no cabeçalho da coluna;
 - consulta dos preços cadastrados para cada produto.
+
+A inativação preserva o histórico e remove a tabela das novas operações.
+Pedidos em rascunho que ainda utilizem a tabela devem selecionar outra tabela
+ativa antes do envio.
 
 Os valores são mantidos no formulário do produto. O vínculo com região
 continua sendo configurado exclusivamente em Regiões.

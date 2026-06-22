@@ -14,11 +14,16 @@ As tabelas de preço são gerenciadas dentro da listagem de Produtos:
 - o botão `+` no cabeçalho Preço cria uma tabela ativa para a empresa;
 - cada tabela ativa é exibida como uma coluna após Preço;
 - o nome pode ser editado diretamente no cabeçalho da coluna;
+- a tabela pode ser inativada no cabeçalho mediante confirmação dupla;
 - nomes são únicos dentro da empresa;
-- somente Admin e Manager podem criar ou renomear;
+- somente Admin e Manager podem criar, renomear ou inativar;
 - representantes possuem acesso somente de leitura.
 
 A listagem de Produtos não define região.
+
+A inativação preserva preços, vínculos e pedidos históricos. A tabela deixa de
+ser oferecida em novas operações. Pedidos em rascunho que ainda utilizem a
+tabela inativa não podem ser enviados até selecionar outra tabela ativa.
 
 ### Regiões
 

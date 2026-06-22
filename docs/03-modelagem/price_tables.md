@@ -8,6 +8,9 @@ Permite que um mesmo produto possua diferentes preços para diferentes públicos
 
 Toda tabela de preço pertence a uma Company.
 
+Tabelas inativas permanecem armazenadas para preservar preços, vínculos e
+pedidos históricos. O campo `active = false` impede seu uso em novas operações.
+
 ---
 
 ## Campos

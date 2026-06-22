@@ -3,6 +3,22 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Inativação de tabelas de preço
+
+### Funcionalidade
+
+Inclusão da ação de inativar diretamente no cabeçalho das tabelas de preço em
+Produtos.
+
+### Impactos
+
+- ação restrita a Admin e Manager;
+- confirmação dupla antes da inativação;
+- preservação dos preços, vínculos e pedidos históricos;
+- remoção automática da tabela das novas operações;
+- auditoria com ação `Deactivate`;
+- pedidos em rascunho com tabela inativa continuam bloqueados para envio.
+
 ## 2026-06-22 — Importação assíncrona em blocos
 
 ### Correção

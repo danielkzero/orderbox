@@ -436,6 +436,40 @@ class AdminPanelTest extends TestCase
         ]);
     }
 
+    public function test_admin_can_deactivate_price_table_with_double_confirmation_and_preserve_history(): void
+    {
+        $priceTable = PriceTable::query()
+            ->where('company_id', $this->admin->company_id)
+            ->whereHas('prices')
+            ->firstOrFail();
+        $priceCount = ProductPrice::query()->where('price_table_id', $priceTable->id)->count();
+
+        $this->actingAs($this->admin)->get(route('products.index'))
+            ->assertOk()
+            ->assertSee('aria-label="Inativar tabela '.$priceTable->name.'"', false)
+            ->assertSee('data-confirm-level="double"', false)
+            ->assertSee('Confirmar inativação da tabela?');
+
+        $this->actingAs($this->admin)
+            ->post(route('products.price-tables.deactivate', $priceTable))
+            ->assertRedirect(route('products.index'));
+
+        $this->assertDatabaseHas('price_tables', [
+            'id' => $priceTable->id,
+            'active' => false,
+        ]);
+        $this->assertSame($priceCount, ProductPrice::query()->where('price_table_id', $priceTable->id)->count());
+        $this->assertDatabaseHas('audit_logs', [
+            'action' => 'Deactivate',
+            'entity_type' => 'PriceTable',
+            'entity_id' => $priceTable->id,
+        ]);
+        $this->actingAs($this->admin)->get(route('products.index'))
+            ->assertOk()
+            ->assertDontSee('aria-label="Editar nome da tabela '.$priceTable->name.'"', false)
+            ->assertDontSee('aria-label="Inativar tabela '.$priceTable->name.'"', false);
+    }
+
     public function test_admin_can_link_a_price_table_created_in_products_to_a_region(): void
     {
         $this->actingAs($this->admin)->post(route('products.price-tables.store'), [

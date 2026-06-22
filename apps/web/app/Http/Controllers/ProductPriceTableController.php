@@ -56,4 +56,20 @@ class ProductPriceTableController extends Controller
 
         return redirect()->route('products.index')->with('status', 'Nome da tabela de preço atualizado.');
     }
+
+    public function deactivate(Request $request, PriceTable $priceTable, AuditService $audit): RedirectResponse
+    {
+        abort_unless($request->user()->isAdministrative(), 403);
+        abort_unless($priceTable->company_id === $request->user()->company_id, 404);
+
+        if (! $priceTable->active) {
+            return redirect()->route('products.index')->with('status', 'A tabela de preço já está inativa.');
+        }
+
+        $oldValues = $priceTable->toArray();
+        $priceTable->update(['active' => false]);
+        $audit->record($request->user(), 'Deactivate', $priceTable, $oldValues, $priceTable->fresh()->toArray());
+
+        return redirect()->route('products.index')->with('status', 'Tabela de preço inativada.');
+    }
 }
