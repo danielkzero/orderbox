@@ -99,6 +99,17 @@ O painel utiliza componentes padronizados:
 
 Não são utilizados `window.confirm()` ou alerts nativos do navegador.
 
+### Ações em Tabelas
+
+As ações diretas das tabelas administrativas são exibidas como botões
+compactos com ícones. Cada botão possui tooltip e nome acessível para
+identificar sua função, incluindo editar, visualizar, enviar, inativar,
+regenerar, bloquear e revogar.
+
+Quando uma linha possui ações secundárias, o acesso ocorre pelo ícone de três
+pontos verticais. O menu aberto mantém ícone e texto em cada opção para evitar
+ambiguidade.
+
 ### Experiência do Painel
 
 O painel administrativo oferece navegação responsiva, feedback imediato e

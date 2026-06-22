@@ -3,6 +3,36 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Ações com ícones nas tabelas administrativas
+
+### Funcionalidade
+
+As ações de linha das tabelas administrativas foram padronizadas como botões
+compactos com ícones, tooltip e identificação acessível.
+
+### Motivo
+
+Reduzir a largura ocupada pela coluna de ações e melhorar a leitura das
+listagens, especialmente em pedidos e tabelas com várias operações.
+
+### Arquivos alterados
+
+- componentes de ícone, tooltip de ação e botão de tabela;
+- partial compartilhada de ações dos módulos;
+- tabelas de usuários, clientes de API e sessões;
+- documentação de telas e registro de desenvolvimento;
+- testes administrativos.
+
+### Impactos
+
+- pedidos usam ícones para editar, visualizar, enviar por e-mail, WhatsApp e
+  enviar pedido;
+- o menu `Outras ações` usa três pontos verticais;
+- editar e inativar foram padronizados nos demais cadastros;
+- regenerar, bloquear e revogar usam o mesmo padrão visual;
+- menus expandidos preservam texto e ícone para clareza;
+- sem alterações em banco de dados, API, Mobile ou B2B.
+
 ## 2026-06-22 — Paginação das sessões recentes
 
 ### Funcionalidade

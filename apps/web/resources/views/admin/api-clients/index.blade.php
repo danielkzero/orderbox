@@ -66,12 +66,12 @@
                                     <div class="flex justify-end gap-3">
                                         <form method="POST" action="{{ route('api-clients.regenerate', $client) }}" data-confirm-title="Regenerar segredo?" data-confirm-message="O segredo atual deixará de funcionar imediatamente." data-confirm-label="Regenerar" data-confirm-variant="warning">
                                             @csrf
-                                            <button class="text-sm font-medium text-brand-600 dark:text-brand-400">Regenerar</button>
+                                            <x-table-action icon="refresh" label="Regenerar segredo" variant="warning" />
                                         </form>
                                         @if ($client->active)
                                             <form method="POST" action="{{ route('api-clients.deactivate', $client) }}" data-confirm-title="Bloquear integração?" data-confirm-message="O aplicativo ou integração perderá acesso à API." data-confirm-label="Continuar" data-confirm-level="double" data-confirm-variant="danger" data-confirm-final-title="Confirmar bloqueio da integração?" data-confirm-final-message="As autenticações que usam estas credenciais deixarão de funcionar." data-confirm-final-label="Sim, bloquear">
                                                 @csrf
-                                                <button class="text-sm font-medium text-error-600">Bloquear</button>
+                                                <x-table-action icon="ban" label="Bloquear integração" variant="danger" />
                                             </form>
                                         @endif
                                     </div>

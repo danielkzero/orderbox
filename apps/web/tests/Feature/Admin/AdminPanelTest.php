@@ -138,6 +138,10 @@ class AdminPanelTest extends TestCase
             ->assertSee('data-confirm-title="', false)
             ->assertSee('data-confirm-level="double"', false)
             ->assertSee('confirmationDialog()', false)
+            ->assertSee('aria-label="Visualizar pedido"', false)
+            ->assertSee('aria-label="Enviar por e-mail"', false)
+            ->assertSee('aria-label="Enviar por WhatsApp"', false)
+            ->assertSee('aria-label="Outras ações"', false)
             ->assertDontSee('return confirm(', false);
 
         $this->actingAs($this->admin)
@@ -161,6 +165,7 @@ class AdminPanelTest extends TestCase
             <x-alert variant="info" title="Aviso">Mensagem</x-alert>
             <x-spinner />
             <x-tooltip text="Ajuda"><button type="button">?</button></x-tooltip>
+            <x-table-action icon="pencil" label="Editar registro" variant="primary" />
             <x-popover title="Detalhes" trigger="Abrir">Conteúdo</x-popover>
             <x-progress-bar :value="45" label="Progresso" />
             <x-ribbon>Novo</x-ribbon>
@@ -169,6 +174,7 @@ class AdminPanelTest extends TestCase
 
         $this->assertStringContainsString('role="status"', $html);
         $this->assertStringContainsString('role="tooltip"', $html);
+        $this->assertStringContainsString('aria-label="Editar registro"', $html);
         $this->assertStringContainsString('role="progressbar"', $html);
         $this->assertStringContainsString('Novo', $html);
         $this->assertStringContainsString('Descrição', $html);
@@ -214,6 +220,11 @@ class AdminPanelTest extends TestCase
         $this->assertSame($this->admin->company_id, $client->company_id);
         $this->assertNotEmpty($client->client_key);
         $this->assertDatabaseHas('audit_logs', ['action' => 'CreateApiClient', 'entity_id' => $client->id]);
+
+        $this->actingAs($this->admin)->get(route('api-clients.index'))
+            ->assertOk()
+            ->assertSee('aria-label="Regenerar segredo"', false)
+            ->assertSee('aria-label="Bloquear integração"', false);
     }
 
     public function test_admin_can_create_update_and_deactivate_catalog_records(): void
@@ -733,6 +744,7 @@ class AdminPanelTest extends TestCase
             ->get('/security')
             ->assertOk()
             ->assertSee('Exibindo 1 a 10 de 12 sessões')
+            ->assertSee('aria-label="Revogar sessão"', false)
             ->assertSee('10.0.0.12')
             ->assertSee('10.0.0.3')
             ->assertDontSee('10.0.0.2')

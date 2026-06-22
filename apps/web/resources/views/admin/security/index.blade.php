@@ -70,7 +70,7 @@
                             <form method="POST" action="{{ route('security.sessions.revoke', $session) }}" data-confirm-title="Revogar sessão?" data-confirm-message="O dispositivo precisará autenticar novamente para acessar o OrderBox." data-confirm-label="Revogar" data-confirm-variant="danger">
                                 @csrf
                                 @method('DELETE')
-                                <button class="rounded-lg border border-error-200 px-3 py-2 text-sm font-medium text-error-600 hover:bg-error-50 dark:border-error-500/30 dark:hover:bg-error-500/10">Revogar</button>
+                                <x-table-action icon="log-out" label="Revogar sessão" variant="danger" />
                             </form>
                         @endif
                     </div>

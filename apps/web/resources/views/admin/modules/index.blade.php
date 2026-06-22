@@ -65,7 +65,7 @@
                 <thead class="bg-gray-50 text-left text-theme-xs font-medium text-gray-500 dark:bg-white/[0.02] dark:text-gray-400">
                     <tr>
                         @foreach (array_keys($columns) as $column)
-                            <th class="whitespace-nowrap px-5 py-4">{{ $column }}</th>
+                            <th @class(['whitespace-nowrap px-5 py-4', 'text-right' => $column === 'Ações'])>{{ $column }}</th>
                         @endforeach
                     </tr>
                 </thead>
