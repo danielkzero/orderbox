@@ -50,3 +50,7 @@ A nova sessão e a revogação da anterior devem ocorrer na mesma transação.
 ### Histórico
 
 Sessões revogadas permanecem registradas. Tokens Mobile e chaves de validação Web devem ser persistidos somente como hash.
+
+Na administração, o histórico é consultado exclusivamente pelo `user_id` do
+usuário autenticado, em ordem decrescente de criação e com paginação de 10
+registros. O histórico de outros usuários ou empresas não pode ser retornado.

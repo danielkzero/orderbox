@@ -39,8 +39,8 @@ class SecurityController extends Controller
             'sessions' => AuthenticationSession::query()
                 ->where('user_id', $request->user()->id)
                 ->latest()
-                ->limit(20)
-                ->get(),
+                ->paginate(10)
+                ->withQueryString(),
         ]);
     }
 

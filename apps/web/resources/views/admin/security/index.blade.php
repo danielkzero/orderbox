@@ -56,7 +56,7 @@
         <x-panel>
             <div class="border-b border-gray-200 px-6 py-5 dark:border-gray-800">
                 <h2 class="text-lg font-semibold text-gray-800 dark:text-white/90">Sessões recentes</h2>
-                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Revogue acessos que não devem continuar ativos.</p>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Revogue acessos que não devem continuar ativos. Exibimos 10 sessões por página.</p>
             </div>
 
             <div class="divide-y divide-gray-100 dark:divide-gray-800">
@@ -78,6 +78,15 @@
                     <div class="p-6 text-sm text-gray-500">Nenhuma sessão registrada.</div>
                 @endforelse
             </div>
+
+            @if ($sessions->hasPages())
+                <div class="border-t border-gray-200 p-5 dark:border-gray-800">
+                    <p class="mb-4 text-xs text-gray-500 dark:text-gray-400">
+                        Exibindo {{ $sessions->firstItem() }} a {{ $sessions->lastItem() }} de {{ $sessions->total() }} sessões
+                    </p>
+                    {{ $sessions->links() }}
+                </div>
+            @endif
         </x-panel>
     </div>
 </x-app-layout>

@@ -6,6 +6,7 @@ use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
 use App\Mail\OrderDocumentMail;
 use App\Models\ApiClient;
 use App\Models\AuditLog;
+use App\Models\AuthenticationSession;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Company;
@@ -701,6 +702,49 @@ class AdminPanelTest extends TestCase
 
         $this->assertTrue($this->admin->refresh()->two_factor_enabled);
         $this->assertSame(1, AuditLog::query()->where('action', 'Enable2FA')->count());
+    }
+
+    public function test_recent_sessions_are_paginated_and_restricted_to_the_authenticated_user(): void
+    {
+        foreach (range(1, 12) as $index) {
+            AuthenticationSession::query()->forceCreate([
+                'company_id' => $this->admin->company_id,
+                'user_id' => $this->admin->id,
+                'channel' => 'Web',
+                'active_slot' => $index === 12 ? true : null,
+                'ip_address' => '10.0.0.'.$index,
+                'last_activity_at' => now()->subMinutes(12 - $index),
+                'created_at' => now()->subMinutes(12 - $index),
+                'updated_at' => now()->subMinutes(12 - $index),
+            ]);
+        }
+
+        $otherUser = User::factory()->create();
+        AuthenticationSession::query()->create([
+            'company_id' => $otherUser->company_id,
+            'user_id' => $otherUser->id,
+            'channel' => 'Mobile',
+            'active_slot' => true,
+            'ip_address' => '192.168.0.250',
+            'last_activity_at' => now(),
+        ]);
+
+        $this->actingAs($this->admin)
+            ->get('/security')
+            ->assertOk()
+            ->assertSee('Exibindo 1 a 10 de 12 sessões')
+            ->assertSee('10.0.0.12')
+            ->assertSee('10.0.0.3')
+            ->assertDontSee('10.0.0.2')
+            ->assertDontSee('192.168.0.250');
+
+        $this->actingAs($this->admin)
+            ->get('/security?page=2')
+            ->assertOk()
+            ->assertSee('10.0.0.2')
+            ->assertSee('10.0.0.1')
+            ->assertDontSee('10.0.0.3')
+            ->assertDontSee('192.168.0.250');
     }
 
     public function test_non_admin_cannot_manage_users_or_view_audit_logs(): void

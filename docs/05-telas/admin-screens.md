@@ -70,6 +70,11 @@ prazos disponíveis dos bloqueados e atualiza o estado conforme o total muda.
 Meu perfil e Segurança são pessoais. Usuários e Integrações são exclusivos de
 Admin. Auditoria é disponibilizada para Admin e Manager.
 
+Na tela de Segurança, o histórico de sessões recentes é ordenado da sessão
+mais nova para a mais antiga e paginado em 10 registros. A navegação informa a
+faixa e o total de sessões do usuário autenticado. Cada sessão ativa pode ser
+revogada individualmente.
+
 #### Ajuda
 
 - Manual de uso

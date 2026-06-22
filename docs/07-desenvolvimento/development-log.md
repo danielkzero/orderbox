@@ -3,6 +3,35 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Paginação das sessões recentes
+
+### Funcionalidade
+
+A tela de Segurança passou a apresentar o histórico de sessões em páginas de
+10 registros, mantendo a ordenação da sessão mais recente para a mais antiga.
+
+### Motivo
+
+Evitar o crescimento contínuo da lista na interface sem impedir o acesso ao
+histórico completo.
+
+### Arquivos alterados
+
+- `apps/web/app/Http/Controllers/SecurityController.php`;
+- `apps/web/resources/views/admin/security/index.blade.php`;
+- `apps/web/tests/Feature/Admin/AdminPanelTest.php`;
+- `docs/03-modelagem/authentication_sessions.md`;
+- `docs/05-telas/admin-screens.md`;
+- `docs/07-desenvolvimento/development-log.md`.
+
+### Impactos
+
+- limite visual de 10 sessões por página;
+- navegação entre todas as sessões registradas;
+- exibição da faixa atual e do total de registros;
+- preservação do isolamento por usuário e empresa;
+- sem alterações em banco de dados, API, Mobile ou B2B.
+
 ## 2026-06-19 — Ícone da página do pedido
 
 A visualização independente do pedido passou a usar o favicon oficial do
