@@ -26,6 +26,14 @@ Todo produto pertence a uma Company.
 | name | varchar(255) | Sim | Nome do produto |
 | short_description | varchar(500) | Não | Descrição resumida |
 | description | text | Não | Descrição completa |
+| weight_kg | decimal(10,3) | Não | Peso em quilogramas |
+| length_cm | decimal(10,2) | Não | Comprimento |
+| width_cm | decimal(10,2) | Não | Largura |
+| height_cm | decimal(10,2) | Não | Altura |
+| base_price | decimal(15,2) | Não | Preço base |
+| minimum_quantity | decimal(15,3) | Sim | Quantidade mínima por item de pedido |
+| quantity_multiple | decimal(15,3) | Não | Múltiplo obrigatório de venda |
+| allows_fractional_quantity | boolean | Sim | Permite quantidade decimal por peso ou medida |
 | active | boolean | Sim | Produto ativo |
 | available_stock | decimal(15,3) | Não | Estoque disponível sincronizado do ERP |
 | created_at | timestamp | Sim | Data de criação |
@@ -67,6 +75,17 @@ Utilizar:
 
 active = false
 
+### Quantidade de Venda
+
+`minimum_quantity` define a menor quantidade aceita no pedido.
+
+Quando `quantity_multiple` for preenchido, a quantidade deve ser divisível pelo
+múltiplo. Exemplo: múltiplo `5` aceita `5`, `10`, `15` e assim por diante.
+
+Quando `allows_fractional_quantity = false`, somente quantidades inteiras são
+aceitas. Produtos vendidos por peso ou medida usam
+`allows_fractional_quantity = true` e podem receber valores como `0,750`.
+
 ---
 
 ## Casos de Uso
@@ -107,10 +126,6 @@ Possíveis integrações de catálogo:
 Possíveis recursos:
 
 - cost_price (preço do custo)
-- weight (peso)
-- width (largura)
-- height (altura)
-- length (comprimento)
 - múltiplas imagens
 - vídeos
 - NCM

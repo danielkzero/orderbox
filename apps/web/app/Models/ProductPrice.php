@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ProductPrice extends Model
 {
-    protected $fillable = ['product_id', 'price_table_id', 'price', 'minimum_quantity'];
+    protected $fillable = ['product_id', 'price_table_id', 'price'];
 
     protected function casts(): array
     {
-        return ['price' => 'decimal:2', 'minimum_quantity' => 'decimal:3'];
+        return ['price' => 'decimal:2'];
     }
 
     public function product(): BelongsTo

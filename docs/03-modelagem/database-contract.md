@@ -98,7 +98,7 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 | Units | `(company_id, code)` único |
 | Products | `(company_id, sku)` único; `available_stock >= 0` quando informado |
 | PriceTables | `(company_id, name)` único |
-| ProductPrices | `(product_id, price_table_id, minimum_quantity)` único; `price > 0`; `minimum_quantity > 0` quando informada |
+| ProductPrices | `(product_id, price_table_id)` único; `price > 0` |
 | PaymentMethods | `(company_id, code)` único; `(company_id, name)` único |
 | PaymentTerms | `(company_id, code)` único; `(company_id, name)` único; `installment_days` não vazio; `minimum_order_amount >= 0` |
 | SalesRepresentatives | `(company_id, user_id)` único; `(company_id, code)` único |
@@ -110,7 +110,8 @@ Products, preços e demais cadastros administrativos usam `updated_at` para sinc
 | SyncOperations | `(company_id, operation_id)` único |
 | SyncChanges | `sequence` único e crescente |
 
-Quando `minimum_quantity` estiver ausente em ProductPrices, a migration deve normalizar o valor para `1.000` ou usar uma estratégia equivalente que preserve a unicidade da faixa base.
+Quantidade mínima, múltiplo e permissão de fracionamento são regras de
+Products. ProductPrices mantém somente um preço por produto e tabela.
 
 ---
 
@@ -142,7 +143,7 @@ Além de PKs, FKs e constraints únicas:
 | Customers | `(company_id, active, corporate_name)`, `(company_id, updated_at)` |
 | CustomerRepresentatives | `(sales_representative_id, customer_id)` |
 | Products | `(company_id, active, name)`, `(company_id, category_id)`, `(company_id, updated_at)` |
-| ProductPrices | `(price_table_id, product_id, minimum_quantity)` |
+| ProductPrices | `(price_table_id, product_id)` |
 | PaymentMethods | `(company_id, active, sort_order)` |
 | PaymentTerms | `(company_id, active, sort_order)` |
 | Orders | `(company_id, status, order_date)`, `(sales_representative_id, order_date)`, `(customer_id, order_date)`, `(company_id, updated_at)` |

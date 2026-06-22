@@ -6,8 +6,10 @@ use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
 use App\Models\Company;
 use App\Models\ImportBatch;
 use App\Models\User;
+use App\Services\Import\DataImportTemplateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -34,19 +36,29 @@ class DataImportTest extends TestCase
             ->get(route('imports.template', 'products'))
             ->assertOk()
             ->assertDownload('orderbox-importacao-products.xlsx');
+
+        $path = app(DataImportTemplateService::class)->create('products');
+        $headers = IOFactory::load($path)->getSheetByName('Produtos')->rangeToArray('A1:U1')[0];
+
+        $this->assertContains('quantidade_minima', $headers);
+        $this->assertContains('multiplo', $headers);
+        $this->assertContains('fator_peso', $headers);
+        $this->assertContains('Varejo', $headers);
+        $this->assertNotContains('descricao_curta', $headers);
+        $this->assertNotContains('url_imagem', $headers);
+        $this->assertNotContains('unidade_codigo', $headers);
     }
 
     public function test_product_import_creates_related_catalog_and_prices(): void
     {
         $file = $this->spreadsheet('Produtos', [
             'codigo', 'nome', 'sku', 'barcode', 'preco_base', 'estoque_disponivel',
-            'situacao_estoque', 'ativo', 'categoria', 'categoria_pai', 'marca',
-            'unidade_codigo', 'unidade_nome', 'preco_01_tabela', 'preco_01_valor',
-            'preco_01_quantidade_minima',
+            'situacao_estoque', 'quantidade_minima', 'multiplo', 'fator_peso',
+            'ativo', 'categoria', 'categoria_pai', 'marca', 'unidade', 'Atacado',
         ], [
             'EXT-1', 'Produto importado', 'SKU-IMPORT-1', '7891234567890', '100,50',
-            25, 'InStock', 'sim', 'Ferramentas', 'Catálogo', 'Marca Teste', 'UN',
-            'Unidade', 'Atacado', '89,90', 1,
+            25, 'InStock', 5, 5, 'não', 'sim', 'Ferramentas', 'Catálogo',
+            'Marca Teste', 'UN', '89,90',
         ]);
 
         $this->actingAs($this->admin)
@@ -60,9 +72,12 @@ class DataImportTest extends TestCase
             'company_id' => $this->admin->company_id,
             'sku' => 'SKU-IMPORT-1',
             'base_price' => 100.50,
+            'minimum_quantity' => 5,
+            'quantity_multiple' => 5,
+            'allows_fractional_quantity' => false,
         ]);
         $this->assertDatabaseHas('price_tables', ['company_id' => $this->admin->company_id, 'name' => 'Atacado']);
-        $this->assertDatabaseHas('product_prices', ['price' => 89.90, 'minimum_quantity' => 1]);
+        $this->assertDatabaseHas('product_prices', ['price' => 89.90]);
         $this->assertDatabaseHas('import_batches', [
             'company_id' => $this->admin->company_id,
             'status' => 'completed',
@@ -73,9 +88,9 @@ class DataImportTest extends TestCase
     public function test_invalid_import_rolls_back_the_entire_file_and_records_the_error(): void
     {
         $file = $this->spreadsheet('Produtos', [
-            'nome', 'sku', 'categoria', 'unidade_codigo', 'unidade_nome',
+            'nome', 'sku', 'categoria', 'unidade',
         ], [
-            'Produto sem SKU', '', 'Categoria temporária', 'UN', 'Unidade',
+            'Produto sem SKU', '', 'Categoria temporária', 'UN',
         ]);
 
         $this->actingAs($this->admin)
@@ -100,8 +115,8 @@ class DataImportTest extends TestCase
             'codigo', 'nome', 'dias_parcelas', 'pedido_minimo', 'ordem', 'ativo',
         ], ['30_60', '30/60 dias', '30|60', 100, 10, 'sim']);
         $this->addSheet($spreadsheet, 'Produtos', [
-            'nome', 'sku', 'categoria', 'unidade_codigo', 'unidade_nome', 'ativo',
-        ], ['Produto inicial', 'SKU-INICIAL', 'Geral', 'UN', 'Unidade', 'sim']);
+            'nome', 'sku', 'categoria', 'unidade', 'ativo',
+        ], ['Produto inicial', 'SKU-INICIAL', 'Geral', 'UN', 'sim']);
         $this->addSheet($spreadsheet, 'Clientes', [
             'razao_social', 'documento', 'ativo',
         ], ['Cliente inicial', '52998224725', 'sim']);

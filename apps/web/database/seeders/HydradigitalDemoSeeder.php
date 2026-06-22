@@ -252,6 +252,9 @@ class HydradigitalDemoSeeder extends Seeder
                     'width_cm' => 10,
                     'height_cm' => 8,
                     'base_price' => $data['retail'],
+                    'minimum_quantity' => 1,
+                    'quantity_multiple' => null,
+                    'allows_fractional_quantity' => in_array($data['unit'], ['KG', 'MT'], true),
                     'active' => true,
                     'available_stock' => $data['stock'],
                     'stock_status' => $data['stock'] <= 30 ? 'LowStock' : 'InStock',
@@ -260,11 +263,11 @@ class HydradigitalDemoSeeder extends Seeder
             );
 
             ProductPrice::query()->updateOrCreate(
-                ['product_id' => $product->id, 'price_table_id' => $priceTables['Varejo']->id, 'minimum_quantity' => 1],
+                ['product_id' => $product->id, 'price_table_id' => $priceTables['Varejo']->id],
                 ['price' => $data['retail']],
             );
             ProductPrice::query()->updateOrCreate(
-                ['product_id' => $product->id, 'price_table_id' => $priceTables['Atacado']->id, 'minimum_quantity' => 10],
+                ['product_id' => $product->id, 'price_table_id' => $priceTables['Atacado']->id],
                 ['price' => round($data['retail'] * 0.88, 2)],
             );
 

@@ -226,10 +226,17 @@ representante visualiza os preços, sem controles de manutenção.
 - Dados do produto
 - Estoque disponível
 - Tabelas de preço
+- Quantidade mínima
+- Múltiplo de venda
+- Venda fracionada por peso ou medida
 
 ### Ações
 
 - Editar
+
+No pedido, a quantidade inicial assume o mínimo configurado no produto. O
+campo informa mínimo, múltiplo e permissão de fracionamento. O servidor rejeita
+quantidades fora dessas regras.
 
 ---
 

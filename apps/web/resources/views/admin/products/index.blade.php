@@ -155,10 +155,7 @@
                                 @php $tablePrice = $product->prices->firstWhere('price_table_id', $priceTable->id); @endphp
                                 <td class="whitespace-nowrap px-5 py-5 text-gray-700 dark:text-gray-300">
                                     @if ($tablePrice)
-                                        <div class="space-y-1">
-                                            <p class="font-medium text-gray-800 dark:text-white/90">R$ {{ number_format((float) $tablePrice->price, 2, ',', '.') }}</p>
-                                            <p class="text-xs text-gray-500 dark:text-gray-400">Mín. {{ number_format((float) $tablePrice->minimum_quantity, 3, ',', '.') }}</p>
-                                        </div>
+                                        <p class="font-medium text-gray-800 dark:text-white/90">R$ {{ number_format((float) $tablePrice->price, 2, ',', '.') }}</p>
                                     @else
                                         <span class="text-gray-400">-</span>
                                     @endif

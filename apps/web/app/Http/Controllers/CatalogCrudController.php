@@ -340,11 +340,13 @@ class CatalogCrudController extends Controller
                 'width_cm' => ['nullable', 'numeric', 'min:0'],
                 'height_cm' => ['nullable', 'numeric', 'min:0'],
                 'base_price' => ['nullable', 'numeric', 'min:0'],
+                'minimum_quantity' => ['required', 'numeric', 'min:0.001'],
+                'quantity_multiple' => ['nullable', 'numeric', 'min:0.001'],
+                'allows_fractional_quantity' => ['sometimes', 'boolean'],
                 'available_stock' => ['nullable', 'numeric', 'min:0'],
                 'stock_status' => ['nullable', 'in:InStock,LowStock,OutOfStock'],
                 'table_prices' => ['nullable', 'array'],
                 'table_prices.*.price_table_id' => ['required_with:table_prices', Rule::exists('price_tables', 'id')->where('company_id', $companyId)],
-                'table_prices.*.minimum_quantity' => ['nullable', 'numeric', 'min:0.001'],
                 'table_prices.*.price' => ['nullable', 'numeric', 'min:0.01'],
                 'active' => ['sometimes', 'boolean'],
             ]),
@@ -452,6 +454,18 @@ class CatalogCrudController extends Controller
         $tablePrices = collect($data['table_prices'] ?? []);
         unset($data['table_prices']);
         unset($data['image']);
+        $data['allows_fractional_quantity'] = (bool) ($data['allows_fractional_quantity'] ?? false);
+
+        if (! $data['allows_fractional_quantity']) {
+            foreach (['minimum_quantity', 'quantity_multiple'] as $field) {
+                $value = $data[$field] ?? null;
+                if ($value !== null && abs((float) $value - round((float) $value)) > 0.000001) {
+                    throw ValidationException::withMessages([
+                        $field => 'Use um valor inteiro ou habilite a venda fracionada.',
+                    ]);
+                }
+            }
+        }
 
         if ($request->hasFile('image')) {
             if ($model instanceof Product && $model->image_url && str_starts_with($model->image_url, 'storage/products/')) {
@@ -520,7 +534,6 @@ class CatalogCrudController extends Controller
             ProductPrice::query()->create([
                 'product_id' => $product->id,
                 'price_table_id' => (int) $row['price_table_id'],
-                'minimum_quantity' => $row['minimum_quantity'] ?: 1,
                 'price' => $row['price'],
             ]);
         }
@@ -793,9 +806,17 @@ class CatalogCrudController extends Controller
         }
 
         return DB::transaction(function () use ($request, $data, $model): Order {
-            $items = collect($data['items'])->map(function (array $row) use ($data): array {
+            $products = Product::query()
+                ->where('company_id', $request->user()->company_id)
+                ->whereIn('id', collect($data['items'])->pluck('product_id'))
+                ->get()
+                ->keyBy('id');
+
+            $items = collect($data['items'])->map(function (array $row) use ($data, $products): array {
+                $product = $products->get((int) $row['product_id']);
+                $this->validateOrderProductQuantity($product, (float) $row['quantity']);
                 $adjustments = $this->normalizeOrderAdjustments($row);
-                $unitPrice = $this->resolveOrderProductPrice((int) $row['product_id'], (int) $data['price_table_id'], (float) $row['quantity']);
+                $unitPrice = $this->resolveOrderProductPrice((int) $row['product_id'], (int) $data['price_table_id']);
                 $subtotal = round((float) $row['quantity'] * $unitPrice, 2);
                 $total = $this->applyOrderAdjustments($subtotal, $adjustments);
 
@@ -864,13 +885,11 @@ class CatalogCrudController extends Controller
         return $prefix.str_pad((string) $sequence, 6, '0', STR_PAD_LEFT);
     }
 
-    private function resolveOrderProductPrice(int $productId, int $priceTableId, float $quantity): float
+    private function resolveOrderProductPrice(int $productId, int $priceTableId): float
     {
         $price = ProductPrice::query()
             ->where('product_id', $productId)
             ->where('price_table_id', $priceTableId)
-            ->where('minimum_quantity', '<=', $quantity)
-            ->orderByDesc('minimum_quantity')
             ->value('price');
 
         if ($price !== null) {
@@ -878,6 +897,41 @@ class CatalogCrudController extends Controller
         }
 
         return (float) Product::query()->whereKey($productId)->value('base_price');
+    }
+
+    private function validateOrderProductQuantity(?Product $product, float $quantity): void
+    {
+        if (! $product) {
+            throw ValidationException::withMessages(['items' => 'Produto inválido no pedido.']);
+        }
+
+        $minimum = (float) $product->minimum_quantity;
+        if ($quantity + 0.000001 < $minimum) {
+            throw ValidationException::withMessages([
+                'items' => sprintf(
+                    'O produto %s exige quantidade mínima de %s.',
+                    $product->name,
+                    number_format($minimum, 3, ',', '.'),
+                ),
+            ]);
+        }
+
+        if (! $product->allows_fractional_quantity && abs($quantity - round($quantity)) > 0.000001) {
+            throw ValidationException::withMessages([
+                'items' => "O produto {$product->name} aceita somente quantidades inteiras.",
+            ]);
+        }
+
+        $multiple = (float) ($product->quantity_multiple ?? 0);
+        if ($multiple > 0 && abs(($quantity / $multiple) - round($quantity / $multiple)) > 0.000001) {
+            throw ValidationException::withMessages([
+                'items' => sprintf(
+                    'O produto %s deve ser vendido em múltiplos de %s.',
+                    $product->name,
+                    number_format($multiple, 3, ',', '.'),
+                ),
+            ]);
+        }
     }
 
     private function normalizeOrderAdjustments(array $row)

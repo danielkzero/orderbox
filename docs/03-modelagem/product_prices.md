@@ -16,7 +16,6 @@ Permite que um produto possua múltiplos valores de venda.
 | product_id | bigint | Sim | Produto |
 | price_table_id | bigint | Sim | Tabela de preço |
 | price | decimal(15,2) | Sim | Valor de venda |
-| minimum_quantity | decimal(15,3) | Não | Quantidade mínima |
 | created_at | timestamp | Sim | Data de criação |
 | updated_at | timestamp | Sim | Data de atualização |
 
@@ -69,21 +68,9 @@ Não pode existir dois registros para:
 
 - mesmo produto
 - mesma tabela de preço
-- mesma quantidade mínima
 
-Quando `minimum_quantity` não for informada, o registro representa a faixa base do produto na tabela.
-
-### Quantidade Mínima
-
-Permite preços escalonados.
-
-Exemplo:
-
-1 unidade = R$ 39,90
-
-10 unidades = R$ 34,90
-
-50 unidades = R$ 29,90
+A quantidade mínima e o múltiplo pertencem ao produto e não alteram o preço da
+tabela.
 
 ---
 

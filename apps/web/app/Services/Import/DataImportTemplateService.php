@@ -42,23 +42,17 @@ class DataImportTemplateService
 
         if (in_array($type, ['initial', 'products'], true)) {
             $headers = [
-                'codigo', 'nome', 'sku', 'barcode', 'descricao_curta', 'descricao', 'cor',
-                'peso_kg', 'comprimento_cm', 'largura_cm', 'altura_cm', 'preco_base',
-                'estoque_disponivel', 'situacao_estoque', 'url_imagem', 'ativo',
-                'categoria', 'categoria_pai', 'marca', 'unidade_codigo', 'unidade_nome',
+                'codigo', 'nome', 'sku', 'barcode', 'peso_kg', 'comprimento_cm',
+                'largura_cm', 'altura_cm', 'preco_base', 'estoque_disponivel',
+                'situacao_estoque', 'quantidade_minima', 'multiplo',
+                'fator_peso', 'ativo', 'categoria', 'categoria_pai', 'marca',
+                'unidade', 'Varejo', 'Atacado',
             ];
             $example = [
                 'PROD-001', 'Produto de exemplo', 'SKU-001', '7891234567890',
-                'Descrição comercial curta', 'Descrição completa', 'Azul', 1.25, 30, 20,
-                10, 99.9, 100, 'InStock', 'https://exemplo.com/produto.jpg', 'sim',
-                'Categoria exemplo', '', 'Marca exemplo', 'UN', 'Unidade',
+                1.25, 30, 20, 10, 99.9, 100, 'InStock', 5, 5, 'não', 'sim',
+                'Categoria exemplo', '', 'Marca exemplo', 'UN', 89.9, 79.9,
             ];
-
-            for ($index = 1; $index <= 20; $index++) {
-                $number = str_pad((string) $index, 2, '0', STR_PAD_LEFT);
-                array_push($headers, "preco_{$number}_tabela", "preco_{$number}_valor", "preco_{$number}_quantidade_minima");
-                array_push($example, $index <= 2 ? 'Tabela '.$index : '', $index === 1 ? 89.9 : ($index === 2 ? 79.9 : ''), $index <= 2 ? 1 : '');
-            }
 
             $this->addSheet($spreadsheet, 'Produtos', $headers, $example);
         }
@@ -116,7 +110,8 @@ class DataImportTemplateService
             ['Atualização', 'Produtos são identificados pelo SKU; clientes pelo CPF/CNPJ; formas e prazos pelo código.'],
             ['Valores', 'Decimais podem usar vírgula ou ponto. Campos booleanos aceitam sim/não, 1/0, true/false.'],
             ['Produtos', 'Categoria, categoria pai, marca, unidade e tabelas de preço são criadas quando ainda não existem.'],
-            ['Tabelas de preço', 'São aceitas até 20 tabelas por produto. Informe nome, valor e quantidade mínima.'],
+            ['Tabelas de preço', 'Depois da coluna unidade, use cada cabeçalho como nome de tabela e informe somente o preço nas linhas. São aceitas até 20 tabelas.'],
+            ['Quantidades', 'Quantidade mínima e múltiplo pertencem ao produto. Fator peso aceita decimais para venda por peso ou medida.'],
             ['Clientes', 'O documento deve ser CPF/CNPJ válido. Tabelas de preço são separadas por |.'],
             ['Prazos', 'Dias das parcelas são separados por |, /, vírgula ou ponto e vírgula.'],
             ['Transação', 'Se uma linha for inválida, nenhuma alteração do arquivo será gravada.'],

@@ -428,14 +428,13 @@
             @elseif ($resource === 'products')
                 @php
                     $currentProductPrices = $model->exists
-                        ? $model->prices->sortBy('minimum_quantity')->groupBy('price_table_id')
+                        ? $model->prices->groupBy('price_table_id')
                         : collect();
                     $tablePriceRows = collect(old('table_prices', $priceTables->values()->map(function ($priceTable) use ($currentProductPrices) {
                         $price = $currentProductPrices->get($priceTable->id)?->first();
 
                         return [
                             'price_table_id' => $priceTable->id,
-                            'minimum_quantity' => $price?->minimum_quantity ?? 1,
                             'price' => $price?->price,
                         ];
                     })->all()));
@@ -528,6 +527,23 @@
                                     <option value="OutOfStock" @selected(old('stock_status', $model->stock_status) === 'OutOfStock')>Sem estoque</option>
                                 </select>
                             </div>
+                            <div>
+                                <x-input-label for="minimum_quantity" value="Quantidade mínima" />
+                                <x-text-input id="minimum_quantity" name="minimum_quantity" type="number" step="0.001" min="0.001" class="mt-1 block w-full" :value="old('minimum_quantity', $model->minimum_quantity ?? 1)" required />
+                            </div>
+                            <div>
+                                <x-input-label for="quantity_multiple" value="Múltiplo de venda" />
+                                <x-text-input id="quantity_multiple" name="quantity_multiple" type="number" step="0.001" min="0.001" class="mt-1 block w-full" :value="old('quantity_multiple', $model->quantity_multiple)" placeholder="Ex.: 5" />
+                                <p class="mt-1 text-xs text-gray-500">Quando preenchido, aceita somente 5, 10, 15 etc.</p>
+                            </div>
+                            <label class="flex items-start gap-3 rounded-xl border border-gray-200 p-4 dark:border-gray-800 md:col-span-2">
+                                <input type="hidden" name="allows_fractional_quantity" value="0">
+                                <input type="checkbox" name="allows_fractional_quantity" value="1" @checked(old('allows_fractional_quantity', $model->allows_fractional_quantity)) class="mt-0.5 rounded border-gray-300 text-brand-500 focus:ring-brand-500">
+                                <span>
+                                    <strong class="block text-sm text-gray-800 dark:text-white/90">Fator peso / venda fracionada</strong>
+                                    <span class="mt-1 block text-xs text-gray-500">Permite quantidades decimais, como 0,750 kg ou 1,500 m.</span>
+                                </span>
+                            </label>
                         </div>
                     </div>
 
@@ -546,7 +562,6 @@
                                         @php
                                             $row = $tablePriceRows->firstWhere('price_table_id', $priceTable->id) ?? [
                                                 'price_table_id' => $priceTable->id,
-                                                'minimum_quantity' => 1,
                                                 'price' => null,
                                             ];
                                         @endphp
@@ -559,17 +574,11 @@
                                                 <span class="rounded-full bg-brand-50 px-2.5 py-1 text-xs font-medium text-brand-600 dark:bg-brand-500/15 dark:text-brand-400">Tabela</span>
                                             </div>
                                             <input type="hidden" name="table_prices[{{ $index }}][price_table_id]" value="{{ $priceTable->id }}">
-                                            <div class="grid gap-3 sm:grid-cols-[120px_1fr]">
-                                                <div>
-                                                    <x-input-label value="Qtd. mínima" />
-                                                    <input type="number" step="0.001" min="0.001" name="table_prices[{{ $index }}][minimum_quantity]" value="{{ old("table_prices.$index.minimum_quantity", $row['minimum_quantity'] ?? 1) }}" class="{{ $inputClass }}">
-                                                </div>
-                                                <div>
-                                                    <x-input-label value="Preço" />
-                                                    <div class="mt-1 flex">
-                                                        <span class="inline-flex h-11 items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">R$</span>
-                                                        <input type="number" step="0.01" min="0" name="table_prices[{{ $index }}][price]" value="{{ old("table_prices.$index.price", $row['price'] ?? '') }}" class="{{ Str::replaceFirst('rounded-lg', 'rounded-r-lg', $inputClass) }}">
-                                                    </div>
+                                            <div>
+                                                <x-input-label value="Preço" />
+                                                <div class="mt-1 flex">
+                                                    <span class="inline-flex h-11 items-center rounded-l-lg border border-r-0 border-gray-300 bg-gray-50 px-3 text-sm text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">R$</span>
+                                                    <input type="number" step="0.01" min="0" name="table_prices[{{ $index }}][price]" value="{{ old("table_prices.$index.price", $row['price'] ?? '') }}" class="{{ Str::replaceFirst('rounded-lg', 'rounded-r-lg', $inputClass) }}">
                                                 </div>
                                             </div>
                                         </div>
@@ -1037,10 +1046,11 @@
                         'stock' => $product->available_stock,
                         'image' => $product->imageSrc(),
                         'default_price' => $product->displayPrice(),
+                        'minimum_quantity' => (float) $product->minimum_quantity,
+                        'quantity_multiple' => $product->quantity_multiple !== null ? (float) $product->quantity_multiple : null,
+                        'allows_fractional_quantity' => (bool) $product->allows_fractional_quantity,
                         'prices' => $product->prices
-                            ->sortByDesc('minimum_quantity')
-                            ->groupBy('price_table_id')
-                            ->map(fn ($prices) => (float) $prices->first()->price),
+                            ->mapWithKeys(fn ($price) => [$price->price_table_id => (float) $price->price]),
                         'search' => strtolower($product->sku.' '.$product->name.' '.$product->barcode),
                     ])->values();
                     $orderRows = collect(old('items', $model->exists ? $model->items->map(fn ($item) => [
@@ -1161,12 +1171,30 @@
                     selectProduct(index, product) {
                         this.items[index].product_id = product.id;
                         this.items[index].product_search = product.label;
+                        this.items[index].quantity = product.minimum_quantity || 1;
                         this.items[index].unit_price = this.productPrice(product);
                     },
                     selectedProduct(item) { return this.products.find((product) => product.id === Number(item.product_id)); },
                     productPrice(product) {
                         if (! product) return 0;
                         return Number(product.prices[this.selectedPriceTableId] ?? product.default_price ?? 0);
+                    },
+                    quantityStep(item) {
+                        const product = this.selectedProduct(item);
+                        if (! product) return 1;
+                        if (product.quantity_multiple) return product.quantity_multiple;
+                        return product.allows_fractional_quantity ? 0.001 : 1;
+                    },
+                    quantityMinimum(item) {
+                        return this.selectedProduct(item)?.minimum_quantity || 1;
+                    },
+                    quantityRule(item) {
+                        const product = this.selectedProduct(item);
+                        if (! product) return '';
+                        const rules = [`Mínimo ${Number(product.minimum_quantity || 1).toLocaleString('pt-BR')}`];
+                        if (product.quantity_multiple) rules.push(`múltiplo de ${Number(product.quantity_multiple).toLocaleString('pt-BR')}`);
+                        if (product.allows_fractional_quantity) rules.push('aceita fracionado');
+                        return rules.join(' · ');
                     },
                     refreshItemPrices() {
                         this.items.forEach((item) => {
@@ -1454,7 +1482,8 @@
 
                                         <div>
                                             <x-input-label value="Qtd." />
-                                            <input type="number" step="0.001" min="0.001" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }}" required>
+                                            <input type="number" :step="quantityStep(item)" :min="quantityMinimum(item)" :name="`items[${index}][quantity]`" x-model="item.quantity" class="{{ $inputClass }}" required>
+                                            <p class="mt-1 text-[11px] text-gray-500" x-text="quantityRule(item)"></p>
                                         </div>
 
                                         <div>

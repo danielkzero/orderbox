@@ -3,6 +3,24 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Regras de quantidade e simplificação da importação de produtos
+
+### Funcionalidade
+
+A quantidade mínima, o múltiplo e a venda fracionada passaram a ser regras do
+produto. Os preços deixaram de possuir faixas por quantidade.
+
+### Impactos
+
+- produto pode exigir venda em múltiplos, como `5`, `10` e `15`;
+- produtos por peso ou medida aceitam quantidades decimais;
+- pedido valida mínimo, múltiplo e fracionamento no servidor;
+- planilha remove descrições, URL de imagem e campos duplicados de unidade;
+- uma única coluna `unidade` cria ou localiza a unidade;
+- cabeçalhos após `unidade` são nomes de tabelas de preço;
+- cada célula de tabela contém somente o preço;
+- migration consolida preços legados em um registro por produto e tabela.
+
 ## 2026-06-22 — Importação de dados do estágio zero
 
 ### Funcionalidade

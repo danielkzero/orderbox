@@ -61,7 +61,8 @@ A aba Produtos concentra dados de:
 - marca;
 - unidade;
 - tabelas de preço;
-- preços e quantidades mínimas.
+- preços;
+- quantidade mínima, múltiplo e venda fracionada do produto.
 
 Categorias, marcas, unidades e tabelas de preço inexistentes são criadas
 automaticamente dentro da empresa autenticada.
@@ -74,9 +75,6 @@ automaticamente dentro da empresa autenticada.
 | nome | Sim | Nome do produto |
 | sku | Sim | Chave de criação/atualização |
 | barcode | Não | Código de barras |
-| descricao_curta | Não | Descrição comercial curta |
-| descricao | Não | Descrição completa |
-| cor | Não | Cor |
 | peso_kg | Não | Peso em quilogramas |
 | comprimento_cm | Não | Comprimento |
 | largura_cm | Não | Largura |
@@ -84,25 +82,24 @@ automaticamente dentro da empresa autenticada.
 | preco_base | Não | Preço base |
 | estoque_disponivel | Não | Quantidade disponível |
 | situacao_estoque | Não | `InStock`, `LowStock` ou `OutOfStock` |
-| url_imagem | Não | URL HTTPS/HTTP válida |
+| quantidade_minima | Não | Menor quantidade aceita; padrão `1` |
+| multiplo | Não | Obriga venda em múltiplos do valor |
+| fator_peso | Não | `sim` permite decimais para peso ou medida |
 | ativo | Não | Padrão verdadeiro |
 | categoria | Sim | Categoria criada ou localizada pelo nome |
 | categoria_pai | Não | Categoria pai criada ou localizada pelo nome |
 | marca | Não | Marca criada ou localizada pelo nome |
-| unidade_codigo | Sim | Código da unidade |
-| unidade_nome | Sim | Nome da unidade |
+| unidade | Sim | Código/nome curto da unidade, por exemplo `UN`, `KG` ou `MT` |
 
-As colunas de preço seguem o padrão:
+Depois de `unidade`, cada cabeçalho adicional representa diretamente o nome de
+uma tabela de preço:
 
 ```text
-preco_01_tabela
-preco_01_valor
-preco_01_quantidade_minima
-...
-preco_20_tabela
-preco_20_valor
-preco_20_quantidade_minima
+... | unidade | Varejo | Atacado | Distribuidor
+... | UN      | 39,90  | 34,90   | 29,90
 ```
+
+São aceitas no máximo 20 colunas de tabelas de preço.
 
 ## Clientes
 

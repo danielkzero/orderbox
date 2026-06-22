@@ -26,6 +26,9 @@ class Product extends Model
         'width_cm',
         'height_cm',
         'base_price',
+        'minimum_quantity',
+        'quantity_multiple',
+        'allows_fractional_quantity',
         'available_stock',
         'stock_status',
         'published_at',
@@ -42,6 +45,9 @@ class Product extends Model
             'width_cm' => 'decimal:2',
             'height_cm' => 'decimal:2',
             'base_price' => 'decimal:2',
+            'minimum_quantity' => 'decimal:3',
+            'quantity_multiple' => 'decimal:3',
+            'allows_fractional_quantity' => 'boolean',
             'published_at' => 'datetime',
         ];
     }
@@ -73,7 +79,7 @@ class Product extends Model
 
     public function displayPrice(): float
     {
-        return (float) ($this->base_price ?? $this->prices->sortBy('minimum_quantity')->first()?->price ?? 0);
+        return (float) ($this->base_price ?? $this->prices->first()?->price ?? 0);
     }
 
     public function imageSrc(): ?string

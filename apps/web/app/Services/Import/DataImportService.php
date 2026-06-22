@@ -136,7 +136,11 @@ class DataImportService
                 continue;
             }
 
-            $row = ['_row' => $offset + 2, '_sheet' => $sheet->getTitle()];
+            $row = [
+                '_row' => $offset + 2,
+                '_sheet' => $sheet->getTitle(),
+                '_columns' => array_combine($headers, array_map(fn ($header): string => trim((string) $header), $rawHeaders)),
+            ];
             foreach ($headers as $index => $header) {
                 if ($header !== '') {
                     $row[$header] = $values[$index] ?? null;
@@ -150,11 +154,17 @@ class DataImportService
 
     private function importProduct(User $user, array $row): string
     {
-        $highestPriceTable = collect(array_keys($row))
-            ->map(fn (string $column): int => preg_match('/^preco_(\d+)_/', $column, $matches) ? (int) $matches[1] : 0)
-            ->max();
+        $fixedColumns = collect([
+            'codigo', 'nome', 'sku', 'barcode', 'peso_kg', 'comprimento_cm', 'largura_cm',
+            'altura_cm', 'preco_base', 'estoque_disponivel', 'situacao_estoque',
+            'quantidade_minima', 'multiplo', 'fator_peso', 'venda_fracionada', 'ativo', 'categoria',
+            'categoria_pai', 'marca', 'unidade',
+        ]);
+        $priceColumns = collect($row['_columns'])
+            ->except($fixedColumns)
+            ->filter(fn (string $header, string $column): bool => $column !== '' && $header !== '');
 
-        if ($highestPriceTable > 20) {
+        if ($priceColumns->count() > 20) {
             throw ValidationException::withMessages([
                 'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: são permitidas no máximo 20 tabelas de preço.",
             ]);
@@ -165,9 +175,6 @@ class DataImportService
             'name' => $this->text($row['nome'] ?? null),
             'sku' => $this->text($row['sku'] ?? null),
             'barcode' => $this->text($row['barcode'] ?? null),
-            'short_description' => $this->text($row['descricao_curta'] ?? null),
-            'description' => $this->text($row['descricao'] ?? null),
-            'color' => $this->text($row['cor'] ?? null),
             'weight_kg' => $this->decimal($row['peso_kg'] ?? null),
             'length_cm' => $this->decimal($row['comprimento_cm'] ?? null),
             'width_cm' => $this->decimal($row['largura_cm'] ?? null),
@@ -175,13 +182,14 @@ class DataImportService
             'base_price' => $this->decimal($row['preco_base'] ?? null),
             'available_stock' => $this->decimal($row['estoque_disponivel'] ?? null),
             'stock_status' => $this->text($row['situacao_estoque'] ?? null) ?: 'InStock',
-            'image_url' => $this->text($row['url_imagem'] ?? null),
+            'minimum_quantity' => $this->decimal($row['quantidade_minima'] ?? null) ?? 1,
+            'quantity_multiple' => $this->decimal($row['multiplo'] ?? null),
+            'allows_fractional_quantity' => $this->boolean($row['fator_peso'] ?? $row['venda_fracionada'] ?? false),
             'active' => $this->boolean($row['ativo'] ?? true),
             'category' => $this->text($row['categoria'] ?? null),
             'category_parent' => $this->text($row['categoria_pai'] ?? null),
             'brand' => $this->text($row['marca'] ?? null),
-            'unit_code' => Str::upper($this->text($row['unidade_codigo'] ?? null)),
-            'unit_name' => $this->text($row['unidade_nome'] ?? null),
+            'unit' => Str::upper($this->text($row['unidade'] ?? null)),
         ];
 
         $this->validateRow($row, $data, [
@@ -195,12 +203,13 @@ class DataImportService
             'base_price' => ['nullable', 'numeric', 'min:0'],
             'available_stock' => ['nullable', 'numeric', 'min:0'],
             'stock_status' => ['required', 'in:InStock,LowStock,OutOfStock'],
-            'image_url' => ['nullable', 'url', 'max:255'],
+            'minimum_quantity' => ['required', 'numeric', 'min:0.001'],
+            'quantity_multiple' => ['nullable', 'numeric', 'min:0.001'],
             'category' => ['required', 'string', 'max:255'],
             'brand' => ['nullable', 'string', 'max:255'],
-            'unit_code' => ['required', 'string', 'max:10'],
-            'unit_name' => ['required', 'string', 'max:100'],
+            'unit' => ['required', 'string', 'max:10'],
         ]);
+        $this->validateQuantityConfiguration($row, $data);
 
         $parent = $data['category_parent'] ? Category::query()->firstOrCreate([
             'company_id' => $user->company_id,
@@ -218,12 +227,12 @@ class DataImportService
         ], ['active' => true]) : null;
         $unit = Unit::query()->updateOrCreate([
             'company_id' => $user->company_id,
-            'code' => $data['unit_code'],
-        ], ['name' => $data['unit_name'], 'active' => true]);
+            'code' => $data['unit'],
+        ], ['name' => $data['unit'], 'active' => true]);
 
         $product = Product::query()->where('company_id', $user->company_id)->where('sku', $data['sku'])->first();
         $action = $product ? 'updated' : 'created';
-        $payload = collect($data)->except(['category', 'category_parent', 'brand', 'unit_code', 'unit_name'])->all() + [
+        $payload = collect($data)->except(['category', 'category_parent', 'brand', 'unit'])->all() + [
             'company_id' => $user->company_id,
             'category_id' => $category->id,
             'brand_id' => $brand?->id,
@@ -232,20 +241,15 @@ class DataImportService
         ];
         $product = $product ? tap($product)->update($payload) : Product::query()->create($payload);
 
-        for ($index = 1; $index <= 20; $index++) {
-            $number = str_pad((string) $index, 2, '0', STR_PAD_LEFT);
-            $tableName = $this->text($row["preco_{$number}_tabela"] ?? null);
-            $price = $this->decimal($row["preco_{$number}_valor"] ?? null);
-            $minimum = $this->decimal($row["preco_{$number}_quantidade_minima"] ?? null) ?? 1;
-
-            if (! $tableName && $price === null) {
+        foreach ($priceColumns as $column => $tableName) {
+            $price = $this->decimal($row[$column] ?? null);
+            if ($price === null) {
                 continue;
             }
 
-            $this->validateRow($row, compact('tableName', 'price', 'minimum'), [
+            $this->validateRow($row, compact('tableName', 'price'), [
                 'tableName' => ['required', 'string', 'max:255'],
                 'price' => ['required', 'numeric', 'min:0.01'],
-                'minimum' => ['required', 'numeric', 'min:0.001'],
             ]);
             $priceTable = PriceTable::query()->firstOrCreate([
                 'company_id' => $user->company_id,
@@ -254,7 +258,6 @@ class DataImportService
             ProductPrice::query()->updateOrCreate([
                 'product_id' => $product->id,
                 'price_table_id' => $priceTable->id,
-                'minimum_quantity' => $minimum,
             ], ['price' => $price]);
         }
 
@@ -402,6 +405,22 @@ class DataImportService
     private function normalizeHeader(string $header): string
     {
         return Str::of($header)->ascii()->lower()->replaceMatches('/[^a-z0-9]+/', '_')->trim('_')->toString();
+    }
+
+    private function validateQuantityConfiguration(array $row, array $data): void
+    {
+        if ($data['allows_fractional_quantity']) {
+            return;
+        }
+
+        foreach (['minimum_quantity', 'quantity_multiple'] as $field) {
+            $value = $data[$field] ?? null;
+            if ($value !== null && abs((float) $value - round((float) $value)) > 0.000001) {
+                throw ValidationException::withMessages([
+                    'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: {$field} deve ser inteiro quando fator_peso for não.",
+                ]);
+            }
+        }
     }
 
     private function text(mixed $value): ?string

@@ -185,7 +185,7 @@
                     @foreach ([
                         ['Clientes', 'Cadastro, documento, limite, região e representantes.'],
                         ['Produtos', 'SKU, categoria, marca, unidade e disponibilidade.'],
-                        ['Tabelas de preço', 'Preços por produto e quantidade mínima.'],
+                        ['Tabelas de preço', 'Um preço por produto em cada tabela comercial.'],
                         ['Pedidos', 'Status, origem, representante, itens e totais.'],
                         ['Regiões', 'Organização comercial por UF, cidade e carteira.'],
                         ['API', 'Clientes autorizados, segredo e rotação controlada.'],

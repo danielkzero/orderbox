@@ -331,12 +331,15 @@ class AdminPanelTest extends TestCase
             'width_cm' => '10',
             'height_cm' => '8',
             'base_price' => '49.90',
+            'minimum_quantity' => '5',
+            'quantity_multiple' => '5',
+            'allows_fractional_quantity' => '0',
             'available_stock' => '12.5',
             'stock_status' => 'LowStock',
             'active' => '1',
             'image' => UploadedFile::fake()->image('produto-teste.jpg', 800, 400),
             'table_prices' => [
-                ['price_table_id' => $priceTable->id, 'minimum_quantity' => '1', 'price' => '47.90'],
+                ['price_table_id' => $priceTable->id, 'price' => '47.90'],
             ],
         ])->assertRedirect(route('products.index'));
 
@@ -346,6 +349,8 @@ class AdminPanelTest extends TestCase
             'name' => 'Produto Teste',
             'barcode' => '7891000000010',
             'base_price' => '49.90',
+            'minimum_quantity' => '5.000',
+            'quantity_multiple' => '5.000',
             'stock_status' => 'LowStock',
         ]);
         $product = Product::query()->where('sku', 'TEST-001')->firstOrFail();
@@ -357,7 +362,6 @@ class AdminPanelTest extends TestCase
         $this->assertDatabaseHas('product_prices', [
             'product_id' => $product->id,
             'price_table_id' => $priceTable->id,
-            'minimum_quantity' => '1.000',
             'price' => '47.90',
         ]);
     }
@@ -499,11 +503,11 @@ class AdminPanelTest extends TestCase
         $firstProduct = $products->first();
         $secondProduct = $products->last();
         ProductPrice::query()->updateOrCreate(
-            ['product_id' => $firstProduct->id, 'price_table_id' => $priceTable->id, 'minimum_quantity' => 1],
+            ['product_id' => $firstProduct->id, 'price_table_id' => $priceTable->id],
             ['price' => '15.50'],
         );
         ProductPrice::query()->updateOrCreate(
-            ['product_id' => $secondProduct->id, 'price_table_id' => $priceTable->id, 'minimum_quantity' => 1],
+            ['product_id' => $secondProduct->id, 'price_table_id' => $priceTable->id],
             ['price' => '10.00'],
         );
 
@@ -678,6 +682,59 @@ class AdminPanelTest extends TestCase
             ->assertSee('Pedido cancelado')
             ->assertSee('Pedido')
             ->assertSee($duplicate->order_number.' (#'.$duplicate->id.')');
+    }
+
+    public function test_order_quantity_respects_product_minimum_multiple_and_fractional_sale(): void
+    {
+        $customer = Customer::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        $priceTable = $customer->applicablePriceTables()->firstOrFail();
+        $representativeId = $customer->representatives()->value('sales_representative_id');
+        $paymentMethod = PaymentMethod::query()->where('company_id', $this->admin->company_id)->where('active', true)->firstOrFail();
+        $paymentTerm = PaymentTerm::query()->where('company_id', $this->admin->company_id)->where('active', true)->orderBy('minimum_order_amount')->firstOrFail();
+        $product = Product::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+
+        $product->update([
+            'minimum_quantity' => 5,
+            'quantity_multiple' => 5,
+            'allows_fractional_quantity' => false,
+        ]);
+        ProductPrice::query()->updateOrCreate([
+            'product_id' => $product->id,
+            'price_table_id' => $priceTable->id,
+        ], ['price' => 20]);
+
+        $payload = [
+            'customer_id' => $customer->id,
+            'sales_representative_id' => $representativeId,
+            'price_table_id' => $priceTable->id,
+            'order_date' => now()->format('Y-m-d H:i:s'),
+            'payment_method' => $paymentMethod->code,
+            'payment_terms' => $paymentTerm->code,
+            'items' => [[
+                'product_id' => $product->id,
+                'quantity' => 6,
+                'unit_price' => 20,
+            ]],
+        ];
+
+        $this->actingAs($this->admin)
+            ->from(route('crud.create', 'orders'))
+            ->post('/crud/orders', $payload)
+            ->assertSessionHasErrors('items');
+
+        $this->actingAs($this->admin)
+            ->post('/crud/orders', data_set($payload, 'items.0.quantity', 10))
+            ->assertRedirect(route('orders.index'));
+
+        $product->update([
+            'minimum_quantity' => 0.1,
+            'quantity_multiple' => null,
+            'allows_fractional_quantity' => true,
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post('/crud/orders', data_set($payload, 'items.0.quantity', 0.75))
+            ->assertRedirect(route('orders.index'));
     }
 
     public function test_admin_can_create_a_user_and_the_action_is_audited(): void

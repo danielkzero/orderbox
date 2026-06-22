@@ -51,6 +51,16 @@ Permissões:
 
 O pedido ainda não foi enviado para processamento.
 
+### Quantidade dos Itens
+
+Cada item deve respeitar a configuração do produto:
+
+- quantidade mínima;
+- múltiplo de venda, quando informado;
+- números inteiros quando a venda fracionada estiver desativada;
+- até três casas decimais quando a venda fracionada por peso ou medida estiver
+  ativada.
+
 ---
 
 ### Sent
