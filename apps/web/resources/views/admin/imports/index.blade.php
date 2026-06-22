@@ -1,12 +1,18 @@
 <x-app-layout title="Importação de dados">
     <x-page-header title="Importação de dados" description="Carregue os cadastros essenciais da empresa a partir dos modelos oficiais do OrderBox." />
 
-    <div class="grid gap-6 xl:grid-cols-[420px_1fr]">
+    <div
+        class="grid gap-6 xl:grid-cols-[420px_1fr]"
+        @if ($imports->contains(fn ($import) => in_array($import->status, ['queued', 'processing'], true)))
+            x-data
+            x-init="setTimeout(() => window.location.reload(), 5000)"
+        @endif
+    >
         <div class="space-y-6">
             <x-panel>
                 <div class="border-b border-gray-200 p-5 dark:border-gray-800">
                     <h2 class="font-semibold text-gray-900 dark:text-white">Nova importação</h2>
-                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">A operação é transacional: qualquer erro cancela todo o arquivo.</p>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">O arquivo entra na fila e é processado em blocos de 100 registros.</p>
                 </div>
                 <form method="POST" action="{{ route('imports.store') }}" enctype="multipart/form-data" class="space-y-5 p-5">
                     @csrf
@@ -63,7 +69,26 @@
                                 <td class="whitespace-nowrap px-5 py-4">{{ $import->created_at->format('d/m/Y H:i') }}</td>
                                 <td class="max-w-[220px] px-5 py-4"><p class="truncate font-medium text-gray-800 dark:text-white">{{ $import->original_filename }}</p>@if ($import->errors)<p class="mt-1 text-xs text-error-600">{{ collect($import->errors)->first() }}</p>@endif</td>
                                 <td class="px-5 py-4">{{ $types[$import->type] ?? $import->type }}</td>
-                                <td class="px-5 py-4"><x-status-badge :active="$import->status === 'completed'" :label="$import->status === 'completed' ? 'Concluída' : 'Falhou'" /><p class="mt-1 text-xs text-gray-500">{{ $import->created_rows }} criados · {{ $import->updated_rows }} atualizados</p></td>
+                                <td class="min-w-[210px] px-5 py-4">
+                                    @if ($import->status === 'completed')
+                                        <x-status-badge :active="true" label="Concluída" />
+                                    @elseif ($import->status === 'failed')
+                                        <x-status-badge :active="false" label="Falhou" />
+                                    @else
+                                        <span class="inline-flex rounded-full bg-warning-50 px-2.5 py-1 text-xs font-medium text-warning-700 dark:bg-warning-500/15 dark:text-warning-400">
+                                            {{ $import->status === 'processing' ? 'Processando' : 'Aguardando' }}
+                                        </span>
+                                    @endif
+                                    <p class="mt-1 text-xs text-gray-500">{{ $import->created_rows }} criados · {{ $import->updated_rows }} atualizados</p>
+                                    @if ($import->total_rows > 0)
+                                        <div class="mt-2">
+                                            <div class="h-1.5 overflow-hidden rounded-full bg-gray-100 dark:bg-gray-800">
+                                                <div class="h-full rounded-full bg-brand-500" style="width: {{ min(100, round(($import->processed_rows / $import->total_rows) * 100)) }}%"></div>
+                                            </div>
+                                            <p class="mt-1 text-[11px] text-gray-500">{{ $import->processed_rows }} de {{ $import->total_rows }} linhas</p>
+                                        </div>
+                                    @endif
+                                </td>
                                 <td class="px-5 py-4">{{ $import->user->name }}</td>
                             </tr>
                         @empty

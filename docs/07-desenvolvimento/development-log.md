@@ -3,6 +3,23 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Importação assíncrona em blocos
+
+### Correção
+
+O processamento da planilha foi removido da requisição HTTP para evitar o
+limite de execução de 30 segundos.
+
+### Impactos
+
+- upload registra o lote e responde imediatamente;
+- job de fila processa blocos de 100 linhas;
+- progresso é atualizado após cada bloco;
+- tela recarrega automaticamente enquanto houver lote ativo;
+- arquivo temporário é removido ao concluir ou falhar;
+- bloqueio impede execução simultânea do mesmo lote;
+- `retry_after` da fila foi alinhado ao timeout máximo do job.
+
 ## 2026-06-22 — Regras de quantidade e simplificação da importação de produtos
 
 ### Funcionalidade

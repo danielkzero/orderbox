@@ -526,6 +526,8 @@ Carregar os cadastros essenciais para iniciar a operação da empresa.
 
 - download de modelo preenchido com exemplo e aba de instruções;
 - limite de 10 MB e 5.000 linhas;
-- validação e gravação em transação única;
+- envio imediato para a fila;
+- processamento sequencial em blocos de 100 linhas;
+- atualização automática do progresso enquanto o lote estiver ativo;
 - histórico paginado com arquivo, tipo, responsável, resultado e primeiro erro;
-- nenhuma alteração é mantida quando a importação falha.
+- transação por bloco e interrupção do lote quando um bloco falha.

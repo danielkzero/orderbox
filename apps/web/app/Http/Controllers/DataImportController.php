@@ -38,23 +38,21 @@ class DataImportController extends Controller
 
     public function store(StoreDataImportRequest $request, DataImportService $imports, AuditService $audit): RedirectResponse
     {
-        $batch = $imports->import(
+        $batch = $imports->queue(
             $request->user(),
             $request->string('type')->toString(),
             $request->file('file'),
         );
 
-        $audit->record($request->user(), 'ImportData', $batch, null, $batch->toArray());
-
-        if ($batch->status !== 'completed') {
-            return redirect()->route('imports.index')->withErrors([
-                'file' => $batch->errors[0] ?? 'A importação falhou. Nenhum dado foi alterado.',
-            ]);
-        }
+        $audit->record($request->user(), 'ImportData', $batch, null, $batch->only([
+            'type',
+            'original_filename',
+            'status',
+        ]));
 
         return redirect()->route('imports.index')->with(
             'status',
-            "Importação concluída: {$batch->created_rows} criados e {$batch->updated_rows} atualizados.",
+            'Importação adicionada à fila. O progresso será atualizado no histórico.',
         );
     }
 

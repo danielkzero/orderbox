@@ -12,12 +12,15 @@ class ImportBatch extends Model
         'user_id',
         'type',
         'original_filename',
+        'storage_path',
         'status',
         'total_rows',
+        'processed_rows',
         'created_rows',
         'updated_rows',
         'failed_rows',
         'errors',
+        'started_at',
         'completed_at',
     ];
 
@@ -25,6 +28,7 @@ class ImportBatch extends Model
     {
         return [
             'errors' => 'array',
+            'started_at' => 'datetime',
             'completed_at' => 'datetime',
         ];
     }

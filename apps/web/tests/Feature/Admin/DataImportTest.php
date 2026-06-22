@@ -3,12 +3,15 @@
 namespace Tests\Feature\Admin;
 
 use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
+use App\Jobs\ProcessDataImport;
 use App\Models\Company;
 use App\Models\ImportBatch;
 use App\Models\User;
+use App\Services\Import\DataImportService;
 use App\Services\Import\DataImportTemplateService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Queue;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -24,6 +27,7 @@ class DataImportTest extends TestCase
     {
         parent::setUp();
         $this->withoutMiddleware(EnsureAuthenticationSessionIsActive::class);
+        Queue::fake();
         $this->admin = User::factory()->create([
             'company_id' => Company::factory()->create()->id,
             'role' => 'Admin',
@@ -65,6 +69,11 @@ class DataImportTest extends TestCase
             ->post(route('imports.store'), ['type' => 'products', 'file' => $file])
             ->assertRedirect(route('imports.index'));
 
+        $batch = ImportBatch::query()->firstOrFail();
+        $this->assertSame('queued', $batch->status);
+        Queue::assertPushed(ProcessDataImport::class, fn ($job): bool => $job->importBatchId === $batch->id);
+        app(DataImportService::class)->process($batch);
+
         $this->assertDatabaseHas('categories', ['company_id' => $this->admin->company_id, 'name' => 'Ferramentas']);
         $this->assertDatabaseHas('brands', ['company_id' => $this->admin->company_id, 'name' => 'Marca Teste']);
         $this->assertDatabaseHas('units', ['company_id' => $this->admin->company_id, 'code' => 'UN']);
@@ -97,9 +106,12 @@ class DataImportTest extends TestCase
             ->post(route('imports.store'), ['type' => 'products', 'file' => $file])
             ->assertRedirect(route('imports.index'));
 
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
         $this->assertDatabaseMissing('categories', ['company_id' => $this->admin->company_id, 'name' => 'Categoria temporária']);
         $this->assertDatabaseCount('products', 0);
-        $batch = ImportBatch::query()->firstOrFail();
+        $batch->refresh();
         $this->assertSame('failed', $batch->status);
         $this->assertStringContainsString('linha 2', $batch->errors[0]);
     }
@@ -128,11 +140,50 @@ class DataImportTest extends TestCase
             ])
             ->assertRedirect(route('imports.index'));
 
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
         $this->assertDatabaseHas('payment_methods', ['company_id' => $this->admin->company_id, 'code' => 'pix']);
         $this->assertDatabaseHas('payment_terms', ['company_id' => $this->admin->company_id, 'code' => '30_60']);
         $this->assertDatabaseHas('products', ['company_id' => $this->admin->company_id, 'sku' => 'SKU-INICIAL']);
         $this->assertDatabaseHas('customers', ['company_id' => $this->admin->company_id, 'document' => '52998224725']);
         $this->assertDatabaseHas('import_batches', ['status' => 'completed', 'created_rows' => 4]);
+    }
+
+    public function test_large_import_is_processed_in_chunks_and_updates_progress(): void
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Formas de pagamento');
+        $sheet->fromArray(['codigo', 'nome', 'ordem', 'ativo'], null, 'A1');
+
+        foreach (range(1, 205) as $row) {
+            $sheet->fromArray(
+                ["forma-{$row}", "Forma {$row}", $row, 'sim'],
+                null,
+                'A'.($row + 1),
+            );
+        }
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), [
+                'type' => 'payment_methods',
+                'file' => $this->uploadedSpreadsheet($spreadsheet),
+            ])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+        $batch->refresh();
+
+        $this->assertSame('completed', $batch->status);
+        $this->assertSame(205, $batch->total_rows);
+        $this->assertSame(205, $batch->processed_rows);
+        $this->assertSame(205, $batch->created_rows);
+        $this->assertDatabaseHas('payment_methods', [
+            'company_id' => $this->admin->company_id,
+            'code' => 'forma-205',
+        ]);
     }
 
     public function test_sales_representative_cannot_access_imports(): void

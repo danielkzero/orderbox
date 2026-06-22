@@ -72,6 +72,18 @@ php artisan db:seed --class=HydradigitalDemoSeeder
 
 O seeder é idempotente e cria clientes, representantes, catálogo, tabelas de preço e pedidos. As contas fictícias usam a senha `password`; a senha do administrador não é alterada.
 
+## Worker de Fila
+
+Importações são processadas fora da requisição HTTP. Em desenvolvimento, use:
+
+```bash
+php artisan queue:work --tries=1 --timeout=1200
+```
+
+O comando `composer dev` já inicia um listener de fila. Para a conexão
+`database`, mantenha `DB_QUEUE_RETRY_AFTER` maior que o timeout do job; o valor
+recomendado é `1300`.
+
 ---
 
 ## Execução

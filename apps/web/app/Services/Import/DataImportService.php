@@ -2,6 +2,7 @@
 
 namespace App\Services\Import;
 
+use App\Jobs\ProcessDataImport;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Customer;
@@ -17,6 +18,7 @@ use App\Support\BrazilianDocument;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -28,21 +30,51 @@ class DataImportService
 {
     private const MAX_ROWS = 5000;
 
-    public function import(User $user, string $type, UploadedFile $file): ImportBatch
-    {
-        $batch = ImportBatch::query()->create([
-            'company_id' => $user->company_id,
-            'user_id' => $user->id,
-            'type' => $type,
-            'original_filename' => $file->getClientOriginalName(),
-            'status' => 'processing',
-        ]);
+    private const CHUNK_SIZE = 100;
 
+    public function queue(User $user, string $type, UploadedFile $file): ImportBatch
+    {
+        $storagePath = $file->storeAs(
+            "imports/{$user->company_id}",
+            Str::uuid().'.'.strtolower($file->getClientOriginalExtension()),
+        );
+
+        try {
+            $batch = ImportBatch::query()->create([
+                'company_id' => $user->company_id,
+                'user_id' => $user->id,
+                'type' => $type,
+                'original_filename' => $file->getClientOriginalName(),
+                'storage_path' => $storagePath,
+                'status' => 'queued',
+            ]);
+
+            ProcessDataImport::dispatch($batch->id);
+
+            return $batch;
+        } catch (Throwable $exception) {
+            Storage::delete($storagePath);
+            throw $exception;
+        }
+    }
+
+    public function process(ImportBatch $batch): ImportBatch
+    {
         $totalRows = 0;
 
         try {
-            $spreadsheet = IOFactory::load($file->getRealPath());
-            $datasets = $this->datasets($spreadsheet, $type);
+            $batch->update([
+                'status' => 'processing',
+                'started_at' => now(),
+                'errors' => null,
+            ]);
+
+            if (! $batch->storage_path || ! Storage::exists($batch->storage_path)) {
+                throw ValidationException::withMessages(['file' => 'O arquivo temporário da importação não foi encontrado.']);
+            }
+
+            $spreadsheet = IOFactory::load(Storage::path($batch->storage_path));
+            $datasets = $this->datasets($spreadsheet, $batch->type);
             $totalRows = collect($datasets)->sum(fn (array $rows): int => count($rows));
 
             if ($totalRows === 0) {
@@ -53,29 +85,45 @@ class DataImportService
                 throw ValidationException::withMessages(['file' => 'A planilha excede o limite de '.self::MAX_ROWS.' linhas.']);
             }
 
-            $result = DB::transaction(function () use ($user, $datasets): array {
-                $result = ['created' => 0, 'updated' => 0];
+            $batch->update(['total_rows' => $totalRows]);
+            $result = ['created' => 0, 'updated' => 0, 'processed' => 0];
 
-                foreach (['payment_methods', 'payment_terms', 'products', 'customers'] as $dataset) {
-                    foreach ($datasets[$dataset] ?? [] as $row) {
-                        $action = match ($dataset) {
-                            'payment_methods' => $this->importPaymentMethod($user, $row),
-                            'payment_terms' => $this->importPaymentTerm($user, $row),
-                            'products' => $this->importProduct($user, $row),
-                            'customers' => $this->importCustomer($user, $row),
-                        };
-                        $result[$action]++;
-                    }
+            foreach (['payment_methods', 'payment_terms', 'products', 'customers'] as $dataset) {
+                foreach (array_chunk($datasets[$dataset] ?? [], self::CHUNK_SIZE) as $chunk) {
+                    $chunkResult = DB::transaction(function () use ($batch, $dataset, $chunk): array {
+                        $user = $batch->user;
+                        $result = ['created' => 0, 'updated' => 0];
+
+                        foreach ($chunk as $row) {
+                            $action = match ($dataset) {
+                                'payment_methods' => $this->importPaymentMethod($user, $row),
+                                'payment_terms' => $this->importPaymentTerm($user, $row),
+                                'products' => $this->importProduct($user, $row),
+                                'customers' => $this->importCustomer($user, $row),
+                            };
+                            $result[$action]++;
+                        }
+
+                        return $result;
+                    });
+
+                    $result['created'] += $chunkResult['created'];
+                    $result['updated'] += $chunkResult['updated'];
+                    $result['processed'] += count($chunk);
+                    $batch->update([
+                        'created_rows' => $result['created'],
+                        'updated_rows' => $result['updated'],
+                        'processed_rows' => $result['processed'],
+                    ]);
                 }
-
-                return $result;
-            });
+            }
 
             $batch->update([
                 'status' => 'completed',
                 'total_rows' => $totalRows,
                 'created_rows' => $result['created'],
                 'updated_rows' => $result['updated'],
+                'processed_rows' => $totalRows,
                 'completed_at' => now(),
             ]);
         } catch (Throwable $exception) {
@@ -88,10 +136,15 @@ class DataImportService
             $batch->update([
                 'status' => 'failed',
                 'total_rows' => $totalRows,
-                'failed_rows' => 1,
+                'failed_rows' => max(1, $totalRows - $batch->processed_rows),
                 'errors' => array_slice($errors, 0, 100),
                 'completed_at' => now(),
             ]);
+        } finally {
+            if ($batch->storage_path) {
+                Storage::delete($batch->storage_path);
+                $batch->update(['storage_path' => null]);
+            }
         }
 
         return $batch->refresh();

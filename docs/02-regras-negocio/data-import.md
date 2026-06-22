@@ -27,10 +27,17 @@ A carga inicial completa exige Excel porque utiliza múltiplas abas.
 - 5.000 linhas de dados por execução;
 - 20 tabelas de preço por linha de produto.
 
-## Transação
+## Processamento Assíncrono
 
-Cada arquivo é processado em uma única transação. Se qualquer aba ou linha for
-inválida, nenhuma alteração é persistida.
+O upload apenas registra o lote e armazena temporariamente o arquivo. A
+importação é executada pela fila em blocos sequenciais de 100 linhas.
+
+Cada bloco usa sua própria transação. Se um bloco falhar, ele é revertido e o
+lote é encerrado como falho. Blocos concluídos anteriormente permanecem
+gravados; uma nova execução é segura porque as entidades são atualizadas pelas
+chaves naturais documentadas.
+
+O arquivo temporário é removido ao concluir ou falhar.
 
 ## Identificação para Atualização
 
@@ -140,6 +147,7 @@ As colunas são `codigo`, `nome`, `descricao`, `ordem` e `ativo`.
 - arquivos não são mantidos após o processamento;
 - erros internos não expõem SQL ou estrutura do banco;
 - a execução possui rate limiting e registro de auditoria.
+- o mesmo lote não pode ser processado simultaneamente por dois workers.
 
 ## Fora do Estágio Zero
 
