@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Usuários">
     <x-page-header title="Usuários" description="Gerencie acessos, perfis e status dos usuários.">
         <x-slot name="actions"><a href="{{ route('users.create') }}" class="rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-medium text-white">Novo usuário</a></x-slot>
     </x-page-header>

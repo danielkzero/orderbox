@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Liberação da API">
     <x-page-header title="Liberação da API" description="Autorize quais APPs podem chamar a API antes do login do usuário.">
         <x-slot name="actions">
             <a href="{{ route('api-guide.index') }}" class="inline-flex items-center rounded-lg border border-gray-300 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-300 dark:hover:bg-gray-800">

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Guia da API">
     <x-page-header title="Guia da API" description="Como liberar APPs, autenticar usuários e consumir endpoints do OrderBox." />
 
     <div class="space-y-6">

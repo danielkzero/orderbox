@@ -8,7 +8,7 @@
     ]);
 @endphp
 
-<x-app-layout>
+<x-app-layout title="Dashboard de vendas" description="Acompanhe receita, desempenho e crescimento comercial em tempo real.">
     <x-page-header title="Dashboard de vendas" description="Acompanhe receita, desempenho e crescimento comercial em tempo real." />
 
     <div class="space-y-6">

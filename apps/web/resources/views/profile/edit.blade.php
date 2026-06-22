@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Perfil">
     <x-page-header title="Perfil" description="Atualize seus dados de acesso e senha." />
 
     <div class="space-y-6">

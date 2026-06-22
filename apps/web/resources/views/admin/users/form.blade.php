@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :title="$user->exists ? 'Editar usuário' : 'Novo usuário'">
     <x-page-header :title="$user->exists ? 'Editar usuário' : 'Novo usuário'" description="Defina os dados de acesso e o perfil do usuário." />
     <x-panel class="max-w-3xl">
         <form method="POST" action="{{ $user->exists ? route('users.update', $user) : route('users.store') }}" class="space-y-5 p-6">

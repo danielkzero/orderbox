@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Manual de uso">
     <x-page-header title="Manual de uso" description="Fluxo básico para operar o OrderBox no painel web e no APP." />
 
     <div class="grid gap-6 lg:grid-cols-[280px_1fr]">

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Histórico de envios">
     <x-page-header title="Histórico de envios" :description="'Pedido '.$order->order_number">
         <x-slot name="actions">
             <a href="{{ route('orders.show', $order) }}" class="inline-flex h-11 items-center rounded-lg border border-gray-300 px-4 text-sm font-medium text-gray-700 dark:border-gray-700 dark:text-gray-300">Visualizar pedido</a>

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Produtos">
     <x-page-header title="Produtos" description="Acompanhe o catálogo comercial e mantenha os produtos prontos para pedidos.">
         <x-slot name="actions">
         </x-slot>

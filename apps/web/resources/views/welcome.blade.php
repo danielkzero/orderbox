@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Orderbox | Força de vendas para distribuidores</title>
+    <title>Orderbox Força de vendas para distribuidores</title>
     <meta name="description" content="Orderbox organiza representantes, clientes, produtos, tabelas de preço, pedidos e API em uma plataforma comercial para web e APP.">
     <link rel="icon" href="{{ asset('favicon.svg') }}" type="image/svg+xml">
     @vite(['resources/css/app.css', 'resources/js/app.js'])

@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout title="Segurança e 2FA">
     <x-page-header title="Segurança e 2FA" description="Proteja a conta, configure autenticação em dois fatores e gerencie sessões autenticadas." />
 
     <div class="grid gap-6 xl:grid-cols-2">

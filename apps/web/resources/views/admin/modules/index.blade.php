@@ -1,4 +1,4 @@
-<x-app-layout>
+<x-app-layout :title="$title">
     <x-page-header :title="$title" :description="$description" />
 
     <x-panel>
