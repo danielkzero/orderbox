@@ -8,7 +8,7 @@
             || in_array($crudResource, ['products', 'categories', 'brands', 'units'], true) => 'catalog',
         request()->routeIs('orders.*', 'payment-methods.*', 'payment-terms.*')
             || in_array($crudResource, ['orders', 'payment-methods', 'payment-terms'], true) => 'orders',
-        request()->routeIs('profile.*', 'security.*', 'users.*', 'api-clients.*', 'audit-logs.*') => 'settings',
+        request()->routeIs('profile.*', 'security.*', 'users.*', 'api-clients.*', 'imports.*', 'audit-logs.*') => 'settings',
         request()->routeIs('manual.*', 'api-guide.*') => 'help',
         default => null,
     };
@@ -35,6 +35,7 @@
             ['route' => 'security.index', 'label' => 'Segurança', 'icon' => 'lock'],
             ['route' => 'users.index', 'label' => 'Usuários', 'icon' => 'users', 'roles' => ['Admin']],
             ['route' => 'api-clients.index', 'label' => 'Integrações', 'icon' => 'key', 'roles' => ['Admin']],
+            ['route' => 'imports.index', 'label' => 'Importação', 'icon' => 'upload', 'roles' => ['Admin', 'Manager']],
             ['route' => 'audit-logs.index', 'label' => 'Auditoria', 'icon' => 'history', 'roles' => ['Admin', 'Manager']],
         ],
         'help' => [

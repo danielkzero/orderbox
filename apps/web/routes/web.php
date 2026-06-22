@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminModuleController;
 use App\Http\Controllers\ApiClientController;
 use App\Http\Controllers\CatalogCrudController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DataImportController;
 use App\Http\Controllers\DocumentationController;
 use App\Http\Controllers\LocationController;
 use App\Http\Controllers\OrderActionController;
@@ -48,6 +49,9 @@ Route::middleware(['auth', 'active.session', 'company.context'])->group(function
     Route::get('/units', [AdminModuleController::class, 'units'])->name('units.index');
     Route::get('/regions', [AdminModuleController::class, 'regions'])->name('regions.index');
     Route::get('/audit-logs', [AdminModuleController::class, 'auditLogs'])->name('audit-logs.index');
+    Route::get('/imports', [DataImportController::class, 'index'])->name('imports.index');
+    Route::get('/imports/templates/{type}', [DataImportController::class, 'template'])->middleware('throttle:export')->name('imports.template');
+    Route::post('/imports', [DataImportController::class, 'store'])->middleware('throttle:sensitive-write')->name('imports.store');
     Route::get('/manual', [DocumentationController::class, 'manual'])->name('manual.index');
     Route::get('/api-guide', [DocumentationController::class, 'apiGuide'])->name('api-guide.index');
     Route::get('/crud/{resource}/create', [CatalogCrudController::class, 'create'])->name('crud.create');

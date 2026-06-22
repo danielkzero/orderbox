@@ -44,6 +44,7 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [x] Manter mensagens de sucesso, erro e estados vazios no layout.
 - [ ] Separar formulários Blade por módulo.
 - [ ] Criar autocompletes paginados.
+- [x] Criar área de importação para os cadastros essenciais do estágio zero.
 
 ## P1 — Contratos e clientes
 

@@ -65,10 +65,14 @@ prazos disponíveis dos bloqueados e atualiza o estado conforme o total muda.
 - Segurança
 - Usuários
 - Integrações
+- Importação
 - Auditoria
 
 Meu perfil e Segurança são pessoais. Usuários e Integrações são exclusivos de
 Admin. Auditoria é disponibilizada para Admin e Manager.
+
+Importação é disponibilizada para Admin e Manager. A tela permite baixar
+modelos oficiais, enviar planilhas e consultar o histórico da própria empresa.
 
 Na tela de Segurança, o histórico de sessões recentes é ordenado da sessão
 mais nova para a mais antiga e paginado em 10 registros. A navegação informa a
@@ -489,3 +493,32 @@ Consultar ações realizadas no sistema.
 Para pedidos, a coluna Registro exibe o número comercial, por exemplo
 `PED-202606-000005 (#5)`. A ação `CancelOrder` é apresentada como
 `Pedido cancelado`, e a pesquisa aceita o número do pedido.
+
+---
+
+## Tela: Importação de Dados
+
+### Objetivo
+
+Carregar os cadastros essenciais para iniciar a operação da empresa.
+
+### Modelos
+
+- carga inicial completa;
+- produtos;
+- clientes;
+- formas de pagamento;
+- prazos de pagamento.
+
+### Campos
+
+- tipo da importação;
+- arquivo Excel ou CSV.
+
+### Comportamento
+
+- download de modelo preenchido com exemplo e aba de instruções;
+- limite de 10 MB e 5.000 linhas;
+- validação e gravação em transação única;
+- histórico paginado com arquivo, tipo, responsável, resultado e primeiro erro;
+- nenhuma alteração é mantida quando a importação falha.

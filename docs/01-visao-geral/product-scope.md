@@ -13,6 +13,7 @@ Sistema de força de vendas com operação online e offline.
 - Representantes
 - Pedidos
 - Consulta de estoque disponível sincronizado do ERP
+- Importação da carga inicial por Excel/CSV
 - Auditoria
 
 ## Aplicações
@@ -37,3 +38,7 @@ Sistema de força de vendas com operação online e offline.
 O OrderBox consulta o estoque disponível recebido do ERP, mas não mantém o estoque oficial nem registra movimentações.
 
 Pedidos podem ser criados no Admin ou no Mobile. Outros canais de venda e integrações de entrada ficam para versões futuras.
+
+A carga inicial do Admin contempla produtos e seus cadastros auxiliares,
+clientes, formas de pagamento e prazos. Pedidos, representantes e regiões não
+são importados no estágio zero.

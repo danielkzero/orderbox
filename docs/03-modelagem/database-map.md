@@ -31,6 +31,7 @@ Entidades raiz possuem `company_id`. Entidades filhas podem herdar o vínculo po
 - Users
 - AuthenticationSessions
 - AuthenticationChallenges
+- ImportBatches
 
 ### Cadastros
 
@@ -98,6 +99,7 @@ ERP
 - 1:N Brands
 - 1:N Units
 - 1:N Products
+- 1:N ImportBatches
 - 1:N PriceTables
 - 1:N PaymentMethods
 - 1:N PaymentTerms

@@ -15,6 +15,10 @@ erDiagram
 
     USERS ||--o{ AUTHENTICATION_CHALLENGES : confirma
 
+    COMPANIES ||--o{ IMPORT_BATCHES : possui
+
+    USERS ||--o{ IMPORT_BATCHES : executa
+
     COMPANIES ||--o{ CUSTOMERS : possui
 
     CUSTOMERS ||--o{ CUSTOMER_ADDRESSES : possui

@@ -23,6 +23,8 @@ Cada entrega deve possuir:
 ## Decisões Consolidadas
 
 - aplicação principal em Laravel 12 com Blade;
+- carga inicial por modelos Excel/CSV, com transação integral e isolamento por
+  empresa;
 - API Mobile autenticada com Laravel Sanctum;
 - aplicativo Mobile em Ionic;
 - banco de dados MariaDB;

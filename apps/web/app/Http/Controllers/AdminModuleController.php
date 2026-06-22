@@ -232,6 +232,7 @@ class AdminModuleController extends Controller
                 'Create' => 'Criação',
                 'Update' => 'Alteração',
                 'Deactivate' => 'Inativação',
+                'ImportData' => 'Importação de dados',
                 default => $item->action,
             },
             'Entidade' => fn (AuditLog $item) => match ($item->entity_type) {
@@ -243,6 +244,7 @@ class AdminModuleController extends Controller
                 'PriceTable' => 'Tabela de preço',
                 'SalesRepresentative' => 'Representante',
                 'User' => 'Usuário',
+                'ImportBatch' => 'Importação',
                 default => $item->entity_type,
             },
             'Registro' => fn (AuditLog $item) => filled($item->entity_label)

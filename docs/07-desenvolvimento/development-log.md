@@ -3,6 +3,37 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Importação de dados do estágio zero
+
+### Funcionalidade
+
+Criação de uma área administrativa para importar os cadastros essenciais por
+Excel ou CSV.
+
+### Motivo
+
+Permitir a implantação inicial de uma empresa sem cadastro manual registro a
+registro.
+
+### Arquivos alterados
+
+- controller, Form Request, model e serviços de importação;
+- migration de histórico `import_batches`;
+- tela, rotas, navegação e ícones;
+- testes de importação;
+- documentação de regras, modelagem, telas e desenvolvimento.
+
+### Impactos
+
+- modelos individuais e workbook consolidado;
+- produtos importam categoria, marca, unidade e até 20 tabelas de preço;
+- clientes importam endereço, contato e tabelas aplicáveis;
+- formas e prazos são criados ou atualizados por código;
+- rollback integral em qualquer erro;
+- histórico e auditoria por empresa;
+- acesso restrito a Admin e Manager;
+- sem impacto nos contratos da API, Mobile ou B2B.
+
 ## 2026-06-22 — Tooltip superior com seta
 
 ### Correção
