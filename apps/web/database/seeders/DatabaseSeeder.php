@@ -6,6 +6,7 @@ use App\Models\Company;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DatabaseSeeder extends Seeder
 {
@@ -38,12 +39,13 @@ class DatabaseSeeder extends Seeder
             [
                 'company_id' => $company->id,
                 'name' => env('ADMIN_NAME', 'OrderBox Admin'),
-                'password' => $password,
+                'password' => Hash::make($password),
                 'role' => 'Admin',
                 'active' => true,
+                'email_verified_at' => now(),
             ],
         );
 
-        (new PaymentSettingsSeeder)->seedCompany($company);
+        //(new PaymentSettingsSeeder)->seedCompany($company);
     }
 }
