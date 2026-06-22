@@ -106,6 +106,10 @@ compactos com ícones. Cada botão possui tooltip e nome acessível para
 identificar sua função, incluindo editar, visualizar, enviar, inativar,
 regenerar, bloquear e revogar.
 
+O tooltip é centralizado imediatamente acima do botão correspondente. Ele só é
+reposicionado abaixo quando não existe espaço suficiente no topo da janela,
+evitando sobreposição com ações vizinhas.
+
 Quando uma linha possui ações secundárias, o acesso ocorre pelo ícone de três
 pontos verticais. O menu aberto mantém ícone e texto em cada opção para evitar
 ambiguidade.

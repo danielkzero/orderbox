@@ -18,7 +18,7 @@
     $classes = 'inline-flex size-9 items-center justify-center rounded-lg border bg-white shadow-theme-xs transition focus:outline-hidden focus:ring-3 focus:ring-brand-500/15 dark:bg-gray-900 '.$variants[$variant];
 @endphp
 
-<x-tooltip :text="$label" position="top">
+<x-tooltip :text="$label">
     @if ($href)
         <a href="{{ $href }}" aria-label="{{ $label }}" {{ $attributes->class($classes) }}>
             <x-icon :name="$icon" class="size-4" />

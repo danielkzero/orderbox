@@ -19,28 +19,37 @@
             document.removeEventListener('scroll', this.repositionHandler, true);
         },
         updatePosition() {
-            if (! this.$refs.trigger) return;
+            if (! this.$refs.trigger || ! this.$refs.tooltip) return;
 
             const rect = this.$refs.trigger.getBoundingClientRect();
+            const tooltip = this.$refs.tooltip.getBoundingClientRect();
             const gap = 8;
-            let left = rect.left + (rect.width / 2);
-            let top = rect.top - gap;
-            let transform = 'translate(-50%, -100%)';
+            const viewportPadding = 8;
+            let left = rect.left + ((rect.width - tooltip.width) / 2);
+            let top = rect.top - tooltip.height - gap;
 
             if (this.position === 'bottom') {
                 top = rect.bottom + gap;
-                transform = 'translate(-50%, 0)';
             } else if (this.position === 'left') {
-                left = rect.left - gap;
-                top = rect.top + (rect.height / 2);
-                transform = 'translate(-100%, -50%)';
+                left = rect.left - tooltip.width - gap;
+                top = rect.top + ((rect.height - tooltip.height) / 2);
             } else if (this.position === 'right') {
                 left = rect.right + gap;
-                top = rect.top + (rect.height / 2);
-                transform = 'translate(0, -50%)';
+                top = rect.top + ((rect.height - tooltip.height) / 2);
+            } else if (top < viewportPadding) {
+                top = rect.bottom + gap;
             }
 
-            this.style = `left: ${left}px; top: ${top}px; transform: ${transform};`;
+            left = Math.min(
+                Math.max(viewportPadding, left),
+                window.innerWidth - tooltip.width - viewportPadding,
+            );
+            top = Math.min(
+                Math.max(viewportPadding, top),
+                window.innerHeight - tooltip.height - viewportPadding,
+            );
+
+            this.style = `left: ${Math.round(left)}px; top: ${Math.round(top)}px;`;
         },
         show() {
             this.open = true;
@@ -64,6 +73,7 @@
 
     <template x-teleport="body">
         <span
+            x-ref="tooltip"
             x-show="open"
             x-cloak
             x-transition.opacity

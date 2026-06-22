@@ -3,6 +3,21 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-22 — Posicionamento dos tooltips de ações
+
+### Correção
+
+O tooltip das ações em tabelas passou a usar as dimensões reais do botão e da
+própria caixa para permanecer centralizado imediatamente acima do controle.
+
+### Impactos
+
+- identificação visual vinculada diretamente ao botão acionado;
+- prevenção de deslocamento sobre ações vizinhas;
+- ajuste aos limites laterais da janela;
+- fallback abaixo do botão somente quando faltar espaço no topo;
+- preservação da navegação por teclado e dos nomes acessíveis.
+
 ## 2026-06-22 — Ações com ícones nas tabelas administrativas
 
 ### Funcionalidade
