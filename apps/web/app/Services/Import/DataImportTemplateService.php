@@ -12,6 +12,7 @@ class DataImportTemplateService
 {
     public const TYPES = [
         'initial' => 'Carga inicial completa',
+        'regions' => 'Regiões',
         'products' => 'Produtos',
         'customers' => 'Clientes',
         'payment_methods' => 'Formas de pagamento',
@@ -39,6 +40,18 @@ class DataImportTemplateService
             ], [
                 '30_60_90', '30/60/90 dias', '30|60|90', 500, 'Três parcelas', 10, 'sim',
             ]);
+        }
+
+        if (in_array($type, ['initial', 'regions'], true)) {
+            $this->addSheet($spreadsheet, 'Regiões', [
+                'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+                'microrregioes', 'mesorregioes', 'tabelas_preco', 'descricao', 'ativo',
+            ], [
+                'São Paulo Capital', 1, 'SP', 'municipios', '3550308|3549904',
+                'São Paulo|São José dos Campos', 'São Paulo|São José dos Campos',
+                'Metropolitana de São Paulo|Vale do Paraíba Paulista', 'Varejo|Atacado',
+                'Região comercial da capital e cidades prioritárias.', 'sim',
+            ], ['codigos_ibge']);
         }
 
         if (in_array($type, ['initial', 'products'], true)) {
@@ -123,13 +136,14 @@ class DataImportTemplateService
             ['Regra', 'Descrição'],
             ['Arquivo', 'Use o modelo sem alterar os nomes das abas ou cabeçalhos. XLSX, XLS ou CSV; carga completa exige XLSX/XLS.'],
             ['Limite', 'Máximo de 5.000 linhas de dados e 10 MB por arquivo.'],
-            ['Atualização', 'Produtos são identificados pelo SKU; clientes pelo CPF/CNPJ; formas e prazos pelo código.'],
+            ['Atualização', 'Regiões são identificadas pelo nome; produtos pelo SKU; clientes pelo CPF/CNPJ; formas e prazos pelo código.'],
             ['Valores', 'Decimais podem usar vírgula ou ponto. Campos booleanos aceitam sim/não, 1/0, true/false.'],
             ['Identificadores', 'Código, SKU e barcode são textos. Não remova a formatação textual dessas colunas para preservar zeros à esquerda e códigos longos.'],
             ['Produtos', 'Categoria, categoria pai, marca, unidade e tabelas de preço são criadas quando ainda não existem.'],
             ['Tabelas de preço', 'Depois da coluna unidade, use cada cabeçalho como nome de tabela e informe somente o preço nas linhas. São aceitas até 20 tabelas.'],
             ['Quantidades', 'Quantidade mínima e múltiplo pertencem ao produto. Fator peso aceita decimais para venda por peso ou medida.'],
             ['Clientes', 'O documento deve ser CPF/CNPJ válido. Tabelas de preço são separadas por |.'],
+            ['Regiões', 'Regiões são identificadas pelo nome. Use municipios ou restante_uf. Códigos, municípios, microrregiões, mesorregiões e tabelas são separados por |; códigos e municípios devem ter a mesma quantidade.'],
             ['Prazos', 'Dias das parcelas são separados por |, /, vírgula ou ponto e vírgula.'],
             ['Transação', 'Se uma linha for inválida, nenhuma alteração do arquivo será gravada.'],
             ['Tipo do modelo', self::TYPES[$type]],

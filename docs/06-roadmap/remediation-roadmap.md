@@ -45,6 +45,7 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 - [ ] Separar formulários Blade por módulo.
 - [ ] Criar autocompletes paginados.
 - [x] Criar área de importação para os cadastros essenciais do estágio zero.
+- [x] Adicionar regiões comerciais à carga inicial e aos modelos individuais.
 
 ## P1 — Contratos e clientes
 

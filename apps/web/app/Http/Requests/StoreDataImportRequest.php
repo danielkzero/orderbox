@@ -15,7 +15,7 @@ class StoreDataImportRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(['initial', 'products', 'customers', 'payment_methods', 'payment_terms'])],
+            'type' => ['required', Rule::in(['initial', 'regions', 'products', 'customers', 'payment_methods', 'payment_terms'])],
             'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
         ];
     }

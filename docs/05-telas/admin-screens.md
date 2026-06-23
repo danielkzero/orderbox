@@ -522,6 +522,7 @@ Carregar os cadastros essenciais para iniciar a operação da empresa.
 ### Modelos
 
 - carga inicial completa;
+- regiões;
 - produtos;
 - clientes;
 - formas de pagamento;
@@ -537,6 +538,8 @@ Carregar os cadastros essenciais para iniciar a operação da empresa.
 - download de modelo preenchido com exemplo e aba de instruções;
 - colunas `codigo`, `sku` e `barcode` do modelo de produtos formatadas como
   texto para preservar zeros à esquerda e códigos longos;
+- modelo de regiões com abrangência por municípios ou restante da UF, códigos
+  IBGE e tabelas de preço;
 - limite de 10 MB e 5.000 linhas;
 - envio imediato para a fila;
 - processamento sequencial em blocos de 100 linhas;

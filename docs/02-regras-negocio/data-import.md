@@ -43,6 +43,7 @@ O arquivo temporário é removido ao concluir ou falhar.
 
 | Entidade | Chave |
 |---|---|
+| Região | `nome` dentro da empresa |
 | Produto | `sku` dentro da empresa |
 | Cliente | CPF/CNPJ dentro da empresa |
 | Forma de pagamento | `codigo` dentro da empresa |
@@ -54,10 +55,42 @@ O arquivo consolidado possui as abas:
 
 1. Formas de pagamento;
 2. Prazos de pagamento;
-3. Produtos;
-4. Clientes.
+3. Regiões;
+4. Produtos;
+5. Clientes.
 
 Essa é também a ordem de processamento.
+
+## Regiões
+
+A aba Regiões cria ou atualiza regiões comerciais pelo nome dentro da empresa.
+Cada linha representa uma região completa e substitui seus municípios e
+vínculos com tabelas de preço.
+
+As colunas são:
+
+| Coluna | Obrigatória | Destino/Regra |
+|---|---|---|
+| nome | Sim | Chave de criação ou atualização |
+| nivel | Não | Prioridade de `1` a `99`; padrão `1` |
+| uf | Sim | Sigla da unidade federativa |
+| tipo_abrangencia | Sim | `municipios` ou `restante_uf` |
+| codigos_ibge | Para `municipios` | Códigos de sete dígitos separados por `|` |
+| municipios | Para `municipios` | Nomes separados por `|`, na mesma ordem dos códigos |
+| microrregioes | Não | Nomes separados por `|`, na mesma ordem dos códigos |
+| mesorregioes | Não | Nomes separados por `|`, na mesma ordem dos códigos |
+| tabelas_preco | Não | Tabelas separadas por `|`; são criadas quando inexistentes |
+| descricao | Não | Observações comerciais |
+| ativo | Não | Padrão verdadeiro |
+
+As listas geográficas paralelas devem possuir a mesma quantidade de itens.
+Microrregiões e mesorregiões podem ficar vazias. Para `restante_uf`, os campos
+de municípios são ignorados.
+
+Somente uma região `restante_uf` pode existir por UF e empresa. Um código IBGE
+não pode pertencer a duas regiões da mesma empresa, mas pode ser usado por
+empresas diferentes. Ao concluir uma importação com regiões, a reclassificação
+dos clientes da empresa é enviada para a fila.
 
 ## Produtos
 
@@ -157,5 +190,4 @@ As colunas são `codigo`, `nome`, `descricao`, `ordem` e `ativo`.
 ## Fora do Estágio Zero
 
 - representantes, pois dependem da criação prévia de usuários;
-- regiões, pois dependem da classificação geográfica e códigos IBGE;
 - pedidos, pois dependem de cliente, representante, produto e regras comerciais.

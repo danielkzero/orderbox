@@ -3,6 +3,35 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-23 — Importação de regiões comerciais
+
+### Funcionalidade
+
+Inclusão de regiões comerciais nos modelos individuais e na carga inicial.
+
+### Motivo
+
+Permitir a implantação de abrangências comerciais, municípios e vínculos com
+tabelas de preço sem cadastro manual região por região.
+
+### Arquivos alterados
+
+- Form Request e serviços de importação;
+- modelo Excel oficial;
+- testes de feature do importador;
+- regras de negócio, modelagem, telas, roadmap e registro de desenvolvimento.
+
+### Impactos
+
+- região criada ou atualizada pelo nome dentro da empresa;
+- suporte a abrangência por municípios ou restante da UF;
+- listas paralelas de códigos IBGE, municípios, microrregiões e mesorregiões;
+- criação e vínculo de tabelas de preço informadas na planilha;
+- validação de município duplicado e de uma única região restante por UF;
+- isolamento multiempresa preservado;
+- reclassificação assíncrona de clientes após importações com regiões;
+- nenhuma migration ou alteração nos contratos da API, Mobile e B2B.
+
 ## 2026-06-22 — Provisionamento obrigatório de representantes
 
 ### Correção

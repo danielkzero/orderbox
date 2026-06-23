@@ -6,6 +6,8 @@ use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
 use App\Jobs\ProcessDataImport;
 use App\Models\Company;
 use App\Models\ImportBatch;
+use App\Models\PriceTable;
+use App\Models\Region;
 use App\Models\User;
 use App\Services\Import\DataImportService;
 use App\Services\Import\DataImportTemplateService;
@@ -57,6 +59,24 @@ class DataImportTest extends TestCase
         $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('A2')->getNumberFormat()->getFormatCode());
         $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('C2')->getNumberFormat()->getFormatCode());
         $this->assertSame(NumberFormat::FORMAT_TEXT, $productsSheet->getStyle('D2')->getNumberFormat()->getFormatCode());
+    }
+
+    public function test_admin_can_download_the_region_template(): void
+    {
+        $this->actingAs($this->admin)
+            ->get(route('imports.template', 'regions'))
+            ->assertOk()
+            ->assertDownload('orderbox-importacao-regions.xlsx');
+
+        $path = app(DataImportTemplateService::class)->create('regions');
+        $regionsSheet = IOFactory::load($path)->getSheetByName('Regiões');
+        $headers = $regionsSheet->rangeToArray('A1:K1')[0];
+
+        $this->assertSame([
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+            'microrregioes', 'mesorregioes', 'tabelas_preco', 'descricao', 'ativo',
+        ], $headers);
+        $this->assertSame(NumberFormat::FORMAT_TEXT, $regionsSheet->getStyle('E2')->getNumberFormat()->getFormatCode());
     }
 
     public function test_product_import_preserves_identifiers_as_strings(): void
@@ -133,6 +153,124 @@ class DataImportTest extends TestCase
         ]);
     }
 
+    public function test_region_import_creates_municipalities_and_links_price_tables(): void
+    {
+        $file = $this->spreadsheet('Regiões', [
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+            'microrregioes', 'mesorregioes', 'tabelas_preco', 'descricao', 'ativo',
+        ], [
+            'Vale do Paraíba', 1, 'sp', 'municipios', '3549904|3554102',
+            'São José dos Campos|Taubaté', 'São José dos Campos|São José dos Campos',
+            'Vale do Paraíba Paulista|Vale do Paraíba Paulista', 'Varejo|Atacado',
+            'Região importada', 'sim',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), ['type' => 'regions', 'file' => $file])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
+        $region = Region::query()
+            ->where('company_id', $this->admin->company_id)
+            ->where('name', 'Vale do Paraíba')
+            ->firstOrFail();
+
+        $this->assertSame('SP', $region->state);
+        $this->assertSame('municipalities', $region->coverage_type);
+        $this->assertDatabaseHas('region_municipalities', [
+            'region_id' => $region->id,
+            'ibge_code' => '3549904',
+            'name' => 'São José dos Campos',
+        ]);
+        $this->assertDatabaseHas('region_municipalities', [
+            'region_id' => $region->id,
+            'ibge_code' => '3554102',
+            'name' => 'Taubaté',
+        ]);
+        $this->assertSame(
+            2,
+            PriceTable::query()->where('company_id', $this->admin->company_id)->where('region_id', $region->id)->count(),
+        );
+        $this->assertSame('completed', $batch->refresh()->status);
+        $this->assertSame(1, $batch->created_rows);
+    }
+
+    public function test_region_import_keeps_municipality_isolated_between_companies(): void
+    {
+        $otherCompany = Company::factory()->create();
+        $otherRegion = Region::query()->create([
+            'company_id' => $otherCompany->id,
+            'name' => 'Outra empresa',
+            'level' => 1,
+            'state' => 'SP',
+            'coverage_type' => 'municipalities',
+            'active' => true,
+        ]);
+        $otherRegion->municipalities()->create([
+            'ibge_code' => '3550308',
+            'name' => 'São Paulo',
+            'state' => 'SP',
+        ]);
+
+        $file = $this->spreadsheet('Regiões', [
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+        ], [
+            'Capital', 1, 'SP', 'municipios', '3550308', 'São Paulo',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), ['type' => 'regions', 'file' => $file])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->where('company_id', $this->admin->company_id)->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
+        $this->assertSame('completed', $batch->refresh()->status);
+        $this->assertDatabaseHas('regions', [
+            'company_id' => $this->admin->company_id,
+            'name' => 'Capital',
+        ]);
+    }
+
+    public function test_region_import_rejects_municipality_already_used_by_same_company(): void
+    {
+        $existingRegion = Region::query()->create([
+            'company_id' => $this->admin->company_id,
+            'name' => 'Capital existente',
+            'level' => 1,
+            'state' => 'SP',
+            'coverage_type' => 'municipalities',
+            'active' => true,
+        ]);
+        $existingRegion->municipalities()->create([
+            'ibge_code' => '3550308',
+            'name' => 'São Paulo',
+            'state' => 'SP',
+        ]);
+
+        $file = $this->spreadsheet('Regiões', [
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+        ], [
+            'Capital duplicada', 1, 'SP', 'municipios', '3550308', 'São Paulo',
+        ]);
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), ['type' => 'regions', 'file' => $file])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
+        $this->assertSame('failed', $batch->refresh()->status);
+        $this->assertStringContainsString('3550308', $batch->errors[0]);
+        $this->assertDatabaseMissing('regions', [
+            'company_id' => $this->admin->company_id,
+            'name' => 'Capital duplicada',
+        ]);
+    }
+
     public function test_invalid_import_rolls_back_the_entire_file_and_records_the_error(): void
     {
         $file = $this->spreadsheet('Produtos', [
@@ -165,6 +303,9 @@ class DataImportTest extends TestCase
         $this->addSheet($spreadsheet, 'Prazos de pagamento', [
             'codigo', 'nome', 'dias_parcelas', 'pedido_minimo', 'ordem', 'ativo',
         ], ['30_60', '30/60 dias', '30|60', 100, 10, 'sim']);
+        $this->addSheet($spreadsheet, 'Regiões', [
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'ativo',
+        ], ['Interior SP', 2, 'SP', 'restante_uf', 'sim']);
         $this->addSheet($spreadsheet, 'Produtos', [
             'nome', 'sku', 'categoria', 'unidade', 'ativo',
         ], ['Produto inicial', 'SKU-INICIAL', 'Geral', 'UN', 'sim']);
@@ -184,9 +325,10 @@ class DataImportTest extends TestCase
 
         $this->assertDatabaseHas('payment_methods', ['company_id' => $this->admin->company_id, 'code' => 'pix']);
         $this->assertDatabaseHas('payment_terms', ['company_id' => $this->admin->company_id, 'code' => '30_60']);
+        $this->assertDatabaseHas('regions', ['company_id' => $this->admin->company_id, 'name' => 'Interior SP']);
         $this->assertDatabaseHas('products', ['company_id' => $this->admin->company_id, 'sku' => 'SKU-INICIAL']);
         $this->assertDatabaseHas('customers', ['company_id' => $this->admin->company_id, 'document' => '52998224725']);
-        $this->assertDatabaseHas('import_batches', ['status' => 'completed', 'created_rows' => 4]);
+        $this->assertDatabaseHas('import_batches', ['status' => 'completed', 'created_rows' => 5]);
     }
 
     public function test_large_import_is_processed_in_chunks_and_updates_progress(): void

@@ -83,3 +83,16 @@ UFs, municípios, microrregiões e mesorregiões são consultados na API de Loca
 `https://servicodados.ibge.gov.br/api/v1/localidades`
 
 Os identificadores armazenados são os códigos oficiais fornecidos pelo IBGE.
+
+## Importação
+
+Regiões podem ser criadas ou atualizadas pela área de Importação de Dados.
+
+- chave natural: `company_id` + `name`;
+- municípios são substituídos integralmente em cada linha importada;
+- códigos IBGE são exclusivos entre regiões da mesma empresa;
+- somente uma região `state_remainder` é permitida por UF e empresa;
+- tabelas informadas são criadas quando necessário e vinculadas à região;
+- tabelas removidas da lista tornam-se globais;
+- o processamento nunca consulta ou altera regiões de outra empresa;
+- após a conclusão, clientes são reclassificados de forma assíncrona.
