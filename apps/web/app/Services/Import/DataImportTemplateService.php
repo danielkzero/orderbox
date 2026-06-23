@@ -143,7 +143,7 @@ class DataImportTemplateService
             ['Tabelas de preço', 'Depois da coluna unidade, use cada cabeçalho como nome de tabela e informe somente o preço nas linhas. São aceitas até 20 tabelas.'],
             ['Quantidades', 'Quantidade mínima e múltiplo pertencem ao produto. Fator peso aceita decimais para venda por peso ou medida.'],
             ['Clientes', 'O documento deve ser CPF/CNPJ válido. Tabelas de preço são separadas por |.'],
-            ['Regiões', 'Regiões são identificadas pelo nome. Use municipios ou restante_uf. Códigos, municípios, microrregiões, mesorregiões e tabelas são separados por |; códigos e municípios devem ter a mesma quantidade.'],
+            ['Regiões', 'Regiões são identificadas por nome e UF. Você pode repetir nome e UF com um município por linha; o importador consolida municípios e tabelas. Use nomes diferentes quando grupos de municípios precisarem de tabelas diferentes.'],
             ['Prazos', 'Dias das parcelas são separados por |, /, vírgula ou ponto e vírgula.'],
             ['Transação', 'Se uma linha for inválida, nenhuma alteração do arquivo será gravada.'],
             ['Tipo do modelo', self::TYPES[$type]],

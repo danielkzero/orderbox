@@ -170,6 +170,7 @@ class CatalogCrudController extends Controller
         }
 
         $priceTables = PriceTable::query()
+            ->with('regions')
             ->where('company_id', $companyId)
             ->where('active', true)
             ->when(
@@ -370,7 +371,9 @@ class CatalogCrudController extends Controller
                 'active' => ['sometimes', 'boolean'],
             ]),
             'regions' => $request->validate([
-                'name' => ['required', 'string', 'max:255', Rule::unique('regions')->where('company_id', $companyId)->ignore($model)],
+                'name' => ['required', 'string', 'max:255', Rule::unique('regions')->where(fn ($query) => $query
+                    ->where('company_id', $companyId)
+                    ->where('state', strtoupper($request->string('state')->toString())))->ignore($model)],
                 'level' => ['required', 'integer', 'min:1', 'max:99'],
                 'state' => ['required', 'string', 'size:2'],
                 'coverage_type' => ['required', 'in:municipalities,state_remainder'],
@@ -740,15 +743,7 @@ class CatalogCrudController extends Controller
 
             $region->municipalities()->delete();
             $region->municipalities()->createMany($municipalities->all());
-            PriceTable::query()
-                ->where('company_id', $request->user()->company_id)
-                ->where('region_id', $region->id)
-                ->when($priceTableIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $priceTableIds))
-                ->update(['region_id' => null]);
-            PriceTable::query()
-                ->where('company_id', $request->user()->company_id)
-                ->whereIn('id', $priceTableIds)
-                ->update(['region_id' => $region->id]);
+            $region->priceTables()->sync($priceTableIds);
             ReclassifyCompanyCustomers::dispatch(
                 $request->user()->company_id,
                 $request->user()->id,

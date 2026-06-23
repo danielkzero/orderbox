@@ -13,7 +13,7 @@ Origem: revisão arquitetural e funcional de 2026-06-18.
 
 ## P1 — Preços, regiões e integridade
 
-- [x] Confirmar cardinalidade 1:N Região × Tabela de Preço.
+- [x] Evoluir cardinalidade Região × Tabela de Preço para N:N.
 - [x] Tornar Regiões a origem única do vínculo.
 - [x] Remover configuração regional de Tabelas e Produtos.
 - [x] Criar serviço de resolução de tabelas aplicáveis.

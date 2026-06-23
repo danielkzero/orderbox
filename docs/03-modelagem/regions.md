@@ -70,11 +70,8 @@ A resolução segue esta ordem:
 
 ## Tabelas de Preço
 
-Uma região pode possuir várias tabelas. Na cardinalidade atual, cada tabela
-pode pertencer a no máximo uma região.
-
-Mover uma tabela para outra região substitui o vínculo anterior. Tabelas sem
-região permanecem globais.
+Uma região pode possuir várias tabelas e uma tabela pode ser vinculada a várias
+regiões por `region_price_table`. Tabelas sem regiões permanecem globais.
 
 ## Fonte de localidades
 
@@ -88,11 +85,14 @@ Os identificadores armazenados são os códigos oficiais fornecidos pelo IBGE.
 
 Regiões podem ser criadas ou atualizadas pela área de Importação de Dados.
 
-- chave natural: `company_id` + `name`;
-- municípios são substituídos integralmente em cada linha importada;
+- chave natural: `company_id` + `state` + `name`;
+- o mesmo nome de região pode existir em UFs diferentes;
+- linhas repetidas na planilha são consolidadas por nome e UF;
+- municípios são substituídos integralmente em cada grupo consolidado;
 - códigos IBGE são exclusivos entre regiões da mesma empresa;
 - somente uma região `state_remainder` é permitida por UF e empresa;
 - tabelas informadas são criadas quando necessário e vinculadas à região;
-- tabelas removidas da lista tornam-se globais;
+- tabelas removidas da lista perdem apenas o vínculo com a região atual e são
+  globais somente quando não permanecem vinculadas a outra região;
 - o processamento nunca consulta ou altera regiões de outra empresa;
 - após a conclusão, clientes são reclassificados de forma assíncrona.

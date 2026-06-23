@@ -16,13 +16,14 @@ class ApplicablePriceTableService
         $resolvedRegionId = $customer->region_id;
 
         return PriceTable::query()
+            ->with('regions:id')
             ->where('company_id', $customer->company_id)
             ->where('active', true)
             ->where(function ($query) use ($directTableIds, $resolvedRegionId): void {
-                $query->whereNull('region_id');
+                $query->whereDoesntHave('regions');
 
                 if ($resolvedRegionId) {
-                    $query->orWhere('region_id', $resolvedRegionId);
+                    $query->orWhereHas('regions', fn ($relation) => $relation->whereKey($resolvedRegionId));
                 }
 
                 if ($directTableIds->isNotEmpty()) {
@@ -35,7 +36,7 @@ class ApplicablePriceTableService
                     return 2;
                 }
 
-                return $resolvedRegionId && $priceTable->region_id === $resolvedRegionId ? 1 : 0;
+                return $resolvedRegionId && $priceTable->regions->contains('id', $resolvedRegionId) ? 1 : 0;
             })
             ->values();
     }
@@ -48,6 +49,7 @@ class ApplicablePriceTableService
 
         $customers->loadMissing('priceTables');
         $tables = PriceTable::query()
+            ->with('regions:id')
             ->where('company_id', $customers->first()->company_id)
             ->where('active', true)
             ->orderBy('name')
@@ -56,12 +58,12 @@ class ApplicablePriceTableService
         return $customers->mapWithKeys(function (Customer $customer) use ($tables): array {
             $directTableIds = $customer->priceTables->pluck('id');
             $applicable = $tables
-                ->filter(fn (PriceTable $table): bool => $table->region_id === null
-                    || $table->region_id === $customer->region_id
+                ->filter(fn (PriceTable $table): bool => $table->regions->isEmpty()
+                    || $table->regions->contains('id', $customer->region_id)
                     || $directTableIds->contains($table->id))
                 ->sortByDesc(fn (PriceTable $table): int => $directTableIds->contains($table->id)
                     ? 2
-                    : ($table->region_id === $customer->region_id && $customer->region_id ? 1 : 0))
+                    : ($table->regions->contains('id', $customer->region_id) && $customer->region_id ? 1 : 0))
                 ->values();
 
             return [$customer->id => $applicable];

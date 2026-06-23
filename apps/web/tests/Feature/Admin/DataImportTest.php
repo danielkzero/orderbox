@@ -6,7 +6,6 @@ use App\Http\Middleware\EnsureAuthenticationSessionIsActive;
 use App\Jobs\ProcessDataImport;
 use App\Models\Company;
 use App\Models\ImportBatch;
-use App\Models\PriceTable;
 use App\Models\Region;
 use App\Models\User;
 use App\Services\Import\DataImportService;
@@ -191,10 +190,78 @@ class DataImportTest extends TestCase
         ]);
         $this->assertSame(
             2,
-            PriceTable::query()->where('company_id', $this->admin->company_id)->where('region_id', $region->id)->count(),
+            $region->priceTables()->count(),
         );
         $this->assertSame('completed', $batch->refresh()->status);
         $this->assertSame(1, $batch->created_rows);
+    }
+
+    public function test_region_import_consolidates_one_municipality_per_row_by_name_and_state(): void
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Regiões');
+        $sheet->fromArray([
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+            'microrregioes', 'mesorregioes', 'tabelas_preco', 'ativo',
+        ], null, 'A1');
+        $sheet->fromArray([
+            'Tudo', 1, 'RO', 'municipios', '1100452', 'BURITIS',
+            'PORTO VELHO', 'MADEIRA-GUAPORÉ', 'NIVEL 5', 'sim',
+        ], null, 'A2');
+        $sheet->fromArray([
+            'Tudo', 1, 'RO', 'municipios', '1100700', 'CAMPO NOVO DE RONDÔNIA',
+            'PORTO VELHO', 'MADEIRA-GUAPORÉ', 'NIVEL 5', 'sim',
+        ], null, 'A3');
+        $sheet->fromArray([
+            'Tudo', 1, 'RO', 'municipios', '1100080', 'COSTA MARQUES',
+            'GUAJARÁ-MIRIM', 'MADEIRA-GUAPORÉ', 'NIVEL 6', 'sim',
+        ], null, 'A4');
+        $sheet->fromArray([
+            'Tudo', 1, 'AC', 'municipios', '1200401', 'RIO BRANCO',
+            'RIO BRANCO', 'VALE DO ACRE', 'NIVEL 5', 'sim',
+        ], null, 'A5');
+
+        $this->actingAs($this->admin)
+            ->post(route('imports.store'), [
+                'type' => 'regions',
+                'file' => $this->uploadedSpreadsheet($spreadsheet),
+            ])
+            ->assertRedirect(route('imports.index'));
+
+        $batch = ImportBatch::query()->firstOrFail();
+        app(DataImportService::class)->process($batch);
+
+        $rondonia = Region::query()
+            ->where('company_id', $this->admin->company_id)
+            ->where('name', 'Tudo')
+            ->where('state', 'RO')
+            ->firstOrFail();
+        $acre = Region::query()
+            ->where('company_id', $this->admin->company_id)
+            ->where('name', 'Tudo')
+            ->where('state', 'AC')
+            ->firstOrFail();
+
+        $this->assertSame(3, $rondonia->municipalities()->count());
+        $this->assertSame(1, $acre->municipalities()->count());
+        $this->assertEqualsCanonicalizing(
+            ['NIVEL 5', 'NIVEL 6'],
+            $rondonia->priceTables()->pluck('name')->all(),
+        );
+        $levelFiveId = $rondonia->priceTables()->where('name', 'NIVEL 5')->value('price_tables.id');
+        $this->assertDatabaseHas('region_price_table', [
+            'region_id' => $rondonia->id,
+            'price_table_id' => $levelFiveId,
+        ]);
+        $this->assertDatabaseHas('region_price_table', [
+            'region_id' => $acre->id,
+            'price_table_id' => $levelFiveId,
+        ]);
+        $this->assertSame('completed', $batch->refresh()->status);
+        $this->assertSame(4, $batch->total_rows);
+        $this->assertSame(4, $batch->processed_rows);
+        $this->assertSame(2, $batch->created_rows);
     }
 
     public function test_region_import_keeps_municipality_isolated_between_companies(): void
@@ -335,12 +402,15 @@ class DataImportTest extends TestCase
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Formas de pagamento');
-        $sheet->fromArray(['codigo', 'nome', 'ordem', 'ativo'], null, 'A1');
+        $sheet->setTitle('Regiões');
+        $sheet->fromArray([
+            'nome', 'nivel', 'uf', 'tipo_abrangencia', 'codigos_ibge', 'municipios',
+            'tabelas_preco', 'ativo',
+        ], null, 'A1');
 
         foreach (range(1, 5001) as $row) {
             $sheet->fromArray(
-                ["forma-{$row}", "Forma {$row}", $row % 65536, 'sim'],
+                ['Carga nacional', 1, 'SP', 'municipios', str_pad((string) $row, 7, '0', STR_PAD_LEFT), "Município {$row}", 'NIVEL 5', 'sim'],
                 null,
                 'A'.($row + 1),
             );
@@ -348,7 +418,7 @@ class DataImportTest extends TestCase
 
         $this->actingAs($this->admin)
             ->post(route('imports.store'), [
-                'type' => 'payment_methods',
+                'type' => 'regions',
                 'file' => $this->uploadedSpreadsheet($spreadsheet),
             ])
             ->assertRedirect(route('imports.index'));
@@ -360,11 +430,13 @@ class DataImportTest extends TestCase
         $this->assertSame('completed', $batch->status);
         $this->assertSame(5001, $batch->total_rows);
         $this->assertSame(5001, $batch->processed_rows);
-        $this->assertSame(5001, $batch->created_rows);
-        $this->assertDatabaseHas('payment_methods', [
+        $this->assertSame(1, $batch->created_rows);
+        $region = Region::query()->where([
             'company_id' => $this->admin->company_id,
-            'code' => 'forma-5001',
-        ]);
+            'name' => 'Carga nacional',
+            'state' => 'SP',
+        ])->firstOrFail();
+        $this->assertSame(5001, $region->municipalities()->count());
     }
 
     public function test_sales_representative_cannot_access_imports(): void

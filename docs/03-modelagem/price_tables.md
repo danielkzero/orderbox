@@ -19,7 +19,6 @@ pedidos históricos. O campo `active = false` impede seu uso em novas operaçõe
 |---------|---------|---------|---------|
 | id | bigint | Sim | Identificador único |
 | company_id | bigint | Sim | Empresa proprietária |
-| region_id | bigint | Não | Região responsável pelo vínculo; mantido exclusivamente pelo módulo Regiões |
 | name | varchar(255) | Sim | Nome da tabela |
 | description | text | Não | Descrição |
 | active | boolean | Sim | Tabela ativa |
@@ -33,7 +32,7 @@ pedidos históricos. O campo `active = false` impede seu uso em novas operaçõe
 PriceTable
 
 - N:1 Company
-- N:0..1 Region
+- N:N Region por `region_price_table`
 - 1:N ProductPrices
 
 ---
@@ -70,10 +69,8 @@ Não pode existir duas tabelas com o mesmo nome dentro da mesma empresa.
 
 ### Vínculo Regional
 
-O campo `region_id` é um detalhe de persistência da cardinalidade atual. Ele
-não pode ser alterado na manutenção de tabelas disponível em Produtos.
-
-O vínculo é mantido exclusivamente pelo módulo Regiões.
+O vínculo é persistido em `region_price_table` e mantido exclusivamente pelo
+módulo Regiões. Uma tabela pode atender várias regiões; sem vínculos, é global.
 
 ### Manutenção no Admin
 

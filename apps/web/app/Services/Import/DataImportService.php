@@ -78,7 +78,9 @@ class DataImportService
 
             $spreadsheet = IOFactory::load(Storage::path($batch->storage_path));
             $datasets = $this->datasets($spreadsheet, $batch->type);
-            $totalRows = collect($datasets)->sum(fn (array $rows): int => count($rows));
+            $totalRows = collect($datasets)->sum(
+                fn (array $rows): int => collect($rows)->sum(fn (array $row): int => $row['_source_rows'] ?? 1),
+            );
 
             if ($totalRows === 0) {
                 throw ValidationException::withMessages(['file' => 'A planilha não possui linhas de dados.']);
@@ -109,7 +111,7 @@ class DataImportService
 
                     $result['created'] += $chunkResult['created'];
                     $result['updated'] += $chunkResult['updated'];
-                    $result['processed'] += count($chunk);
+                    $result['processed'] += collect($chunk)->sum(fn (array $row): int => $row['_source_rows'] ?? 1);
                     $batch->update([
                         'created_rows' => $result['created'],
                         'updated_rows' => $result['updated'],
@@ -176,7 +178,10 @@ class DataImportService
                 ]);
             }
 
-            $datasets[$dataset] = $this->rows($sheet);
+            $rows = $this->rows($sheet);
+            $datasets[$dataset] = $dataset === 'regions'
+                ? $this->consolidateRegionRows($rows)
+                : $rows;
         }
 
         return $datasets;
@@ -212,6 +217,51 @@ class DataImportService
         return $rows;
     }
 
+    private function consolidateRegionRows(array $rows): array
+    {
+        return collect($rows)
+            ->groupBy(function (array $row): string {
+                $name = Str::lower($this->text($row['nome'] ?? null) ?? '');
+                $state = Str::upper($this->text($row['uf'] ?? null) ?? '');
+
+                return $name !== '' && $state !== ''
+                    ? "{$state}|{$name}"
+                    : "invalid|{$row['_row']}";
+            })
+            ->map(function (Collection $group): array {
+                $first = $group->first();
+                $municipalities = collect();
+                $priceTableNames = collect();
+
+                foreach ($group as $row) {
+                    $codes = $this->orderedList($row['codigos_ibge'] ?? null);
+                    $names = $this->orderedList($row['municipios'] ?? null);
+                    $microregions = $this->orderedList($row['microrregioes'] ?? null);
+                    $mesoregions = $this->orderedList($row['mesorregioes'] ?? null);
+
+                    foreach ($codes as $index => $code) {
+                        $municipalities->push([
+                            'ibge_code' => $code,
+                            'name' => $names->get($index),
+                            'microregion_name' => $microregions->get($index),
+                            'mesoregion_name' => $mesoregions->get($index),
+                            '_row' => $row['_row'],
+                        ]);
+                    }
+
+                    $priceTableNames = $priceTableNames->merge($this->list($row['tabelas_preco'] ?? null));
+                }
+
+                return $first + [
+                    '_source_rows' => $group->count(),
+                    '_municipalities' => $municipalities->all(),
+                    '_price_table_names' => $priceTableNames->unique()->values()->all(),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     private function importRegion(User $user, array $row): string
     {
         $coverageType = match (Str::lower($this->text($row['tipo_abrangencia'] ?? null) ?? '')) {
@@ -219,11 +269,8 @@ class DataImportService
             'restante_uf', 'state_remainder' => 'state_remainder',
             default => $this->text($row['tipo_abrangencia'] ?? null),
         };
-        $ibgeCodes = $this->orderedList($row['codigos_ibge'] ?? null);
-        $municipalityNames = $this->orderedList($row['municipios'] ?? null);
-        $microregions = $this->orderedList($row['microrregioes'] ?? null);
-        $mesoregions = $this->orderedList($row['mesorregioes'] ?? null);
-        $priceTableNames = $this->list($row['tabelas_preco'] ?? null);
+        $rawMunicipalities = collect($row['_municipalities'] ?? []);
+        $priceTableNames = collect($row['_price_table_names'] ?? $this->list($row['tabelas_preco'] ?? null));
         $data = [
             'name' => $this->text($row['nome'] ?? null),
             'level' => $this->decimal($row['nivel'] ?? null) ?? 1,
@@ -242,44 +289,35 @@ class DataImportService
         ]);
 
         if ($coverageType === 'state_remainder') {
-            $ibgeCodes = collect();
-            $municipalityNames = collect();
-            $microregions = collect();
-            $mesoregions = collect();
+            $rawMunicipalities = collect();
         }
 
-        if ($coverageType === 'municipalities' && ($ibgeCodes->isEmpty() || $ibgeCodes->count() !== $municipalityNames->count())) {
+        if ($coverageType === 'municipalities' && $rawMunicipalities->isEmpty()) {
             throw ValidationException::withMessages([
-                'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: códigos IBGE e municípios são obrigatórios e devem ter a mesma quantidade.",
+                'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: códigos IBGE e municípios são obrigatórios.",
             ]);
         }
 
-        if ($ibgeCodes->duplicates()->isNotEmpty()) {
+        if ($rawMunicipalities->pluck('ibge_code')->duplicates()->isNotEmpty()) {
             throw ValidationException::withMessages([
                 'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: cada código IBGE pode aparecer somente uma vez na região.",
             ]);
         }
 
-        foreach (['microrregiões' => $microregions, 'mesorregiões' => $mesoregions] as $label => $items) {
-            if ($items->isNotEmpty() && $items->count() !== $ibgeCodes->count()) {
-                throw ValidationException::withMessages([
-                    'file' => "Aba {$row['_sheet']}, linha {$row['_row']}: {$label} deve ter a mesma quantidade de códigos IBGE.",
-                ]);
-            }
-        }
-
-        $municipalities = $coverageType === 'municipalities'
-            ? $ibgeCodes->map(fn (string $code, int $index): array => [
-                'ibge_code' => $code,
-                'name' => $municipalityNames->get($index),
+        $municipalities = $rawMunicipalities
+            ->map(fn (array $municipality): array => [
+                'ibge_code' => $municipality['ibge_code'] ?? null,
+                'name' => $municipality['name'] ?? null,
                 'state' => $data['state'],
-                'microregion_name' => $microregions->get($index),
-                'mesoregion_name' => $mesoregions->get($index),
-            ])->values()
-            : collect();
+                'microregion_name' => $municipality['microregion_name'] ?? null,
+                'mesoregion_name' => $municipality['mesoregion_name'] ?? null,
+                '_row' => $municipality['_row'] ?? $row['_row'],
+            ])
+            ->values();
 
         foreach ($municipalities as $municipality) {
-            $this->validateRow($row, $municipality, [
+            $municipalityRow = $row + ['_row' => $municipality['_row']];
+            $this->validateRow($municipalityRow, $municipality, [
                 'ibge_code' => ['required', 'regex:/^[0-9]{7}$/'],
                 'name' => ['required', 'string', 'max:255'],
                 'state' => ['required', 'string', 'size:2'],
@@ -291,6 +329,7 @@ class DataImportService
         $region = Region::query()
             ->where('company_id', $user->company_id)
             ->where('name', $data['name'])
+            ->where('state', $data['state'])
             ->first();
         $action = $region ? 'updated' : 'created';
 
@@ -305,12 +344,16 @@ class DataImportService
             ]);
         }
 
-        $duplicateCode = DB::table('region_municipalities')
-            ->join('regions', 'regions.id', '=', 'region_municipalities.region_id')
-            ->where('regions.company_id', $user->company_id)
-            ->when($region, fn ($query) => $query->where('regions.id', '!=', $region->id))
-            ->whereIn('region_municipalities.ibge_code', $municipalities->pluck('ibge_code'))
-            ->value('region_municipalities.ibge_code');
+        $duplicateCode = $municipalities->pluck('ibge_code')
+            ->chunk(self::CHUNK_SIZE)
+            ->map(fn (Collection $codes) => DB::table('region_municipalities')
+                ->join('regions', 'regions.id', '=', 'region_municipalities.region_id')
+                ->where('regions.company_id', $user->company_id)
+                ->when($region, fn ($query) => $query->where('regions.id', '!=', $region->id))
+                ->whereIn('region_municipalities.ibge_code', $codes)
+                ->value('region_municipalities.ibge_code'))
+            ->filter()
+            ->first();
 
         if ($duplicateCode) {
             throw ValidationException::withMessages([
@@ -323,21 +366,16 @@ class DataImportService
             ? tap($region)->update($payload)
             : Region::query()->create($payload + ['company_id' => $user->company_id]);
         $region->municipalities()->delete();
-        $region->municipalities()->createMany($municipalities->all());
+        $municipalities
+            ->map(fn (array $municipality): array => collect($municipality)->except('_row')->all())
+            ->chunk(self::CHUNK_SIZE)
+            ->each(fn (Collection $chunk) => $region->municipalities()->createMany($chunk->all()));
 
         $priceTableIds = $priceTableNames->map(fn (string $name): int => PriceTable::query()->firstOrCreate([
             'company_id' => $user->company_id,
             'name' => $name,
         ], ['active' => true])->id);
-        PriceTable::query()
-            ->where('company_id', $user->company_id)
-            ->where('region_id', $region->id)
-            ->when($priceTableIds->isNotEmpty(), fn ($query) => $query->whereNotIn('id', $priceTableIds))
-            ->update(['region_id' => null]);
-        PriceTable::query()
-            ->where('company_id', $user->company_id)
-            ->whereIn('id', $priceTableIds)
-            ->update(['region_id' => $region->id]);
+        $region->priceTables()->sync($priceTableIds);
 
         return $action;
     }

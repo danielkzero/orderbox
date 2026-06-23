@@ -64,15 +64,17 @@ Essa é também a ordem de processamento.
 
 ## Regiões
 
-A aba Regiões cria ou atualiza regiões comerciais pelo nome dentro da empresa.
-Cada linha representa uma região completa e substitui seus municípios e
-vínculos com tabelas de preço.
+A aba Regiões cria ou atualiza regiões comerciais pelo nome e UF dentro da
+empresa. É permitido informar a região completa em uma linha ou repetir o mesmo
+nome e UF em várias linhas, inclusive com um município por linha. Linhas
+repetidas são consolidadas antes da gravação, somando municípios e tabelas de
+preço.
 
 As colunas são:
 
 | Coluna | Obrigatória | Destino/Regra |
 |---|---|---|
-| nome | Sim | Chave de criação ou atualização |
+| nome | Sim | Parte da chave de criação ou atualização junto com a UF |
 | nivel | Não | Prioridade de `1` a `99`; padrão `1` |
 | uf | Sim | Sigla da unidade federativa |
 | tipo_abrangencia | Sim | `municipios` ou `restante_uf` |
@@ -87,6 +89,14 @@ As colunas são:
 As listas geográficas paralelas devem possuir a mesma quantidade de itens.
 Microrregiões e mesorregiões podem ficar vazias. Para `restante_uf`, os campos
 de municípios são ignorados.
+
+O mesmo nome pode ser reutilizado em UFs diferentes. Por exemplo, linhas com
+`Tudo` em RO são consolidadas em uma região distinta das linhas com `Tudo` em
+AC. Dentro da mesma região e UF, todas as tabelas informadas são vinculadas à
+região inteira; o vínculo não varia por município.
+
+Quando municípios da mesma UF precisarem de conjuntos diferentes de tabelas,
+devem usar nomes de região diferentes, por exemplo `NIVEL 5` e `NIVEL 6`.
 
 Somente uma região `restante_uf` pode existir por UF e empresa. Um código IBGE
 não pode pertencer a duas regiões da mesma empresa, mas pode ser usado por

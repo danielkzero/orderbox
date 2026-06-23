@@ -218,8 +218,9 @@ class HydradigitalDemoSeeder extends Seeder
         ])->mapWithKeys(function (array $data) use ($company, $regions): array {
             $table = PriceTable::query()->updateOrCreate(
                 ['company_id' => $company->id, 'name' => $data['name']],
-                ['region_id' => $data['name'] === 'Atacado' ? $regions['São Paulo Interior']->id : null, 'description' => $data['description'], 'active' => true],
+                ['description' => $data['description'], 'active' => true],
             );
+            $table->regions()->sync($data['name'] === 'Atacado' ? [$regions['São Paulo Interior']->id] : []);
 
             return [$table->name => $table];
         });

@@ -874,8 +874,10 @@
                                     <span>
                                         <strong class="block text-sm text-gray-800 dark:text-white/90">{{ $priceTable->name }}</strong>
                                         <span class="mt-1 block text-xs text-gray-500 dark:text-gray-400">{{ $priceTable->description ?: 'Sem descrição' }}</span>
-                                        @if ($priceTable->region_id && $priceTable->region_id !== $model->id)
-                                            <span class="mt-1 block text-xs text-warning-600">Será movida da região atual.</span>
+                                        @if ($priceTable->regions->where('id', '!=', $model->id)->isNotEmpty())
+                                            <span class="mt-1 block text-xs text-gray-500">
+                                                Também vinculada a {{ $priceTable->regions->where('id', '!=', $model->id)->pluck('name')->join(', ') }}.
+                                            </span>
                                         @endif
                                     </span>
                                 </label>

@@ -496,7 +496,7 @@ class AdminPanelTest extends TestCase
         ])->assertRedirect(route('regions.index'));
 
         $region = Region::query()->where('name', 'Vale do Paraiba')->firstOrFail();
-        $this->assertSame($region->id, $table->refresh()->region_id);
+        $this->assertTrue($table->regions()->whereKey($region->id)->exists());
         $this->assertDatabaseHas('region_municipalities', [
             'region_id' => $region->id,
             'ibge_code' => '3549904',

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Region extends Model
@@ -30,9 +31,9 @@ class Region extends Model
         return $this->hasMany(SalesRepresentative::class);
     }
 
-    public function priceTables(): HasMany
+    public function priceTables(): BelongsToMany
     {
-        return $this->hasMany(PriceTable::class);
+        return $this->belongsToMany(PriceTable::class, 'region_price_table')->withTimestamps();
     }
 
     public function municipalities(): HasMany

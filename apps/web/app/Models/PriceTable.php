@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class PriceTable extends Model
 {
-    protected $fillable = ['company_id', 'region_id', 'name', 'description', 'active'];
+    protected $fillable = ['company_id', 'name', 'description', 'active'];
 
     protected function casts(): array
     {
@@ -21,9 +21,9 @@ class PriceTable extends Model
         return $this->belongsTo(Company::class);
     }
 
-    public function region(): BelongsTo
+    public function regions(): BelongsToMany
     {
-        return $this->belongsTo(Region::class);
+        return $this->belongsToMany(Region::class, 'region_price_table')->withTimestamps();
     }
 
     public function prices(): HasMany

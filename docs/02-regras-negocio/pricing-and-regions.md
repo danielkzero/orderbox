@@ -45,7 +45,7 @@ cria e renomeia tabelas, mas não as vincula a regiões.
 Na V1:
 
 - uma Região possui zero ou várias Tabelas de Preço;
-- uma Tabela de Preço pertence a zero ou uma Região;
+- uma Tabela de Preço pertence a zero ou várias Regiões;
 - tabela sem região é global;
 - vínculo direto de tabela ao cliente tem precedência sobre região e tabela
   global.

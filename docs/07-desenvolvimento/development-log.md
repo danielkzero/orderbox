@@ -3,6 +3,26 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-23 — Consolidação de municípios na importação de regiões
+
+### Correção
+
+Linhas repetidas com o mesmo nome de região substituíam os municípios gravados
+pelas linhas anteriores. A importação passou a consolidar as linhas por nome e
+UF antes da persistência.
+
+### Impactos
+
+- suporte ao formato de um município por linha;
+- municípios e tabelas são acumulados para a mesma região e UF;
+- municípios são inseridos em lotes de 100;
+- o mesmo nome de região pode ser usado em UFs diferentes;
+- chave única alterada para `company_id`, `state` e `name`;
+- tabelas de preço podem ser compartilhadas por várias regiões;
+- vínculos existentes são migrados para `region_price_table`;
+- contadores de progresso continuam representando as linhas originais;
+- sem alteração na API, Mobile ou B2B.
+
 ## 2026-06-23 — Remoção do limite de linhas da importação
 
 ### Correção
