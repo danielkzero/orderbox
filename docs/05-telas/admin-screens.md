@@ -540,7 +540,7 @@ Carregar os cadastros essenciais para iniciar a operação da empresa.
   texto para preservar zeros à esquerda e códigos longos;
 - modelo de regiões com abrangência por municípios ou restante da UF, códigos
   IBGE e tabelas de preço;
-- limite de 10 MB e 5.000 linhas;
+- limite de 10 MB por arquivo, sem limite fixo de linhas;
 - envio imediato para a fila;
 - processamento sequencial em blocos de 100 linhas;
 - atualização automática do progresso enquanto o lote estiver ativo;

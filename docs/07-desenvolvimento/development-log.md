@@ -3,6 +3,20 @@
 Este documento mantém a rastreabilidade técnica das alterações realizadas no
 OrderBox.
 
+## 2026-06-23 — Remoção do limite de linhas da importação
+
+### Correção
+
+O bloqueio fixo de 5.000 linhas foi removido. Arquivos dentro do limite de 10 MB
+passam a ser processados integralmente em blocos sequenciais de 100 registros.
+
+### Impactos
+
+- importações de regiões e demais entidades podem superar 5.000 linhas;
+- transações, progresso e contadores continuam sendo atualizados por bloco;
+- limite de 10 MB e processamento assíncrono permanecem ativos;
+- nenhuma alteração estrutural no banco de dados, API, Mobile ou B2B.
+
 ## 2026-06-23 — Importação de regiões comerciais
 
 ### Funcionalidade

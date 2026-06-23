@@ -331,16 +331,16 @@ class DataImportTest extends TestCase
         $this->assertDatabaseHas('import_batches', ['status' => 'completed', 'created_rows' => 5]);
     }
 
-    public function test_large_import_is_processed_in_chunks_and_updates_progress(): void
+    public function test_import_above_five_thousand_rows_is_processed_in_chunks_and_updates_progress(): void
     {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Formas de pagamento');
         $sheet->fromArray(['codigo', 'nome', 'ordem', 'ativo'], null, 'A1');
 
-        foreach (range(1, 205) as $row) {
+        foreach (range(1, 5001) as $row) {
             $sheet->fromArray(
-                ["forma-{$row}", "Forma {$row}", $row, 'sim'],
+                ["forma-{$row}", "Forma {$row}", $row % 65536, 'sim'],
                 null,
                 'A'.($row + 1),
             );
@@ -358,12 +358,12 @@ class DataImportTest extends TestCase
         $batch->refresh();
 
         $this->assertSame('completed', $batch->status);
-        $this->assertSame(205, $batch->total_rows);
-        $this->assertSame(205, $batch->processed_rows);
-        $this->assertSame(205, $batch->created_rows);
+        $this->assertSame(5001, $batch->total_rows);
+        $this->assertSame(5001, $batch->processed_rows);
+        $this->assertSame(5001, $batch->created_rows);
         $this->assertDatabaseHas('payment_methods', [
             'company_id' => $this->admin->company_id,
-            'code' => 'forma-205',
+            'code' => 'forma-5001',
         ]);
     }
 

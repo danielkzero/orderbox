@@ -135,7 +135,7 @@ class DataImportTemplateService
         $sheet->fromArray([
             ['Regra', 'Descrição'],
             ['Arquivo', 'Use o modelo sem alterar os nomes das abas ou cabeçalhos. XLSX, XLS ou CSV; carga completa exige XLSX/XLS.'],
-            ['Limite', 'Máximo de 5.000 linhas de dados e 10 MB por arquivo.'],
+            ['Limite', 'Máximo de 10 MB por arquivo. As linhas são processadas em blocos de 100 registros.'],
             ['Atualização', 'Regiões são identificadas pelo nome; produtos pelo SKU; clientes pelo CPF/CNPJ; formas e prazos pelo código.'],
             ['Valores', 'Decimais podem usar vírgula ou ponto. Campos booleanos aceitam sim/não, 1/0, true/false.'],
             ['Identificadores', 'Código, SKU e barcode são textos. Não remova a formatação textual dessas colunas para preservar zeros à esquerda e códigos longos.'],

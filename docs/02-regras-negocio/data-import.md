@@ -24,13 +24,14 @@ A carga inicial completa exige Excel porque utiliza múltiplas abas.
 ## Limites
 
 - 10 MB por arquivo;
-- 5.000 linhas de dados por execução;
 - 20 tabelas de preço por linha de produto.
 
 ## Processamento Assíncrono
 
 O upload apenas registra o lote e armazena temporariamente o arquivo. A
 importação é executada pela fila em blocos sequenciais de 100 linhas.
+Não há limite fixo de quantidade de linhas; o tamanho máximo do arquivo é a
+restrição de entrada.
 
 Cada bloco usa sua própria transação. Se um bloco falhar, ele é revertido e o
 lote é encerrado como falho. Blocos concluídos anteriormente permanecem

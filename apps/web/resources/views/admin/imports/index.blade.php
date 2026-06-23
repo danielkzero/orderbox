@@ -28,7 +28,7 @@
                         <x-input-label for="file" value="Planilha" />
                         <input id="file" name="file" type="file" accept=".xlsx,.xls,.csv" class="mt-1 block w-full rounded-lg border border-gray-300 p-3 text-sm dark:border-gray-700" required>
                         <x-input-error :messages="$errors->get('file')" class="mt-2" />
-                        <p class="mt-2 text-xs text-gray-500">XLSX, XLS ou CSV, até 10 MB e 5.000 linhas. A carga completa exige arquivo Excel.</p>
+                        <p class="mt-2 text-xs text-gray-500">XLSX, XLS ou CSV, até 10 MB. As linhas são processadas em blocos de 100 registros. A carga completa exige arquivo Excel.</p>
                     </div>
                     <button class="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-brand-500 px-4 py-3 text-sm font-medium text-white hover:bg-brand-600">
                         <x-icon name="upload" class="size-5" />

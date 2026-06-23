@@ -33,8 +33,6 @@ use Throwable;
 
 class DataImportService
 {
-    private const MAX_ROWS = 5000;
-
     private const CHUNK_SIZE = 100;
 
     public function queue(User $user, string $type, UploadedFile $file): ImportBatch
@@ -84,10 +82,6 @@ class DataImportService
 
             if ($totalRows === 0) {
                 throw ValidationException::withMessages(['file' => 'A planilha não possui linhas de dados.']);
-            }
-
-            if ($totalRows > self::MAX_ROWS) {
-                throw ValidationException::withMessages(['file' => 'A planilha excede o limite de '.self::MAX_ROWS.' linhas.']);
             }
 
             $batch->update(['total_rows' => $totalRows]);
